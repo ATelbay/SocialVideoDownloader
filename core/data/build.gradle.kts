@@ -6,6 +6,11 @@ plugins {
 
 android {
     namespace = "com.socialvideodownloader.core.data"
+    testOptions {
+        unitTests.all {
+            it.useJUnitPlatform()
+        }
+    }
 }
 
 dependencies {
@@ -18,6 +23,7 @@ dependencies {
     implementation(libs.youtubedl.android.aria2c)
 
     testImplementation(libs.junit5)
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
 }

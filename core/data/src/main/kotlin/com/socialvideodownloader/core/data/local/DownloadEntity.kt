@@ -10,6 +10,7 @@ data class DownloadEntity(
     val sourceUrl: String,
     val videoTitle: String,
     val thumbnailUrl: String?,
+    val formatLabel: String = "",
     val filePath: String?,
     val status: String,
     val createdAt: Long,

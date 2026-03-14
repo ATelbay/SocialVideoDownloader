@@ -1,4 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="download_placeholder">Download Screen</string>
+    <!-- URL Input -->
+    <string name="download_url_hint">Paste video URL here</string>
+    <string name="download_extract_button">Extract</string>
+    <string name="download_extracting">Extracting video info…</string>
+
+    <!-- Format Selection -->
+    <string name="download_video_formats">Video</string>
+    <string name="download_audio_formats">Audio Only</string>
+    <string name="download_button">Download</string>
+    <string name="download_file_size_mb">%.1f MB</string>
+    <string name="download_file_size_gb">%.1f GB</string>
+
+    <!-- Download Progress -->
+    <string name="download_cancel">Cancel</string>
+
+    <!-- Download Complete -->
+    <string name="download_complete">Download complete</string>
+    <string name="download_open">Open</string>
+    <string name="download_share">Share</string>
+    <string name="download_new">New Download</string>
+
+    <!-- Error -->
+    <string name="download_retry">Retry</string>
+    <string name="download_error_unsupported_url">This URL is not supported. Try a link from a supported platform.</string>
+    <string name="download_error_unavailable">This video is unavailable. It may be private or removed.</string>
+    <string name="download_error_network">No internet connection. Check your network and try again.</string>
+    <string name="download_error_storage">Not enough storage space. Free up space and try again.</string>
+    <string name="download_error_generic">Something went wrong. Please try again.</string>
+
+    <!-- Clipboard -->
+    <string name="download_clipboard_detected">URL detected from clipboard</string>
+
+    <!-- UrlInputContent composable -->
+    <string name="url_input_label">Video URL</string>
+    <string name="url_input_placeholder">Paste video URL here</string>
+    <string name="url_input_extract_button">Extract</string>
+    <string name="video_info_duration_format">%1$02d:%2$02d</string>
+    <string name="download_progress_percent">%1$d%%</string>
+    <string name="download_progress_speed_kb">%.1f KB/s</string>
+    <string name="download_progress_speed_mb">%.1f MB/s</string>
+    <string name="download_progress_eta">ETA %1$02d:%2$02d</string>
+    <string name="download_progress_cancel">Cancel</string>
+
+    <!-- Notifications -->
+    <string name="notification_downloading">Downloading… %1$d%%</string>
+    <string name="notification_speed_eta">%1$s · ETA %2$s</string>
+    <string name="notification_download_complete">Download complete</string>
+    <string name="notification_download_failed">Download failed</string>
 </resources>
