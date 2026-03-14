@@ -138,6 +138,6 @@
   principles or materially expanded guidance, PATCH for clarifications.
 - Compliance review: every PR and spec review MUST verify alignment with
   these principles. Violations MUST be flagged before merge.
-- Runtime development guidance lives in `.claude/CLAUDE.md`.
+- Runtime development guidance lives in `AGENTS.md` for Codex and `.claude/CLAUDE.md` for Claude Code.
 
 **Version**: 1.0.0 | **Ratified**: 2026-03-14 | **Last Amended**: 2026-03-14

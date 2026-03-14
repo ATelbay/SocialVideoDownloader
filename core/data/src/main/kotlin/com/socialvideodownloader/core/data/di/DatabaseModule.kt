@@ -22,7 +22,7 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             "social-video-downloader-database",
-        ).build()
+        ).addMigrations(AppDatabase.MIGRATION_1_2).build()
 
     @Provides
     fun provideDownloadDao(database: AppDatabase): DownloadDao =

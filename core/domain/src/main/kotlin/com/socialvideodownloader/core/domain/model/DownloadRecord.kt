@@ -5,6 +5,7 @@ data class DownloadRecord(
     val sourceUrl: String,
     val videoTitle: String,
     val thumbnailUrl: String? = null,
+    val formatLabel: String = "",
     val filePath: String? = null,
     val status: DownloadStatus,
     val createdAt: Long,

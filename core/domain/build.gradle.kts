@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 dependencies {
@@ -9,7 +10,15 @@ dependencies {
     // Coroutines for Flow types in repository interfaces
     implementation(libs.kotlinx.coroutines.core)
 
+    // Serialization for domain models passed via Intent
+    implementation(libs.kotlinx.serialization.json)
+
     testImplementation(libs.junit5)
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }
