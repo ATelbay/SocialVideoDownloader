@@ -46,7 +46,7 @@ class MediaStoreRepositoryImpl @Inject constructor(
         val contentValues = ContentValues().apply {
             put(MediaStore.Downloads.DISPLAY_NAME, safeTitle)
             put(MediaStore.Downloads.MIME_TYPE, mimeType)
-            put(MediaStore.Downloads.RELATIVE_PATH, "Downloads/SocialVideoDownloader")
+            put(MediaStore.Downloads.RELATIVE_PATH, "Download/SocialVideoDownloader")
             put(MediaStore.Downloads.IS_PENDING, 1)
         }
         val resolver = context.contentResolver

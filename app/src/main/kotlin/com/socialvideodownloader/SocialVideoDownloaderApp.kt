@@ -64,6 +64,16 @@ class SocialVideoDownloaderApp : Application() {
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to initialize Aria2c", e)
             }
+
+            try {
+                YoutubeDL.getInstance().updateYoutubeDL(
+                    this@SocialVideoDownloaderApp,
+                    YoutubeDL.UpdateChannel.NIGHTLY,
+                )
+                Log.d(TAG, "yt-dlp updated successfully")
+            } catch (e: Exception) {
+                Log.d(TAG, "yt-dlp update skipped: ${e.message}")
+            }
         }
     }
 

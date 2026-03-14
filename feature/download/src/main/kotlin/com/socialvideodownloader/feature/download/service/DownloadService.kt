@@ -102,12 +102,14 @@ class DownloadService : Service() {
             try {
                 val outputPath = downloadVideo(request) { progressPercent, etaSeconds, speedText ->
                     val speedBytes = parseSpeedToBytes(speedText)
+                    val safeProgress = progressPercent.coerceAtLeast(0f)
+                    val safeEta = etaSeconds.coerceAtLeast(0L)
                     val progress = DownloadProgress(
                         requestId = request.id,
-                        progressPercent = progressPercent,
+                        progressPercent = safeProgress,
                         downloadedBytes = 0L,
                         speedBytesPerSec = speedBytes,
-                        etaSeconds = etaSeconds,
+                        etaSeconds = safeEta,
                     )
                     stateHolder.update(DownloadServiceState.Downloading(request.id, progress))
 
@@ -115,9 +117,9 @@ class DownloadService : Service() {
                         notificationId = notificationId,
                         requestId = request.id,
                         videoTitle = request.videoTitle,
-                        progressPercent = progressPercent.toInt(),
+                        progressPercent = safeProgress.toInt(),
                         speedText = speedText,
-                        etaText = formatEta(etaSeconds),
+                        etaText = formatEta(safeEta),
                     )
                     notificationManager.updateNotification(notificationId, updatedNotification)
                 }
@@ -156,6 +158,7 @@ class DownloadService : Service() {
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
+                android.util.Log.e(TAG, "Download failed for ${request.id}", e)
                 val errorMsg = e.message ?: getString(R.string.notification_download_failed)
                 val userFacingError = errorMessageMapper.map(e)
                 stateHolder.update(DownloadServiceState.Failed(request.id, errorMsg))
@@ -236,6 +239,7 @@ class DownloadService : Service() {
     }
 
     companion object {
+        private const val TAG = "DownloadService"
         // XOR mask to derive completion/error notification IDs from progress IDs without collision.
         // hashCode() returns values in [-2^31, 2^31-1]; XOR with this bit pattern flips the sign bit,
         // guaranteeing the result is always in a different half of the Int space.

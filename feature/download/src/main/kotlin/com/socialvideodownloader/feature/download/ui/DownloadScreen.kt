@@ -82,6 +82,15 @@ private fun DownloadScreenContent(
     modifier: Modifier = Modifier,
 ) {
     var urlText by rememberSaveable { mutableStateOf("") }
+    val isIdle = uiState is DownloadUiState.Idle
+    val clipboardUrl = (uiState as? DownloadUiState.Idle)?.clipboardUrl
+
+    // Reset text field when returning to Idle (e.g., after "New Download")
+    LaunchedEffect(isIdle, clipboardUrl) {
+        if (isIdle) {
+            urlText = clipboardUrl ?: ""
+        }
+    }
 
     Column(
         modifier = modifier
@@ -91,9 +100,6 @@ private fun DownloadScreenContent(
     ) {
         when (uiState) {
             is DownloadUiState.Idle -> {
-                LaunchedEffect(uiState.clipboardUrl) {
-                    uiState.clipboardUrl?.let { urlText = it }
-                }
                 UrlInputContent(
                     url = urlText,
                     onUrlChanged = { url ->

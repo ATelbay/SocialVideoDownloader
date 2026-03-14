@@ -32,6 +32,14 @@ class VideoInfoMapper @Inject constructor() {
         )
     }
 
+    private fun buildVideoLabel(format: VideoFormat): String {
+        val resolution = "${format.height}p"
+        val codec = format.vcodec
+            ?.substringBefore(".")  // "av01.0.08M.08" → "av01"
+            ?.takeIf { it != "none" }
+        return listOfNotNull(resolution, codec).joinToString(" ")
+    }
+
     private fun buildAudioLabel(format: VideoFormat): String {
         val codec = format.acodec?.takeIf { it != "none" }
         val bitrateKbps = format.abr.takeIf { it > 0 }?.let { "${it.toInt()}k" }
@@ -44,7 +52,7 @@ class VideoInfoMapper @Inject constructor() {
         val isVideoOnly = format.acodec?.equals("none") == true
         val label = when {
             isAudioOnly -> buildAudioLabel(format)
-            format.height > 0 -> "${format.height}p"
+            format.height > 0 -> buildVideoLabel(format)
             else -> format.ext ?: "unknown"
         }
         val fileSize = format.fileSize.takeIf { it > 0 }
