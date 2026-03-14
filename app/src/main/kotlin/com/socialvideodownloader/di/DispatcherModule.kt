@@ -1,6 +1,6 @@
 package com.socialvideodownloader.di
 
-import com.socialvideodownloader.IoDispatcher
+import com.socialvideodownloader.core.domain.di.IoDispatcher
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

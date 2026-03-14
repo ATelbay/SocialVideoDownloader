@@ -5,16 +5,12 @@ import android.util.Log
 import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.ffmpeg.FFmpeg
 import com.yausername.aria2c.Aria2c
+import com.socialvideodownloader.core.domain.di.IoDispatcher
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import javax.inject.Qualifier
-
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class IoDispatcher
 
 @HiltAndroidApp
 class SocialVideoDownloaderApp : Application() {

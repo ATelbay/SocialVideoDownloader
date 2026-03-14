@@ -22,7 +22,7 @@ class DownloadRepositoryImpl @Inject constructor(
     override suspend fun insert(record: DownloadRecord): Long =
         downloadDao.insert(record.toEntity())
 
-    override suspend fun updateStatus(record: DownloadRecord) =
+    override suspend fun update(record: DownloadRecord) =
         downloadDao.update(record.toEntity())
 
     override suspend fun delete(record: DownloadRecord) =

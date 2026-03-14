@@ -9,7 +9,7 @@ fun DownloadEntity.toDomain(): DownloadRecord = DownloadRecord(
     videoTitle = videoTitle,
     thumbnailUrl = thumbnailUrl,
     filePath = filePath,
-    status = DownloadStatus.valueOf(status),
+    status = DownloadStatus.entries.find { it.name == status } ?: DownloadStatus.FAILED,
     createdAt = createdAt,
     completedAt = completedAt,
     fileSizeBytes = fileSizeBytes,

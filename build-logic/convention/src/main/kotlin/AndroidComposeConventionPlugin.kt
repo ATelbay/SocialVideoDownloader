@@ -8,9 +8,9 @@ class AndroidComposeConventionPlugin : Plugin<Project> {
         with(target) {
             apply(plugin = "org.jetbrains.kotlin.plugin.compose")
 
-            extensions.findByType(CommonExtension::class.java)?.apply {
-                buildFeatures.compose = true
-            }
+            val android = extensions.findByType(CommonExtension::class.java)
+                ?: error("Android plugin must be applied before svd.android.compose")
+            android.buildFeatures.compose = true
         }
     }
 }
