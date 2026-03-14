@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Social Video Downloader</string>
+    <string name="nav_download">Download</string>
+    <string name="nav_history">History</string>
 </resources>
