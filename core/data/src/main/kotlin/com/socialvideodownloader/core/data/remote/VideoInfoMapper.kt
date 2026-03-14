@@ -9,8 +9,10 @@ import javax.inject.Inject
 class VideoInfoMapper @Inject constructor() {
 
     fun mapToMetadata(videoInfo: VideoInfo, url: String): VideoMetadata {
+        val excludedExtensions = setOf("mhtml", "storyboard")
         val formats = videoInfo.formats
             ?.filter { !it.formatId.isNullOrBlank() }
+            ?.filter { it.ext !in excludedExtensions }
             ?.map { mapToFormatOption(it) }
             ?.let { allFormats ->
                 val videoFormats = allFormats.filter { !it.isAudioOnly }
@@ -30,11 +32,18 @@ class VideoInfoMapper @Inject constructor() {
         )
     }
 
+    private fun buildAudioLabel(format: VideoFormat): String {
+        val codec = format.acodec?.takeIf { it != "none" }
+        val bitrateKbps = format.abr.takeIf { it > 0 }?.let { "${it.toInt()}k" }
+        val ext = format.ext
+        return listOfNotNull(codec ?: ext, bitrateKbps).joinToString(" ").ifBlank { "audio" }
+    }
+
     private fun mapToFormatOption(format: VideoFormat): VideoFormatOption {
         val isAudioOnly = format.vcodec?.equals("none") == true
         val isVideoOnly = format.acodec?.equals("none") == true
         val label = when {
-            isAudioOnly -> format.ext ?: "audio"
+            isAudioOnly -> buildAudioLabel(format)
             format.height > 0 -> "${format.height}p"
             else -> format.ext ?: "unknown"
         }
