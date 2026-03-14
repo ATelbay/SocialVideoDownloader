@@ -3,6 +3,9 @@ plugins {
 }
 
 dependencies {
+    // javax.inject for @Qualifier annotations
+    implementation(libs.javax.inject)
+
     // Coroutines for Flow types in repository interfaces
     implementation(libs.kotlinx.coroutines.core)
 

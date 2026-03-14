@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.socialvideodownloader.core.ui.theme.SocialVideoDownloaderTheme
@@ -41,7 +42,7 @@ class MainActivity : ComponentActivity() {
                     bottomBar = {
                         NavigationBar {
                             NavigationBarItem(
-                                selected = currentDestination?.route == DownloadRoute::class.qualifiedName,
+                                selected = currentDestination?.hasRoute<DownloadRoute>() == true,
                                 onClick = {
                                     navController.navigate(DownloadRoute) {
                                         popUpTo(navController.graph.startDestinationId) { saveState = true }
@@ -58,7 +59,7 @@ class MainActivity : ComponentActivity() {
                                 label = { Text(stringResource(R.string.nav_download)) },
                             )
                             NavigationBarItem(
-                                selected = currentDestination?.route == HistoryRoute::class.qualifiedName,
+                                selected = currentDestination?.hasRoute<HistoryRoute>() == true,
                                 onClick = {
                                     navController.navigate(HistoryRoute) {
                                         popUpTo(navController.graph.startDestinationId) { saveState = true }

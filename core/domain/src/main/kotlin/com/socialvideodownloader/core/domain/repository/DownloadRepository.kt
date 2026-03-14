@@ -10,7 +10,7 @@ interface DownloadRepository {
 
     suspend fun insert(record: DownloadRecord): Long
 
-    suspend fun updateStatus(record: DownloadRecord)
+    suspend fun update(record: DownloadRecord)
 
     suspend fun delete(record: DownloadRecord)
 }
