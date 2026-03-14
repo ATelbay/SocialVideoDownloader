@@ -1,15 +1,15 @@
 plugins {
-    id("videograb.android.application")
-    id("videograb.android.compose")
-    id("videograb.android.hilt")
+    id("svd.android.application")
+    id("svd.android.compose")
+    id("svd.android.hilt")
     alias(libs.plugins.kotlin.serialization)
 }
 
 android {
-    namespace = "com.videograb"
+    namespace = "com.socialvideodownloader"
 
     defaultConfig {
-        applicationId = "com.videograb"
+        applicationId = "com.socialvideodownloader"
         versionCode = 1
         versionName = "1.0"
     }

@@ -13,27 +13,27 @@ dependencies {
 gradlePlugin {
     plugins {
         register("androidApplication") {
-            id = "videograb.android.application"
+            id = "svd.android.application"
             implementationClass = "AndroidApplicationConventionPlugin"
         }
         register("androidLibrary") {
-            id = "videograb.android.library"
+            id = "svd.android.library"
             implementationClass = "AndroidLibraryConventionPlugin"
         }
         register("androidCompose") {
-            id = "videograb.android.compose"
+            id = "svd.android.compose"
             implementationClass = "AndroidComposeConventionPlugin"
         }
         register("androidHilt") {
-            id = "videograb.android.hilt"
+            id = "svd.android.hilt"
             implementationClass = "AndroidHiltConventionPlugin"
         }
         register("androidFeature") {
-            id = "videograb.android.feature"
+            id = "svd.android.feature"
             implementationClass = "AndroidFeatureConventionPlugin"
         }
         register("androidRoom") {
-            id = "videograb.android.room"
+            id = "svd.android.room"
             implementationClass = "AndroidRoomConventionPlugin"
         }
     }

@@ -1,10 +1,10 @@
 plugins {
-    id("videograb.android.feature")
+    id("svd.android.feature")
     alias(libs.plugins.kotlin.serialization)
 }
 
 android {
-    namespace = "com.videograb.feature.history"
+    namespace = "com.socialvideodownloader.feature.history"
 }
 
 dependencies {

@@ -17,7 +17,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "VideoGrab"
+rootProject.name = "SocialVideoDownloader"
 
 include(":app")
 include(":feature:download")

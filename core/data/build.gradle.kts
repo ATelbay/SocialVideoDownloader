@@ -1,11 +1,11 @@
 plugins {
-    id("videograb.android.library")
-    id("videograb.android.hilt")
-    id("videograb.android.room")
+    id("svd.android.library")
+    id("svd.android.hilt")
+    id("svd.android.room")
 }
 
 android {
-    namespace = "com.videograb.core.data"
+    namespace = "com.socialvideodownloader.core.data"
 }
 
 dependencies {

@@ -1,10 +1,10 @@
 plugins {
-    id("videograb.android.library")
-    id("videograb.android.compose")
+    id("svd.android.library")
+    id("svd.android.compose")
 }
 
 android {
-    namespace = "com.videograb.core.ui"
+    namespace = "com.socialvideodownloader.core.ui"
 }
 
 dependencies {

@@ -8,9 +8,9 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
             with(pluginManager) {
-                apply("videograb.android.library")
-                apply("videograb.android.compose")
-                apply("videograb.android.hilt")
+                apply("svd.android.library")
+                apply("svd.android.compose")
+                apply("svd.android.hilt")
             }
 
             val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
