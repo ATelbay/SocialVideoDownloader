@@ -8,11 +8,8 @@ class AndroidComposeConventionPlugin : Plugin<Project> {
         with(target) {
             apply(plugin = "org.jetbrains.kotlin.plugin.compose")
 
-            val commonExtension = extensions.findByType(CommonExtension::class.java)
-            commonExtension?.apply {
-                buildFeatures {
-                    compose = true
-                }
+            extensions.findByType(CommonExtension::class.java)?.apply {
+                buildFeatures.compose = true
             }
         }
     }
