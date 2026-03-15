@@ -15,3 +15,8 @@ build/
 local.properties
 firebase-debug.log
 
+# Local Codex runtime state
+/.codex/*
+!/.codex/prompts/
+/.codex/prompts/*
+!/.codex/prompts/*.md
