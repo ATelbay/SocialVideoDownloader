@@ -12,6 +12,7 @@ data class DownloadEntity(
     val thumbnailUrl: String?,
     val formatLabel: String = "",
     val filePath: String?,
+    val mediaStoreUri: String? = null,
     val status: String,
     val createdAt: Long,
     val completedAt: Long?,

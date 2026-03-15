@@ -1,0 +1,14 @@
+package com.socialvideodownloader.feature.history.ui
+
+sealed interface HistoryIntent {
+    data class SearchQueryChanged(val query: String) : HistoryIntent
+    data class HistoryItemClicked(val itemId: Long) : HistoryIntent
+    data class HistoryItemLongPressed(val itemId: Long) : HistoryIntent
+    data object DismissItemMenu : HistoryIntent
+    data class ShareClicked(val itemId: Long) : HistoryIntent
+    data class DeleteItemClicked(val itemId: Long) : HistoryIntent
+    data object DeleteAllClicked : HistoryIntent
+    data class DeleteFilesSelectionChanged(val selected: Boolean) : HistoryIntent
+    data object ConfirmDeletion : HistoryIntent
+    data object DismissDeletionDialog : HistoryIntent
+}

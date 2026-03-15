@@ -9,10 +9,11 @@ class ExtractVideoInfoUseCase
     constructor(
         private val repository: VideoExtractorRepository,
     ) {
-        suspend operator fun invoke(url: String): Result<VideoMetadata> = runCatching {
-            if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                throw IllegalArgumentException("Only HTTP and HTTPS URLs are supported")
+        suspend operator fun invoke(url: String): Result<VideoMetadata> =
+            runCatching {
+                if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                    throw IllegalArgumentException("Only HTTP and HTTPS URLs are supported")
+                }
+                repository.extractInfo(url)
             }
-            repository.extractInfo(url)
-        }
     }

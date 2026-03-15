@@ -2,4 +2,29 @@
 <resources>
     <string name="history_screen_title">History</string>
     <string name="history_empty_message">No downloads yet</string>
+    <string name="history_search_hint">Search history…</string>
+    <string name="history_no_results">No results found</string>
+    <string name="history_status_completed">Completed</string>
+    <string name="history_status_failed">Failed</string>
+    <string name="history_status_downloading">Downloading</string>
+    <string name="history_status_pending">Pending</string>
+    <string name="history_format_unknown">Unknown format</string>
+    <string name="history_file_unavailable">File is no longer available</string>
+    <string name="history_open_error">Could not open file</string>
+    <string name="history_share_error">Could not share file</string>
+    <string name="history_action_share">Share</string>
+    <string name="history_action_open">Open</string>
+    <string name="history_action_delete">Delete</string>
+    <string name="history_context_menu_open">Open file</string>
+    <string name="history_context_menu_share">Share file</string>
+    <string name="history_context_menu_delete">Delete from history</string>
+    <string name="history_delete_single_title">Delete download?</string>
+    <string name="history_delete_all_title">Delete all downloads?</string>
+    <string name="history_delete_message_single">This will remove the record from history</string>
+    <string name="history_delete_message_all">This will remove %d record(s) from history</string>
+    <string name="history_delete_files_checkbox">Also delete downloaded files</string>
+    <string name="history_delete_confirm">Delete</string>
+    <string name="history_delete_cancel">Cancel</string>
+    <string name="history_delete_file_cleanup_failed">Some files could not be removed</string>
+    <string name="history_action_delete_all">Delete all</string>
 </resources>

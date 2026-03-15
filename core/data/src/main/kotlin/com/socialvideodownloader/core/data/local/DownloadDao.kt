@@ -23,4 +23,7 @@ interface DownloadDao {
 
     @Delete
     suspend fun delete(entity: DownloadEntity)
+
+    @Query("DELETE FROM downloads")
+    suspend fun deleteAll()
 }
