@@ -27,4 +27,7 @@ class DownloadRepositoryImpl @Inject constructor(
 
     override suspend fun delete(record: DownloadRecord) =
         downloadDao.delete(record.toEntity())
+
+    override suspend fun deleteAll() =
+        downloadDao.deleteAll()
 }

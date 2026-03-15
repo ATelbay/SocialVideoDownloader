@@ -13,4 +13,6 @@ interface DownloadRepository {
     suspend fun update(record: DownloadRecord)
 
     suspend fun delete(record: DownloadRecord)
+
+    suspend fun deleteAll()
 }

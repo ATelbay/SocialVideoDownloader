@@ -15,5 +15,3 @@ build/
 local.properties
 firebase-debug.log
 
-# Room schema exports
-core/data/schemas/
