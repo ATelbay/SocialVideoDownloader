@@ -29,4 +29,20 @@
     <string name="history_delete_file_cleanup_failed">Some files could not be removed</string>
     <string name="history_delete_single_file_failed">File could not be deleted from storage</string>
     <string name="history_action_delete_all">Delete all</string>
+
+    <!-- Screen title update -->
+    <string name="history_screen_title_full">Download History</string>
+
+    <!-- Empty states -->
+    <string name="history_empty_title">No downloads yet</string>
+    <string name="history_empty_description">Your downloaded videos will appear here</string>
+    <string name="history_no_results_title">No results found</string>
+    <string name="history_no_results_description">Try a different search term</string>
+
+    <!-- Bottom sheet -->
+    <string name="history_bottom_sheet_share">Share</string>
+    <string name="history_bottom_sheet_delete">Delete</string>
+
+    <!-- Delete dialog -->
+    <string name="history_delete_checkbox_label">Also delete file from storage</string>
 </resources>

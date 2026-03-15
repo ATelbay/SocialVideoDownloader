@@ -4,4 +4,13 @@
     <string name="nav_history">History</string>
     <string name="download_notification_channel_name">Download Progress</string>
     <string name="download_notification_channel_description">Shows progress of video downloads</string>
+
+    <!-- Platform names -->
+    <string name="platform_youtube">YouTube</string>
+    <string name="platform_instagram">Instagram</string>
+    <string name="platform_tiktok">TikTok</string>
+    <string name="platform_twitter">Twitter/X</string>
+    <string name="platform_vimeo">Vimeo</string>
+    <string name="platform_facebook">Facebook</string>
+    <string name="platform_video">Video</string>
 </resources>
