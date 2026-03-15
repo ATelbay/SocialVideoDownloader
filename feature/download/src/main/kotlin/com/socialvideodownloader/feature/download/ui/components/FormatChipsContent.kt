@@ -43,7 +43,7 @@ fun FormatChipsContent(
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = stringResource(R.string.download_select_quality),
-            style = MaterialTheme.typography.labelSmall,
+            style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 

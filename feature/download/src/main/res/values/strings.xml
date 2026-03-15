@@ -80,4 +80,8 @@
     <!-- Speed/ETA labels -->
     <string name="download_speed_label">SPEED</string>
     <string name="download_eta_label">ETA</string>
+
+    <!-- Theme toggle -->
+    <string name="theme_toggle_dark">Switch to dark mode</string>
+    <string name="theme_toggle_light">Switch to light mode</string>
 </resources>

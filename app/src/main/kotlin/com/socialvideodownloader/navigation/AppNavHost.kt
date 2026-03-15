@@ -12,13 +12,14 @@ import com.socialvideodownloader.feature.history.navigation.historyScreen
 fun AppNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
+    onToggleTheme: () -> Unit = {},
 ) {
     NavHost(
         navController = navController,
         startDestination = DownloadRoute,
         modifier = modifier,
     ) {
-        downloadScreen()
+        downloadScreen(onToggleTheme = onToggleTheme)
         historyScreen()
     }
 }
