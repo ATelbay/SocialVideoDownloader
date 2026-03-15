@@ -16,6 +16,7 @@ android {
 
     packaging {
         jniLibs.useLegacyPackaging = true
+        jniLibs.keepDebugSymbols += "**/*.zip.so"
     }
 
     buildTypes {

@@ -81,7 +81,7 @@ class VideoInfoMapperTest {
     @Test
     fun `generates label from height for video formats`() {
         val formats = listOf(
-            createVideoFormat(formatId = "248", height = 1080),
+            createVideoFormat(formatId = "248", height = 1080, vcodec = null),
         )
         val videoInfo = createVideoInfo(formats = formats)
 
@@ -142,6 +142,7 @@ class VideoInfoMapperTest {
         fileSizeApproximate: Long = 0L,
         vcodec: String? = "vp9",
         acodec: String? = "mp4a",
+        abr: Int = 0,
     ): VideoFormat = mockk<VideoFormat> {
         every { this@mockk.formatId } returns formatId
         every { this@mockk.height } returns height
@@ -150,5 +151,6 @@ class VideoInfoMapperTest {
         every { this@mockk.fileSizeApproximate } returns fileSizeApproximate
         every { this@mockk.vcodec } returns vcodec
         every { this@mockk.acodec } returns acodec
+        every { this@mockk.abr } returns abr
     }
 }
