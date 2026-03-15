@@ -2,8 +2,14 @@ package com.socialvideodownloader.feature.download.ui
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
@@ -17,15 +23,18 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -48,8 +57,9 @@ import com.socialvideodownloader.feature.download.R
 import com.socialvideodownloader.feature.download.ui.components.DownloadCompleteContent
 import com.socialvideodownloader.feature.download.ui.components.DownloadErrorContent
 import com.socialvideodownloader.feature.download.ui.components.DownloadProgressContent
+import com.socialvideodownloader.feature.download.ui.components.ExtractingContent
 import com.socialvideodownloader.feature.download.ui.components.FormatChipsContent
-import com.socialvideodownloader.feature.download.ui.components.UrlInputContent
+import com.socialvideodownloader.feature.download.ui.components.IdleContent
 
 @Composable
 fun DownloadScreen(
@@ -120,118 +130,152 @@ private fun DownloadScreenContent(
         label = "themeToggleIconColor",
     )
 
+    val titleResId = when (uiState) {
+        is DownloadUiState.Idle, is DownloadUiState.Extracting -> R.string.download_screen_title
+        is DownloadUiState.FormatSelection -> R.string.download_title_select_format
+        is DownloadUiState.Downloading -> R.string.download_title_downloading
+        is DownloadUiState.Done -> R.string.download_title_complete
+        is DownloadUiState.Error -> R.string.download_title_error
+    }
+
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.nav_download)) },
-                actions = {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .padding(end = 8.dp)
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-                    ) {
-                        IconButton(onClick = onToggleTheme) {
-                            Icon(
-                                imageVector = if (isDark) Icons.Outlined.LightMode else Icons.Outlined.DarkMode,
-                                contentDescription = if (isDark) {
-                                    stringResource(R.string.theme_toggle_light)
-                                } else {
-                                    stringResource(R.string.theme_toggle_dark)
-                                },
-                                tint = iconColor,
-                            )
+            Column {
+                TopAppBar(
+                    title = { Text(stringResource(titleResId)) },
+                    navigationIcon = {
+                        if (!isIdle) {
+                            IconButton(onClick = { onIntent(DownloadIntent.NewDownloadClicked) }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = null,
+                                )
+                            }
                         }
-                    }
-                },
-            )
+                    },
+                    actions = {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .padding(end = 8.dp)
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                        ) {
+                            IconButton(onClick = onToggleTheme) {
+                                Icon(
+                                    imageVector = if (isDark) Icons.Outlined.LightMode else Icons.Outlined.DarkMode,
+                                    contentDescription = if (isDark) {
+                                        stringResource(R.string.theme_toggle_light)
+                                    } else {
+                                        stringResource(R.string.theme_toggle_dark)
+                                    },
+                                    tint = iconColor,
+                                )
+                            }
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    ),
+                )
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 1.dp)
+            }
         },
     ) { innerPadding ->
-        Column(
+        AnimatedContent(
+            targetState = uiState,
+            contentKey = { it::class },
+            transitionSpec = {
+                (fadeIn(tween(300)) + scaleIn(initialScale = 0.92f, animationSpec = tween(300)))
+                    .togetherWith(fadeOut(tween(200)))
+                    .using(SizeTransform(clip = false))
+            },
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-        ) {
-            when (uiState) {
-                is DownloadUiState.Idle -> {
-                    UrlInputContent(
-                        url = urlText,
-                        onUrlChanged = { url ->
-                            urlText = url
-                            onIntent(DownloadIntent.UrlChanged(url))
-                        },
-                        onExtractClicked = { onIntent(DownloadIntent.ExtractClicked) },
-                        isLoading = false,
-                    )
-                }
+                .padding(innerPadding),
+            label = "downloadStateTransition",
+        ) { targetState ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                when (targetState) {
+                    is DownloadUiState.Idle -> {
+                        IdleContent(
+                            url = urlText,
+                            onUrlChanged = { url ->
+                                urlText = url
+                                onIntent(DownloadIntent.UrlChanged(url))
+                            },
+                            onExtractClicked = { onIntent(DownloadIntent.ExtractClicked) },
+                        )
+                    }
 
-                is DownloadUiState.Extracting -> {
-                    UrlInputContent(
-                        url = uiState.url,
-                        onUrlChanged = {},
-                        onExtractClicked = {},
-                        isLoading = true,
-                    )
-                }
+                    is DownloadUiState.Extracting -> {
+                        ExtractingContent(
+                            url = targetState.url,
+                            onCancelClicked = { onIntent(DownloadIntent.NewDownloadClicked) },
+                        )
+                    }
 
-                is DownloadUiState.FormatSelection -> {
-                    VideoInfoCard(
-                        thumbnailUrl = uiState.metadata.thumbnailUrl,
-                        title = uiState.metadata.title,
-                        uploaderName = uiState.metadata.author,
-                        durationSeconds = uiState.metadata.durationSeconds,
-                        platformName = platformFromUrl(uiState.metadata.sourceUrl),
-                        platformColor = platformFromUrl(uiState.metadata.sourceUrl)
-                            ?.let { PlatformColors.forPlatform(it) },
-                        compact = false,
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    FormatChipsContent(
-                        formats = uiState.metadata.formats,
-                        selectedFormatId = uiState.selectedFormatId,
-                        onFormatSelected = { onIntent(DownloadIntent.FormatSelected(it)) },
-                        onDownloadClicked = { onIntent(DownloadIntent.DownloadClicked) },
-                    )
-                }
+                    is DownloadUiState.FormatSelection -> {
+                        VideoInfoCard(
+                            thumbnailUrl = targetState.metadata.thumbnailUrl,
+                            title = targetState.metadata.title,
+                            uploaderName = targetState.metadata.author,
+                            durationSeconds = targetState.metadata.durationSeconds,
+                            platformName = platformFromUrl(targetState.metadata.sourceUrl),
+                            platformColor = platformFromUrl(targetState.metadata.sourceUrl)
+                                ?.let { PlatformColors.forPlatform(it) },
+                            compact = false,
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        FormatChipsContent(
+                            formats = targetState.metadata.formats,
+                            selectedFormatId = targetState.selectedFormatId,
+                            onFormatSelected = { onIntent(DownloadIntent.FormatSelected(it)) },
+                            onDownloadClicked = { onIntent(DownloadIntent.DownloadClicked) },
+                        )
+                    }
 
-                is DownloadUiState.Downloading -> {
-                    VideoInfoCard(
-                        thumbnailUrl = uiState.metadata.thumbnailUrl,
-                        title = uiState.metadata.title,
-                        uploaderName = uiState.metadata.author,
-                        durationSeconds = uiState.metadata.durationSeconds,
-                        platformName = platformFromUrl(uiState.metadata.sourceUrl),
-                        platformColor = platformFromUrl(uiState.metadata.sourceUrl)
-                            ?.let { PlatformColors.forPlatform(it) },
-                        compact = false,
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    DownloadProgressContent(
-                        progress = uiState.progress,
-                        onCancelClicked = { onIntent(DownloadIntent.CancelDownloadClicked) },
-                    )
-                }
+                    is DownloadUiState.Downloading -> {
+                        VideoInfoCard(
+                            thumbnailUrl = targetState.metadata.thumbnailUrl,
+                            title = targetState.metadata.title,
+                            uploaderName = targetState.metadata.author,
+                            durationSeconds = targetState.metadata.durationSeconds,
+                            platformName = platformFromUrl(targetState.metadata.sourceUrl),
+                            platformColor = platformFromUrl(targetState.metadata.sourceUrl)
+                                ?.let { PlatformColors.forPlatform(it) },
+                            compact = false,
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        DownloadProgressContent(
+                            progress = targetState.progress,
+                            onCancelClicked = { onIntent(DownloadIntent.CancelDownloadClicked) },
+                        )
+                    }
 
-                is DownloadUiState.Done -> {
-                    DownloadCompleteContent(
-                        metadata = uiState.metadata,
-                        onOpenClicked = { onIntent(DownloadIntent.OpenFileClicked) },
-                        onShareClicked = { onIntent(DownloadIntent.ShareFileClicked) },
-                        onNewDownloadClicked = { onIntent(DownloadIntent.NewDownloadClicked) },
-                    )
-                }
+                    is DownloadUiState.Done -> {
+                        DownloadCompleteContent(
+                            metadata = targetState.metadata,
+                            onOpenClicked = { onIntent(DownloadIntent.OpenFileClicked) },
+                            onShareClicked = { onIntent(DownloadIntent.ShareFileClicked) },
+                            onNewDownloadClicked = { onIntent(DownloadIntent.NewDownloadClicked) },
+                        )
+                    }
 
-                is DownloadUiState.Error -> {
-                    DownloadErrorContent(
-                        message = uiState.message,
-                        onRetryClicked = { onIntent(DownloadIntent.RetryClicked) },
-                        onNewDownloadClicked = { onIntent(DownloadIntent.NewDownloadClicked) },
-                    )
+                    is DownloadUiState.Error -> {
+                        DownloadErrorContent(
+                            message = targetState.message,
+                            onRetryClicked = { onIntent(DownloadIntent.RetryClicked) },
+                            onNewDownloadClicked = { onIntent(DownloadIntent.NewDownloadClicked) },
+                        )
+                    }
                 }
             }
         }
