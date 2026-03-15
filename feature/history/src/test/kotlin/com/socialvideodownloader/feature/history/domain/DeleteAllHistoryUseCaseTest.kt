@@ -47,9 +47,27 @@ class DeleteAllHistoryUseCaseTest {
     fun `calls deleteAll on repository`() = runTest {
         repository.recordsFlow.emit(emptyList())
 
-        useCase()
+        useCase(deleteFiles = true)
 
         assertTrue(repository.deleteAllCalled)
+    }
+
+    @Test
+    fun `skips file deletion and still calls deleteAll when deleteFiles is false`() = runTest {
+        var deleteFileCallCount = 0
+        fileManager.deleteFileResult = { _ -> deleteFileCallCount++; true }
+        fileManager.resolveContentUriResult = { r -> r.mediaStoreUri }
+
+        repository.recordsFlow.emit(listOf(
+            record(id = 1L, mediaStoreUri = "content://media/1"),
+            record(id = 2L, mediaStoreUri = "content://media/2"),
+        ))
+
+        val result = useCase(deleteFiles = false)
+
+        assertEquals(0, deleteFileCallCount)
+        assertTrue(repository.deleteAllCalled)
+        assertEquals(0, result.failedFileDeletions)
     }
 
     @Test

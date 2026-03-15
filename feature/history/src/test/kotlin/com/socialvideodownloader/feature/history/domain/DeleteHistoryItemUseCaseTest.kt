@@ -118,4 +118,43 @@ class DeleteHistoryItemUseCaseTest {
 
         assertTrue(repository.deletedRecords.isEmpty())
     }
+
+    @Test
+    fun `file deletion is attempted before DB record is deleted`() = runTest {
+        val events = mutableListOf<String>()
+        fileManager.resolveContentUriResult = { "content://media/1" }
+        fileManager.deleteFileResult = { events.add("file_deleted"); true }
+        repository.onDeleteCallback = { events.add("db_deleted") }
+
+        val rec = record(id = 1L, mediaStoreUri = "content://media/1")
+        repository.insert(rec)
+
+        useCase(itemId = 1L, deleteFile = true)
+
+        assertEquals(listOf("file_deleted", "db_deleted"), events)
+    }
+
+    @Test
+    fun `returns fileDeleteFailed true when file deletion fails`() = runTest {
+        fileManager.resolveContentUriResult = { "content://media/1" }
+        fileManager.deleteFileResult = { false }
+        val rec = record(id = 1L, mediaStoreUri = "content://media/1")
+        repository.insert(rec)
+
+        val result = useCase(itemId = 1L, deleteFile = true)
+
+        assertTrue(result.fileDeleteFailed)
+    }
+
+    @Test
+    fun `returns fileDeleteFailed false when deleteFile is true and file deleted successfully`() = runTest {
+        fileManager.resolveContentUriResult = { "content://media/1" }
+        fileManager.deleteFileResult = { true }
+        val rec = record(id = 1L, mediaStoreUri = "content://media/1")
+        repository.insert(rec)
+
+        val result = useCase(itemId = 1L, deleteFile = true)
+
+        assertFalse(result.fileDeleteFailed)
+    }
 }

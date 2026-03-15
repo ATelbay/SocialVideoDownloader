@@ -53,7 +53,7 @@ fun HistoryScreen(
         viewModel.effect.collect { effect ->
             when (effect) {
                 is HistoryEffect.ShowMessage -> {
-                    snackbarHostState.showSnackbar(effect.message)
+                    snackbarHostState.showSnackbar(context.getString(effect.messageResId))
                 }
                 is HistoryEffect.OpenContent -> {
                     try {
@@ -73,7 +73,11 @@ fun HistoryScreen(
                             putExtra(Intent.EXTRA_STREAM, Uri.parse(effect.contentUri))
                             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         }
-                        context.startActivity(Intent.createChooser(shareIntent, null))
+                        context.startActivity(
+                            Intent.createChooser(shareIntent, null).apply {
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            },
+                        )
                     } catch (e: Exception) {
                         snackbarHostState.showSnackbar(context.getString(R.string.history_share_error))
                     }

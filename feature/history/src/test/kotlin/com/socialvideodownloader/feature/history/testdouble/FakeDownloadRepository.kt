@@ -11,6 +11,7 @@ class FakeDownloadRepository : DownloadRepository {
 
     val deletedRecords = mutableListOf<DownloadRecord>()
     var deleteAllCalled = false
+    var onDeleteCallback: (() -> Unit)? = null
 
     override fun getAll(): Flow<List<DownloadRecord>> = recordsFlow
 
@@ -31,6 +32,7 @@ class FakeDownloadRepository : DownloadRepository {
     }
 
     override suspend fun delete(record: DownloadRecord) {
+        onDeleteCallback?.invoke()
         deletedRecords.add(record)
         val current = recordsFlow.replayCache.firstOrNull() ?: emptyList()
         recordsFlow.emit(current.filter { it.id != record.id })

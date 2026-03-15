@@ -11,17 +11,18 @@ class DeleteHistoryItemUseCase @Inject constructor(
     suspend operator fun invoke(itemId: Long, deleteFile: Boolean): DeleteResult {
         val record = repository.getById(itemId) ?: return DeleteResult(fileDeleteFailed = false)
 
-        repository.delete(record)
-
+        var fileDeleteFailed = false
         if (deleteFile) {
             val uri = fileManager.resolveContentUri(record)
             if (uri != null) {
                 val deleted = runCatching { fileManager.deleteFile(uri) }.getOrDefault(false)
-                if (!deleted) return DeleteResult(fileDeleteFailed = true)
+                if (!deleted) fileDeleteFailed = true
             }
         }
 
-        return DeleteResult(fileDeleteFailed = false)
+        repository.delete(record)
+
+        return DeleteResult(fileDeleteFailed = fileDeleteFailed)
     }
 }
 

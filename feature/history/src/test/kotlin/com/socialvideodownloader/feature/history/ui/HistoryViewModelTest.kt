@@ -43,7 +43,7 @@ class HistoryViewModelTest {
             historyListItem(id = 3L, title = "kotlin advanced"),
         )
         every { observeHistoryItems() } returns flowOf(testItems)
-        coEvery { deleteAllHistory() } returns DeleteAllHistoryResult(failedFileDeletions = 0)
+        coEvery { deleteAllHistory(any()) } returns DeleteAllHistoryResult(failedFileDeletions = 0)
         viewModel = HistoryViewModel(observeHistoryItems, deleteHistoryItem, deleteAllHistory)
     }
 
@@ -448,12 +448,12 @@ class HistoryViewModelTest {
             cancelAndIgnoreRemainingEvents()
         }
 
-        coVerify { deleteAllHistory() }
+        coVerify { deleteAllHistory(deleteFiles = false) }
     }
 
     @Test
     fun `ConfirmDeletion for All with file-cleanup failures emits ShowMessage`() = runTest {
-        coEvery { deleteAllHistory() } returns DeleteAllHistoryResult(failedFileDeletions = 2)
+        coEvery { deleteAllHistory(any()) } returns DeleteAllHistoryResult(failedFileDeletions = 2)
 
         viewModel.uiState.test {
             awaitItem() // initial Content
@@ -472,7 +472,7 @@ class HistoryViewModelTest {
         // Re-run to capture the effect properly
         val items = listOf(historyListItem(id = 1L, title = "Video"))
         every { observeHistoryItems() } returns flowOf(items)
-        coEvery { deleteAllHistory() } returns DeleteAllHistoryResult(failedFileDeletions = 2)
+        coEvery { deleteAllHistory(any()) } returns DeleteAllHistoryResult(failedFileDeletions = 2)
         val vm2 = HistoryViewModel(observeHistoryItems, deleteHistoryItem, deleteAllHistory)
 
         vm2.effect.test {

@@ -3,6 +3,7 @@ package com.socialvideodownloader.feature.history.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.socialvideodownloader.core.domain.model.DownloadStatus
+import com.socialvideodownloader.feature.history.R
 import com.socialvideodownloader.feature.history.domain.DeleteAllHistoryUseCase
 import com.socialvideodownloader.feature.history.domain.DeleteHistoryItemUseCase
 import com.socialvideodownloader.feature.history.domain.ObserveHistoryItemsUseCase
@@ -82,7 +83,7 @@ class HistoryViewModel @Inject constructor(
             if (item.status == DownloadStatus.COMPLETED && item.isFileAccessible) {
                 _effect.emit(HistoryEffect.OpenContent(item.contentUri!!))
             } else {
-                _effect.emit(HistoryEffect.ShowMessage("File is no longer available"))
+                _effect.emit(HistoryEffect.ShowMessage(R.string.history_file_unavailable))
             }
         }
     }
@@ -93,7 +94,7 @@ class HistoryViewModel @Inject constructor(
             if (item.isFileAccessible) {
                 _effect.emit(HistoryEffect.ShareContent(item.contentUri!!))
             } else {
-                _effect.emit(HistoryEffect.ShowMessage("File is no longer available"))
+                _effect.emit(HistoryEffect.ShowMessage(R.string.history_file_unavailable))
             }
         }
     }
@@ -126,12 +127,15 @@ class HistoryViewModel @Inject constructor(
         viewModelScope.launch {
             when (val target = confirmation.target) {
                 is DeleteTarget.Single -> {
-                    deleteHistoryItem(target.itemId, confirmation.deleteFilesSelected)
+                    val result = deleteHistoryItem(target.itemId, confirmation.deleteFilesSelected)
+                    if (result.fileDeleteFailed) {
+                        _effect.emit(HistoryEffect.ShowMessage(R.string.history_delete_single_file_failed))
+                    }
                 }
                 is DeleteTarget.All -> {
-                    val result = deleteAllHistory()
+                    val result = deleteAllHistory(deleteFiles = confirmation.deleteFilesSelected)
                     if (result.failedFileDeletions > 0) {
-                        _effect.emit(HistoryEffect.ShowMessage("Some files could not be deleted from storage"))
+                        _effect.emit(HistoryEffect.ShowMessage(R.string.history_delete_file_cleanup_failed))
                     }
                 }
             }

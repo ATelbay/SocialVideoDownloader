@@ -8,6 +8,7 @@
     <string name="history_status_failed">Failed</string>
     <string name="history_status_downloading">Downloading</string>
     <string name="history_status_pending">Pending</string>
+    <string name="history_status_cancelled">Cancelled</string>
     <string name="history_format_unknown">Unknown format</string>
     <string name="history_file_unavailable">File is no longer available</string>
     <string name="history_open_error">Could not open file</string>
@@ -26,5 +27,6 @@
     <string name="history_delete_confirm">Delete</string>
     <string name="history_delete_cancel">Cancel</string>
     <string name="history_delete_file_cleanup_failed">Some files could not be removed</string>
+    <string name="history_delete_single_file_failed">File could not be deleted from storage</string>
     <string name="history_action_delete_all">Delete all</string>
 </resources>

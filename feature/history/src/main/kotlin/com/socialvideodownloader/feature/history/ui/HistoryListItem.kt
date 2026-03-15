@@ -133,7 +133,7 @@ private fun statusLabelAndColor(status: DownloadStatus): Pair<String, Color> {
             MaterialTheme.colorScheme.onSurfaceVariant,
         )
         DownloadStatus.CANCELLED -> Pair(
-            stringResource(R.string.history_status_pending),
+            stringResource(R.string.history_status_cancelled),
             MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
