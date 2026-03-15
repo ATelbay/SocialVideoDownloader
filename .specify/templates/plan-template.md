@@ -17,15 +17,15 @@
   the iteration process.
 -->
 
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
-**Project Type**: [e.g., library/cli/web-service/mobile-app/compiler/desktop-app or NEEDS CLARIFICATION]  
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+**Language/Version**: [e.g., Kotlin 2.2.10 or NEEDS CLARIFICATION]  
+**Primary Dependencies**: [e.g., Jetpack Compose, Hilt, Room, Navigation Compose, Coil or NEEDS CLARIFICATION]  
+**Storage**: [e.g., Room, MediaStore, files or N/A]  
+**Testing**: [e.g., JUnit5 + MockK + Turbine or NEEDS CLARIFICATION]  
+**Target Platform**: [e.g., Android 8.0+ (API 26) or NEEDS CLARIFICATION]
+**Project Type**: [e.g., mobile app (Android) or NEEDS CLARIFICATION]  
+**Performance Goals**: [domain-specific, e.g., progress updates >=1/sec, extraction start <30s or NEEDS CLARIFICATION]  
+**Constraints**: [domain-specific, e.g., on-device only, no backend, offline-tolerant UI or NEEDS CLARIFICATION]  
+**Scale/Scope**: [domain-specific, e.g., personal utility, 2 feature modules, 6 UI states or NEEDS CLARIFICATION]
 
 ## Constitution Check
 
@@ -48,51 +48,29 @@ specs/[###-feature]/
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+app/
+└── src/main/
 
-tests/
-├── contract/
-├── integration/
-└── unit/
+feature/
+├── download/src/main/
+├── download/src/test/
+├── history/src/main/
+└── history/src/test/
 
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+core/
+├── domain/src/main/
+├── domain/src/test/
+├── data/src/main/
+├── data/src/test/
+└── ui/src/main/
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: Use the existing multi-module Android layout
+(`:app`, `:feature:*`, `:core:*`). Expand only the modules and source sets
+touched by this feature, and include concrete Kotlin package paths where the
+work lands.
 
 ## Complexity Tracking
 

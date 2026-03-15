@@ -61,7 +61,7 @@ NEW_PLAN="$IMPL_PLAN"  # Alias for compatibility with existing code
 AGENT_TYPE="${1:-}"
 
 # Agent-specific file paths  
-CLAUDE_FILE="$REPO_ROOT/CLAUDE.md"
+CLAUDE_FILE="$REPO_ROOT/.claude/CLAUDE.md"
 GEMINI_FILE="$REPO_ROOT/GEMINI.md"
 COPILOT_FILE="$REPO_ROOT/.github/agents/copilot-instructions.md"
 CURSOR_FILE="$REPO_ROOT/.cursor/rules/specify-rules.mdc"
@@ -248,6 +248,8 @@ get_project_structure() {
     
     if [[ "$project_type" == *"web"* ]]; then
         echo "backend/\\nfrontend/\\ntests/"
+    elif [[ "$project_type" == *"mobile"* ]] || [[ "$project_type" == *"Android"* ]] || [[ "$project_type" == *"android"* ]]; then
+        echo ":app\\n:feature:download\\n:feature:history\\n:core:domain\\n:core:data\\n:core:ui\\nspecs/"
     else
         echo "src/\\ntests/"
     fi
@@ -257,6 +259,9 @@ get_commands_for_language() {
     local lang="$1"
     
     case "$lang" in
+        *"Kotlin"*)
+            echo "./gradlew assembleDebug \\&\\& ./gradlew test \\&\\& ./gradlew ktlintCheck"
+            ;;
         *"Python"*)
             echo "cd src && pytest && ruff check ."
             ;;
@@ -274,7 +279,14 @@ get_commands_for_language() {
 
 get_language_conventions() {
     local lang="$1"
-    echo "$lang: Follow standard conventions"
+    case "$lang" in
+        *"Kotlin"*)
+            echo "Kotlin: Compose-only UI, KSP instead of kapt, repository interfaces in :core:domain with implementations in :core:data"
+            ;;
+        *)
+            echo "$lang: Follow standard conventions"
+            ;;
+    esac
 }
 
 create_new_agent_file() {
