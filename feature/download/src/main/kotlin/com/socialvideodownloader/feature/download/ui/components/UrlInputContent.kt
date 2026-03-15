@@ -1,18 +1,25 @@
 package com.socialvideodownloader.feature.download.ui.components
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentPaste
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.socialvideodownloader.core.ui.theme.AppShapesInstance
 import com.socialvideodownloader.feature.download.R
 
 @Composable
@@ -23,31 +30,43 @@ fun UrlInputContent(
     isLoading: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        OutlinedTextField(
-            value = url,
-            onValueChange = onUrlChanged,
-            label = { Text(stringResource(R.string.download_url_hint)) },
-            enabled = !isLoading,
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        if (isLoading) {
-            CircularProgressIndicator()
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = stringResource(R.string.download_extracting))
-        } else {
-            Button(
-                onClick = onExtractClicked,
-                enabled = url.isNotBlank(),
-                modifier = Modifier.fillMaxWidth(),
+    val clipboardManager = LocalClipboardManager.current
+
+    OutlinedTextField(
+        value = url,
+        onValueChange = onUrlChanged,
+        label = { Text(stringResource(R.string.url_input_label)) },
+        placeholder = { Text(stringResource(R.string.url_input_placeholder)) },
+        enabled = !isLoading,
+        singleLine = true,
+        shape = AppShapesInstance.large,
+        colors = OutlinedTextFieldDefaults.colors(
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+        ),
+        trailingIcon = {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(AppShapesInstance.small)
+                    .background(MaterialTheme.colorScheme.primaryContainer)
+                    .clickable {
+                        clipboardManager.getText()?.text?.let { text ->
+                            onUrlChanged(text)
+                        }
+                    },
+                contentAlignment = Alignment.Center,
             ) {
-                Text(text = stringResource(R.string.download_extract_button))
+                Icon(
+                    imageVector = Icons.Default.ContentPaste,
+                    contentDescription = stringResource(R.string.download_paste_button),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(20.dp),
+                )
             }
-        }
-    }
+        },
+        modifier = modifier.fillMaxWidth(),
+    )
 }
