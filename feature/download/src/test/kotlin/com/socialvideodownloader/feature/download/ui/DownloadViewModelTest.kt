@@ -323,6 +323,48 @@ class DownloadViewModelTest {
     }
 
     @Test
+    fun `PrefillUrl in Idle state sets clipboardUrl and currentUrl`() = runTest {
+        coEvery { extractVideoInfo(any()) } returns Result.success(testMetadata)
+
+        viewModel.uiState.test {
+            assertTrue(awaitItem() is DownloadUiState.Idle)
+
+            viewModel.onIntent(DownloadIntent.PrefillUrl("https://youtube.com/watch?v=prefill"))
+
+            val idle = awaitItem() as DownloadUiState.Idle
+            assertEquals("https://youtube.com/watch?v=prefill", idle.clipboardUrl)
+
+            // currentUrl must also be set — ExtractClicked on non-blank url should proceed
+            viewModel.onIntent(DownloadIntent.ExtractClicked)
+            assertTrue(awaitItem() is DownloadUiState.Extracting)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `PrefillUrl while Extracting does not overwrite state`() = runTest {
+        coEvery { extractVideoInfo(any()) } coAnswers {
+            kotlinx.coroutines.delay(10_000)
+            Result.success(testMetadata)
+        }
+
+        viewModel.onIntent(DownloadIntent.UrlChanged("https://youtube.com/watch?v=test"))
+        viewModel.onIntent(DownloadIntent.ExtractClicked)
+        advanceUntilIdle() // moves to Extracting (coroutine suspended waiting for delay)
+
+        viewModel.uiState.test {
+            val extracting = awaitItem()
+            assertTrue(extracting is DownloadUiState.Extracting)
+
+            viewModel.onIntent(DownloadIntent.PrefillUrl("https://youtube.com/watch?v=prefill"))
+
+            // State must remain Extracting — PrefillUrl should be a no-op
+            expectNoEvents()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun `service state Cancelled restores FormatSelection with original formatId`() = runTest {
         coEvery { extractVideoInfo(any()) } returns Result.success(testMetadata)
 

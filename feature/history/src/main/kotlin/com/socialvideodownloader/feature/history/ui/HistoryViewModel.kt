@@ -83,8 +83,10 @@ class HistoryViewModel @Inject constructor(
             when {
                 item.status == DownloadStatus.FAILED ->
                     _effect.emit(HistoryEffect.RetryDownload(item.sourceUrl))
-                item.status == DownloadStatus.COMPLETED && item.isFileAccessible ->
-                    _effect.emit(HistoryEffect.OpenContent(item.contentUri!!))
+                item.status == DownloadStatus.COMPLETED && item.isFileAccessible -> {
+                    val uri = item.contentUri ?: return@launch
+                    _effect.emit(HistoryEffect.OpenContent(uri))
+                }
                 else ->
                     _effect.emit(HistoryEffect.ShowMessage(R.string.history_file_unavailable))
             }
@@ -95,7 +97,8 @@ class HistoryViewModel @Inject constructor(
         val item = (uiState.value as? HistoryUiState.Content)?.items?.find { it.id == itemId } ?: return
         viewModelScope.launch {
             if (item.isFileAccessible) {
-                _effect.emit(HistoryEffect.ShareContent(item.contentUri!!))
+                val uri = item.contentUri ?: return@launch
+                _effect.emit(HistoryEffect.ShareContent(uri))
             } else {
                 _effect.emit(HistoryEffect.ShowMessage(R.string.history_file_unavailable))
             }
