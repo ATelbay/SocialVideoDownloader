@@ -175,11 +175,7 @@ private fun DownloadScreenContent(
                             IconButton(onClick = onToggleTheme) {
                                 Icon(
                                     imageVector = if (isDark) Icons.Outlined.LightMode else Icons.Outlined.DarkMode,
-                                    contentDescription = if (isDark) {
-                                        stringResource(R.string.theme_toggle_light)
-                                    } else {
-                                        stringResource(R.string.theme_toggle_dark)
-                                    },
+                                    contentDescription = if (isDark) "Switch to light mode" else "Switch to dark mode",
                                     tint = iconColor,
                                 )
                             }

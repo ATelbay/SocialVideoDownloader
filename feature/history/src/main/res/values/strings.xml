@@ -44,4 +44,9 @@
 
     <!-- Delete dialog -->
     <string name="history_delete_checkbox_label">Also delete file from storage</string>
+
+    <!-- UI Redesign strings -->
+    <string name="history_start_downloading">Start Downloading</string>
+    <string name="history_empty_title_new">No downloads yet</string>
+    <string name="history_empty_description_new">Downloaded videos will appear here. Start by pasting a video link!</string>
 </resources>

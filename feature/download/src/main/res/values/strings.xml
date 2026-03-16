@@ -75,7 +75,21 @@
     <string name="download_speed_label">SPEED</string>
     <string name="download_eta_label">ETA</string>
 
-    <!-- Theme toggle -->
-    <string name="theme_toggle_dark">Switch to dark mode</string>
-    <string name="theme_toggle_light">Switch to light mode</string>
+    <!-- UI Redesign strings -->
+    <string name="download_extract_video">Extract Video</string>
+    <string name="download_supported_platforms_label">SUPPORTED PLATFORMS</string>
+    <string name="download_video_quality_label">VIDEO QUALITY</string>
+    <string name="download_audio_quality_label">AUDIO QUALITY</string>
+    <string name="download_selected_format">Selected Format</string>
+    <string name="download_downloading_status">Downloading video…</string>
+    <string name="download_extracting_status">Extracting video info…</string>
+    <string name="download_cancel_download">Cancel Download</string>
+    <string name="download_complete_message">Download Complete!</string>
+    <string name="download_saved_message">Saved to your Downloads folder</string>
+    <string name="download_new_download">New Download</string>
+    <string name="download_speed">Speed</string>
+    <string name="download_eta">ETA</string>
+    <string name="download_size">Size</string>
+    <string name="download_title_extracting">Extracting…</string>
+    <string name="download_url_placeholder">https://…</string>
 </resources>

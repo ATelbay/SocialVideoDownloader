@@ -6,4 +6,12 @@
     <string name="status_pending">Pending</string>
     <string name="status_queued">Queued</string>
     <string name="status_cancelled">Cancelled</string>
+
+    <!-- Platform abbreviations -->
+    <string name="platform_abbr_youtube">YT</string>
+    <string name="platform_abbr_instagram">IG</string>
+    <string name="platform_abbr_tiktok">TT</string>
+    <string name="platform_abbr_twitter">X</string>
+    <string name="platform_abbr_vimeo">VI</string>
+    <string name="platform_abbr_facebook">FB</string>
 </resources>
