@@ -25,7 +25,7 @@ class SettingsViewModel @Inject constructor(
             val next = when (current) {
                 ThemeMode.SYSTEM -> ThemeMode.DARK
                 ThemeMode.DARK -> ThemeMode.LIGHT
-                ThemeMode.LIGHT -> ThemeMode.DARK
+                ThemeMode.LIGHT -> ThemeMode.SYSTEM
             }
             settingsRepository.setThemeMode(next)
         }
