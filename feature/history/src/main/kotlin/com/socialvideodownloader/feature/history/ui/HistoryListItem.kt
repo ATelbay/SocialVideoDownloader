@@ -2,8 +2,12 @@ package com.socialvideodownloader.feature.history.ui
 
 import android.text.format.DateUtils
 import android.text.format.Formatter
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,20 +18,27 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.socialvideodownloader.core.domain.model.DownloadStatus
+import com.socialvideodownloader.core.ui.components.PlatformBadge
+import com.socialvideodownloader.core.ui.components.StatusBadge
+import com.socialvideodownloader.core.ui.theme.AppShapesInstance
+import com.socialvideodownloader.core.ui.tokens.PlatformColors
+import com.socialvideodownloader.core.ui.tokens.Spacing
 import com.socialvideodownloader.feature.history.R
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -39,102 +50,103 @@ fun HistoryListItemRow(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-
     val isDimmed = item.status == DownloadStatus.FAILED || !item.isFileAccessible
-    Row(
+
+    Surface(
+        shape = AppShapesInstance.large,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = modifier
             .fillMaxWidth()
             .alpha(if (isDimmed) 0.6f else 1f)
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
     ) {
-        AsyncImage(
-            model = item.thumbnailUrl,
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .size(width = 80.dp, height = 60.dp)
-                .clip(RoundedCornerShape(4.dp)),
-        )
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = item.title,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = item.formatLabel ?: stringResource(R.string.history_format_unknown),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // Compact thumbnail with platform badge overlay
+            val platformName = PlatformColors.nameFromUrl(item.contentUri ?: "")
+            Box(modifier = Modifier.size(width = 72.dp, height = 54.dp)) {
+                AsyncImage(
+                    model = item.thumbnailUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clip(AppShapesInstance.small),
                 )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                val (statusLabel, statusColor) = statusLabelAndColor(item.status)
-                Text(
-                    text = statusLabel,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = statusColor,
-                )
+                if (platformName != null) {
+                    PlatformBadge(
+                        platformName = platformName,
+                        platformColor = PlatformColors.forPlatform(platformName),
+                        modifier = Modifier.align(Alignment.BottomEnd),
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.width(Spacing.ListItemInternalGap))
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f)) {
+                // Title: 13sp / weight 600, 2-line clamp
                 Text(
-                    text = DateUtils.getRelativeTimeSpanString(
-                        item.createdAt,
-                        System.currentTimeMillis(),
-                        DateUtils.MINUTE_IN_MILLIS,
-                    ).toString(),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = item.title,
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
 
-                if (item.fileSizeBytes != null) {
-                    Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
+
+                // Format tag + StatusBadge row
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    val formatLabel = item.formatLabel
+                    if (formatLabel != null) {
+                        Text(
+                            text = formatLabel,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                                .padding(horizontal = 6.dp, vertical = 2.dp),
+                        )
+                    }
+                    StatusBadge(status = item.status)
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // Timestamp + file size row (Caption = bodySmall)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
                     Text(
-                        text = Formatter.formatFileSize(context, item.fileSizeBytes),
-                        style = MaterialTheme.typography.labelSmall,
+                        text = DateUtils.getRelativeTimeSpanString(
+                            item.createdAt,
+                            System.currentTimeMillis(),
+                            DateUtils.MINUTE_IN_MILLIS,
+                        ).toString(),
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    if (item.fileSizeBytes != null) {
+                        Text(
+                            text = Formatter.formatFileSize(context, item.fileSizeBytes),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
         }
     }
 }
 
-@Composable
-private fun statusLabelAndColor(status: DownloadStatus): Pair<String, Color> {
-    return when (status) {
-        DownloadStatus.COMPLETED -> Pair(
-            stringResource(R.string.history_status_completed),
-            MaterialTheme.colorScheme.primary,
-        )
-        DownloadStatus.FAILED -> Pair(
-            stringResource(R.string.history_status_failed),
-            MaterialTheme.colorScheme.error,
-        )
-        DownloadStatus.DOWNLOADING -> Pair(
-            stringResource(R.string.history_status_downloading),
-            MaterialTheme.colorScheme.tertiary,
-        )
-        DownloadStatus.PENDING, DownloadStatus.QUEUED -> Pair(
-            stringResource(R.string.history_status_pending),
-            MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        DownloadStatus.CANCELLED -> Pair(
-            stringResource(R.string.history_status_cancelled),
-            MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}

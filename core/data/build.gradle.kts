@@ -17,6 +17,7 @@ dependencies {
     implementation(project(":core:domain"))
 
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.androidx.datastore.preferences)
 
     implementation(libs.youtubedl.android.library)
     implementation(libs.youtubedl.android.ffmpeg)

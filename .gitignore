@@ -7,6 +7,7 @@
 /.idea/workspace.xml
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
+/.idea/misc.xml
 .DS_Store
 build/
 /captures
@@ -14,6 +15,10 @@ build/
 .cxx
 local.properties
 firebase-debug.log
+
+# Figma export artifacts
+/components*/
+theme.css
 
 # Local Codex runtime state
 /.codex/*

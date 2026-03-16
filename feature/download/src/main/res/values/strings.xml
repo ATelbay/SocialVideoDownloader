@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- URL Input -->
-    <string name="download_url_hint">Paste video URL here</string>
     <string name="download_extract_button">Extract</string>
     <string name="download_extracting">Extracting video info…</string>
 
@@ -16,7 +15,6 @@
     <string name="download_cancel">Cancel</string>
 
     <!-- Download Complete -->
-    <string name="download_complete">Download complete</string>
     <string name="download_open">Open</string>
     <string name="download_share">Share</string>
     <string name="download_new">New Download</string>
@@ -37,10 +35,6 @@
     <string name="url_input_placeholder">Paste video URL here</string>
     <string name="url_input_extract_button">Extract</string>
     <string name="video_info_duration_format">%1$02d:%2$02d</string>
-    <string name="download_progress_percent">%1$d%%</string>
-    <string name="download_progress_speed_kb">%.1f KB/s</string>
-    <string name="download_progress_speed_mb">%.1f MB/s</string>
-    <string name="download_progress_eta">ETA %1$02d:%2$02d</string>
     <string name="download_progress_cancel">Cancel</string>
 
     <!-- Notifications -->
@@ -48,4 +42,40 @@
     <string name="notification_speed_eta">%1$s · ETA %2$s</string>
     <string name="notification_download_complete">Download complete</string>
     <string name="notification_download_failed">Download failed</string>
+
+    <!-- Screen titles -->
+    <string name="download_screen_title">Video Downloader</string>
+    <string name="download_title_select_format">Select Format</string>
+    <string name="download_title_downloading">Downloading</string>
+    <string name="download_title_complete">Complete</string>
+    <string name="download_title_error">Error</string>
+
+    <!-- Idle state -->
+    <string name="download_hero_title">Download Videos</string>
+    <string name="download_hero_subtitle">Paste any social media URL to get started</string>
+    <string name="download_paste_button">Paste</string>
+    <string name="download_supported_platforms">Supported Platforms</string>
+
+    <!-- Extracting state -->
+    <string name="download_extracting_title">Extracting video info…</string>
+    <string name="download_extracting_subtitle">Fetching available formats</string>
+
+    <!-- Format selection -->
+    <string name="download_select_quality">SELECT QUALITY</string>
+    <string name="download_format_info_unknown_size">Unknown size</string>
+
+    <!-- Complete state -->
+    <string name="download_complete_title">Download complete!</string>
+    <string name="download_complete_subtitle">Your video has been saved</string>
+
+    <!-- Error state -->
+    <string name="download_error_title">Failed to extract</string>
+
+    <!-- Speed/ETA labels -->
+    <string name="download_speed_label">SPEED</string>
+    <string name="download_eta_label">ETA</string>
+
+    <!-- Theme toggle -->
+    <string name="theme_toggle_dark">Switch to dark mode</string>
+    <string name="theme_toggle_light">Switch to light mode</string>
 </resources>

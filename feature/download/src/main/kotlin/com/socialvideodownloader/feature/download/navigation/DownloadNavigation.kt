@@ -8,8 +8,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 object DownloadRoute
 
-fun NavGraphBuilder.downloadScreen() {
+fun NavGraphBuilder.downloadScreen(isDarkTheme: Boolean, onToggleTheme: () -> Unit = {}) {
     composable<DownloadRoute> {
-        DownloadScreen()
+        DownloadScreen(isDarkTheme = isDarkTheme, onToggleTheme = onToggleTheme)
     }
 }
