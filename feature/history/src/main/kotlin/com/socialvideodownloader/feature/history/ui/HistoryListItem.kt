@@ -66,7 +66,7 @@ fun HistoryListItemRow(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // Compact thumbnail with platform badge overlay
-            val platformName = extractPlatformName(item.contentUri ?: "")
+            val platformName = PlatformColors.nameFromUrl(item.contentUri ?: "")
             Box(modifier = Modifier.size(width = 72.dp, height = 54.dp)) {
                 AsyncImage(
                     model = item.thumbnailUrl,
@@ -150,14 +150,3 @@ fun HistoryListItemRow(
     }
 }
 
-private fun extractPlatformName(url: String): String? {
-    return when {
-        url.contains("youtube.com", ignoreCase = true) || url.contains("youtu.be", ignoreCase = true) -> "YouTube"
-        url.contains("instagram.com", ignoreCase = true) -> "Instagram"
-        url.contains("tiktok.com", ignoreCase = true) -> "TikTok"
-        url.contains("twitter.com", ignoreCase = true) || url.contains("x.com", ignoreCase = true) -> "Twitter"
-        url.contains("vimeo.com", ignoreCase = true) -> "Vimeo"
-        url.contains("facebook.com", ignoreCase = true) || url.contains("fb.watch", ignoreCase = true) -> "Facebook"
-        else -> null
-    }
-}

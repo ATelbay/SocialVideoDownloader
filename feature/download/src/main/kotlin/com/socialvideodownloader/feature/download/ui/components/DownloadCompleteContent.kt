@@ -45,13 +45,14 @@ fun DownloadCompleteContent(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        val platformName = PlatformColors.nameFromUrl(metadata.sourceUrl)
         VideoInfoCard(
             thumbnailUrl = metadata.thumbnailUrl,
             title = metadata.title,
             uploaderName = metadata.author,
             durationSeconds = metadata.durationSeconds,
-            platformName = extractPlatformName(metadata.sourceUrl),
-            platformColor = PlatformColors.forPlatform(metadata.sourceUrl),
+            platformName = platformName,
+            platformColor = PlatformColors.forPlatform(platformName),
             compact = false,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -119,14 +120,3 @@ fun DownloadCompleteContent(
     }
 }
 
-private fun extractPlatformName(url: String): String? {
-    return when {
-        url.contains("youtube.com", ignoreCase = true) || url.contains("youtu.be", ignoreCase = true) -> "YouTube"
-        url.contains("instagram.com", ignoreCase = true) -> "Instagram"
-        url.contains("tiktok.com", ignoreCase = true) -> "TikTok"
-        url.contains("twitter.com", ignoreCase = true) || url.contains("x.com", ignoreCase = true) -> "Twitter"
-        url.contains("vimeo.com", ignoreCase = true) -> "Vimeo"
-        url.contains("facebook.com", ignoreCase = true) || url.contains("fb.watch", ignoreCase = true) -> "Facebook"
-        else -> null
-    }
-}

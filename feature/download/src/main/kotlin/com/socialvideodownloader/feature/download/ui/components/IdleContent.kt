@@ -35,18 +35,6 @@ import com.socialvideodownloader.feature.download.R
 
 private val supportedPlatforms = listOf("YouTube", "Instagram", "TikTok", "Twitter", "Vimeo", "Facebook")
 
-private fun detectPlatformFromUrl(url: String): String? {
-    return when {
-        url.contains("youtube.com", ignoreCase = true) || url.contains("youtu.be", ignoreCase = true) -> "YouTube"
-        url.contains("instagram.com", ignoreCase = true) -> "Instagram"
-        url.contains("tiktok.com", ignoreCase = true) -> "TikTok"
-        url.contains("twitter.com", ignoreCase = true) || url.contains("x.com", ignoreCase = true) -> "Twitter"
-        url.contains("vimeo.com", ignoreCase = true) -> "Vimeo"
-        url.contains("facebook.com", ignoreCase = true) || url.contains("fb.watch", ignoreCase = true) -> "Facebook"
-        else -> null
-    }
-}
-
 @Composable
 fun IdleContent(
     url: String,
@@ -54,7 +42,7 @@ fun IdleContent(
     onExtractClicked: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val detectedPlatform = remember(url) { if (url.isNotBlank()) detectPlatformFromUrl(url) else null }
+    val detectedPlatform = remember(url) { if (url.isNotBlank()) PlatformColors.nameFromUrl(url) else null }
 
     Column(
         modifier = modifier.fillMaxWidth(),

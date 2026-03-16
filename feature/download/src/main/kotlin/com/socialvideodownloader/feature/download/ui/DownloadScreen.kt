@@ -228,8 +228,8 @@ private fun DownloadScreenContent(
                             title = targetState.metadata.title,
                             uploaderName = targetState.metadata.author,
                             durationSeconds = targetState.metadata.durationSeconds,
-                            platformName = platformFromUrl(targetState.metadata.sourceUrl),
-                            platformColor = platformFromUrl(targetState.metadata.sourceUrl)
+                            platformName = PlatformColors.nameFromUrl(targetState.metadata.sourceUrl),
+                            platformColor = PlatformColors.nameFromUrl(targetState.metadata.sourceUrl)
                                 ?.let { PlatformColors.forPlatform(it) },
                             compact = false,
                         )
@@ -248,8 +248,8 @@ private fun DownloadScreenContent(
                             title = targetState.metadata.title,
                             uploaderName = targetState.metadata.author,
                             durationSeconds = targetState.metadata.durationSeconds,
-                            platformName = platformFromUrl(targetState.metadata.sourceUrl),
-                            platformColor = platformFromUrl(targetState.metadata.sourceUrl)
+                            platformName = PlatformColors.nameFromUrl(targetState.metadata.sourceUrl),
+                            platformColor = PlatformColors.nameFromUrl(targetState.metadata.sourceUrl)
                                 ?.let { PlatformColors.forPlatform(it) },
                             compact = false,
                         )
@@ -282,12 +282,3 @@ private fun DownloadScreenContent(
     }
 }
 
-private fun platformFromUrl(url: String): String? = when {
-    url.contains("youtube.com", ignoreCase = true) || url.contains("youtu.be", ignoreCase = true) -> "YouTube"
-    url.contains("instagram.com", ignoreCase = true) -> "Instagram"
-    url.contains("tiktok.com", ignoreCase = true) -> "TikTok"
-    url.contains("twitter.com", ignoreCase = true) || url.contains("x.com", ignoreCase = true) -> "Twitter"
-    url.contains("vimeo.com", ignoreCase = true) -> "Vimeo"
-    url.contains("facebook.com", ignoreCase = true) || url.contains("fb.watch", ignoreCase = true) -> "Facebook"
-    else -> null
-}
