@@ -2,23 +2,17 @@ package com.socialvideodownloader.feature.history.ui
 
 import android.text.format.DateUtils
 import android.text.format.Formatter
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -27,7 +21,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -37,9 +30,14 @@ import com.socialvideodownloader.core.domain.model.DownloadStatus
 import com.socialvideodownloader.core.ui.components.PlatformBadge
 import com.socialvideodownloader.core.ui.components.StatusBadge
 import com.socialvideodownloader.core.ui.theme.AppShapesInstance
+import com.socialvideodownloader.core.ui.theme.SvdBorder
+import com.socialvideodownloader.core.ui.theme.SvdSurface
+import com.socialvideodownloader.core.ui.theme.SvdSurfaceElevated
+import com.socialvideodownloader.core.ui.theme.SvdText
+import com.socialvideodownloader.core.ui.theme.SvdTextSecondary
+import com.socialvideodownloader.core.ui.theme.SvdTextTertiary
 import com.socialvideodownloader.core.ui.tokens.PlatformColors
 import com.socialvideodownloader.core.ui.tokens.Spacing
-import com.socialvideodownloader.feature.history.R
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -50,24 +48,24 @@ fun HistoryListItemRow(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val isDimmed = item.status == DownloadStatus.FAILED || !item.isFileAccessible
+    val isFailed = item.status == DownloadStatus.FAILED
 
-    Surface(
-        shape = AppShapesInstance.large,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .alpha(if (isDimmed) 0.6f else 1f)
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+            .alpha(if (isFailed) 0.6f else 1f)
+            .clip(AppShapesInstance.large)
+            .background(SvdSurface)
+            .border(1.dp, SvdBorder, AppShapesInstance.large)
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+            .padding(12.dp),
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Compact thumbnail with platform badge overlay
+            // Thumbnail with platform badge overlay at bottom-start
             val platformName = PlatformColors.nameFromUrl(item.sourceUrl)
-            Box(modifier = Modifier.size(width = 72.dp, height = 54.dp)) {
+            Box(modifier = Modifier.size(width = Spacing.ThumbnailCompactWidth, height = Spacing.ThumbnailCompactHeight)) {
                 AsyncImage(
                     model = item.thumbnailUrl,
                     contentDescription = null,
@@ -80,28 +78,34 @@ fun HistoryListItemRow(
                     PlatformBadge(
                         platformName = platformName,
                         platformColor = PlatformColors.forPlatform(platformName),
-                        modifier = Modifier.align(Alignment.BottomEnd),
+                        abbreviation = true,
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(start = 2.dp, bottom = 2.dp),
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(Spacing.ListItemInternalGap))
-
-            Column(modifier = Modifier.weight(1f)) {
-                // Title: 13sp / weight 600, 2-line clamp
+            // Info column
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = Spacing.InnerGap),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                // Title
                 Text(
                     text = item.title,
-                    style = MaterialTheme.typography.labelMedium.copy(
+                    style = androidx.compose.material3.MaterialTheme.typography.titleSmall.copy(
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
                     ),
+                    color = SvdText,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
 
-                Spacer(modifier = Modifier.height(6.dp))
-
-                // Format tag + StatusBadge row
+                // Format badge + StatusBadge row
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -110,23 +114,21 @@ fun HistoryListItemRow(
                     if (formatLabel != null) {
                         Text(
                             text = formatLabel,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = androidx.compose.material3.MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                            color = SvdTextSecondary,
                             modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                                .padding(horizontal = 6.dp, vertical = 2.dp),
+                                .clip(AppShapesInstance.badge)
+                                .background(SvdSurfaceElevated)
+                                .padding(horizontal = 8.dp, vertical = 3.dp),
                         )
                     }
                     StatusBadge(status = item.status)
                 }
 
-                Spacer(modifier = Modifier.height(4.dp))
-
-                // Timestamp + file size row (Caption = bodySmall)
+                // Timestamp + separator + file size row
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Text(
                         text = DateUtils.getRelativeTimeSpanString(
@@ -134,19 +136,26 @@ fun HistoryListItemRow(
                             System.currentTimeMillis(),
                             DateUtils.MINUTE_IN_MILLIS,
                         ).toString(),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = androidx.compose.material3.MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                        color = SvdTextTertiary,
                     )
-                    if (item.fileSizeBytes != null) {
-                        Text(
-                            text = Formatter.formatFileSize(context, item.fileSizeBytes),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                    Text(
+                        text = "·",
+                        style = androidx.compose.material3.MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                        color = SvdTextTertiary,
+                    )
+                    val sizeText = if (item.fileSizeBytes != null && !isFailed) {
+                        Formatter.formatFileSize(context, item.fileSizeBytes)
+                    } else {
+                        "—"
                     }
+                    Text(
+                        text = sizeText,
+                        style = androidx.compose.material3.MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                        color = SvdTextTertiary,
+                    )
                 }
             }
         }
     }
 }
-
