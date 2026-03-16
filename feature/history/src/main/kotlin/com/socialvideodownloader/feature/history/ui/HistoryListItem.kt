@@ -66,7 +66,7 @@ fun HistoryListItemRow(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // Compact thumbnail with platform badge overlay
-            val platformName = PlatformColors.nameFromUrl(item.contentUri ?: "")
+            val platformName = PlatformColors.nameFromUrl(item.sourceUrl)
             Box(modifier = Modifier.size(width = 72.dp, height = 54.dp)) {
                 AsyncImage(
                     model = item.thumbnailUrl,

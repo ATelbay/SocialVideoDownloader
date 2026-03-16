@@ -35,6 +35,7 @@ import com.socialvideodownloader.feature.history.R
 @Composable
 fun HistoryBottomSheet(
     title: String,
+    showShare: Boolean,
     onShare: () -> Unit,
     onDelete: () -> Unit,
     onDismiss: () -> Unit,
@@ -75,27 +76,29 @@ fun HistoryBottomSheet(
 
             HorizontalDivider()
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(onClick = onShare)
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Share,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurface,
-                )
-                Spacer(modifier = Modifier.width(16.dp))
-                Text(
-                    text = stringResource(R.string.history_bottom_sheet_share),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-            }
+            if (showShare) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onShare)
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Share,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(
+                        text = stringResource(R.string.history_bottom_sheet_share),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
 
-            HorizontalDivider()
+                HorizontalDivider()
+            }
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,

@@ -57,7 +57,7 @@ class MainActivity : ComponentActivity() {
                             NavigationBarItem(
                                 selected = currentDestination?.hasRoute<DownloadRoute>() == true,
                                 onClick = {
-                                    navController.navigate(DownloadRoute) {
+                                    navController.navigate(DownloadRoute()) {
                                         popUpTo(navController.graph.startDestinationId) { saveState = true }
                                         launchSingleTop = true
                                         restoreState = true

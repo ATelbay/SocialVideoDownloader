@@ -7,6 +7,7 @@ data class HistoryListItem(
     val title: String,
     val formatLabel: String?,
     val thumbnailUrl: String?,
+    val sourceUrl: String,
     val status: DownloadStatus,
     val createdAt: Long,
     val fileSizeBytes: Long?,

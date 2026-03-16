@@ -65,10 +65,17 @@ fun DownloadScreen(
     isDarkTheme: Boolean,
     viewModel: DownloadViewModel = hiltViewModel(),
     onToggleTheme: () -> Unit = {},
+    initialUrl: String? = null,
     modifier: Modifier = Modifier,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+
+    LaunchedEffect(initialUrl) {
+        if (initialUrl != null) {
+            viewModel.onIntent(DownloadIntent.PrefillUrl(initialUrl))
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->

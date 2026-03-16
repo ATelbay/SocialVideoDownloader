@@ -17,10 +17,18 @@ fun AppNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = DownloadRoute,
+        startDestination = DownloadRoute(),
         modifier = modifier,
     ) {
         downloadScreen(isDarkTheme = isDarkTheme, onToggleTheme = onToggleTheme)
-        historyScreen()
+        historyScreen(
+            onNavigateToDownload = { initialUrl ->
+                navController.navigate(DownloadRoute(initialUrl = initialUrl)) {
+                    popUpTo(navController.graph.startDestinationId) { saveState = true }
+                    launchSingleTop = true
+                    restoreState = false
+                }
+            },
+        )
     }
 }

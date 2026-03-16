@@ -21,6 +21,7 @@ class ObserveHistoryItemsUseCase @Inject constructor(
                     title = record.videoTitle,
                     formatLabel = record.formatLabel,
                     thumbnailUrl = record.thumbnailUrl,
+                    sourceUrl = record.sourceUrl,
                     status = record.status,
                     createdAt = record.createdAt,
                     fileSizeBytes = record.fileSizeBytes,

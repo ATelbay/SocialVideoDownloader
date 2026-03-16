@@ -2,6 +2,7 @@ package com.socialvideodownloader.feature.download.service
 
 import android.app.Service
 import android.content.Intent
+import android.os.Build
 import android.os.IBinder
 import com.socialvideodownloader.core.domain.di.IoDispatcher
 import com.socialvideodownloader.core.domain.model.DownloadProgress
@@ -142,7 +143,8 @@ class DownloadService : Service() {
                         videoTitle = request.videoTitle,
                         thumbnailUrl = request.thumbnailUrl,
                         formatLabel = request.formatLabel,
-                        filePath = savedUri,
+                        filePath = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) savedUri else null,
+                        mediaStoreUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) savedUri else null,
                         status = DownloadStatus.COMPLETED,
                         createdAt = System.currentTimeMillis(),
                         completedAt = System.currentTimeMillis(),
