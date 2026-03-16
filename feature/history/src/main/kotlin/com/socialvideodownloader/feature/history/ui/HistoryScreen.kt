@@ -42,6 +42,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.socialvideodownloader.core.domain.model.DownloadStatus
 import com.socialvideodownloader.core.ui.theme.AppShapesInstance
 import com.socialvideodownloader.feature.history.R
 import com.socialvideodownloader.feature.history.components.HistoryBottomSheet
@@ -50,6 +51,7 @@ import com.socialvideodownloader.feature.history.components.HistoryDeleteDialog
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
+    onNavigateToDownload: (initialUrl: String) -> Unit,
     viewModel: HistoryViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
 ) {
@@ -94,6 +96,9 @@ fun HistoryScreen(
                     } catch (e: Exception) {
                         snackbarHostState.showSnackbar(context.getString(R.string.history_share_error))
                     }
+                }
+                is HistoryEffect.RetryDownload -> {
+                    onNavigateToDownload(effect.sourceUrl)
                 }
             }
         }
@@ -225,6 +230,7 @@ fun HistoryScreen(
             if (selectedItem != null) {
                 HistoryBottomSheet(
                     title = selectedItem.title,
+                    showShare = selectedItem.status != DownloadStatus.FAILED,
                     onShare = { viewModel.onIntent(HistoryIntent.ShareClicked(openItemId)) },
                     onDelete = { viewModel.onIntent(HistoryIntent.DeleteItemClicked(openItemId)) },
                     onDismiss = { viewModel.onIntent(HistoryIntent.DismissItemMenu) },

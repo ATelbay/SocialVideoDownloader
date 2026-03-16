@@ -80,10 +80,13 @@ class HistoryViewModel @Inject constructor(
     private fun handleItemClicked(itemId: Long) {
         val item = (uiState.value as? HistoryUiState.Content)?.items?.find { it.id == itemId } ?: return
         viewModelScope.launch {
-            if (item.status == DownloadStatus.COMPLETED && item.isFileAccessible) {
-                _effect.emit(HistoryEffect.OpenContent(item.contentUri!!))
-            } else {
-                _effect.emit(HistoryEffect.ShowMessage(R.string.history_file_unavailable))
+            when {
+                item.status == DownloadStatus.FAILED ->
+                    _effect.emit(HistoryEffect.RetryDownload(item.sourceUrl))
+                item.status == DownloadStatus.COMPLETED && item.isFileAccessible ->
+                    _effect.emit(HistoryEffect.OpenContent(item.contentUri!!))
+                else ->
+                    _effect.emit(HistoryEffect.ShowMessage(R.string.history_file_unavailable))
             }
         }
     }
