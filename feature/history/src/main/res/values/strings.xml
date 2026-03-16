@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="history_screen_title">History</string>
     <string name="history_empty_message">No downloads yet</string>
     <string name="history_search_hint">Search history…</string>
     <string name="history_no_results">No results found</string>

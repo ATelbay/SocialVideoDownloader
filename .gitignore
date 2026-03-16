@@ -15,3 +15,7 @@ build/
 local.properties
 firebase-debug.log
 
+# Figma export artifacts
+/components*/
+theme.css
+

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- URL Input -->
-    <string name="download_url_hint">Paste video URL here</string>
     <string name="download_extract_button">Extract</string>
     <string name="download_extracting">Extracting video info…</string>
 
@@ -16,7 +15,6 @@
     <string name="download_cancel">Cancel</string>
 
     <!-- Download Complete -->
-    <string name="download_complete">Download complete</string>
     <string name="download_open">Open</string>
     <string name="download_share">Share</string>
     <string name="download_new">New Download</string>
@@ -37,10 +35,6 @@
     <string name="url_input_placeholder">Paste video URL here</string>
     <string name="url_input_extract_button">Extract</string>
     <string name="video_info_duration_format">%1$02d:%2$02d</string>
-    <string name="download_progress_percent">%1$d%%</string>
-    <string name="download_progress_speed_kb">%.1f KB/s</string>
-    <string name="download_progress_speed_mb">%.1f MB/s</string>
-    <string name="download_progress_eta">ETA %1$02d:%2$02d</string>
     <string name="download_progress_cancel">Cancel</string>
 
     <!-- Notifications -->
