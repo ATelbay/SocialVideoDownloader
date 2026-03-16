@@ -1,5 +1,6 @@
 package com.socialvideodownloader
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -10,6 +11,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.socialvideodownloader.core.ui.components.PillNavigationBar
@@ -22,12 +24,16 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    private var navController: NavHostController? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val sharedUrl = getSharedUrl(intent)
         setContent {
             SocialVideoDownloaderTheme {
-                val navController = rememberNavController()
+                val navController = rememberNavController().also { this@MainActivity.navController = it }
                 val currentBackStack by navController.currentBackStackEntryAsState()
                 val currentDestination = currentBackStack?.destination
 
@@ -61,10 +67,26 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
                     AppNavHost(
                         navController = navController,
+                        startDestination = DownloadRoute(initialUrl = sharedUrl),
                         modifier = Modifier.padding(innerPadding),
                     )
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        val url = getSharedUrl(intent) ?: return
+        navController?.navigate(DownloadRoute(initialUrl = url)) {
+            popUpTo(navController!!.graph.startDestinationId) { saveState = true }
+            launchSingleTop = true
+            restoreState = false
+        }
+    }
+
+    private fun getSharedUrl(intent: Intent): String? {
+        if (intent.action != Intent.ACTION_SEND) return null
+        return intent.getStringExtra(Intent.EXTRA_TEXT)
     }
 }

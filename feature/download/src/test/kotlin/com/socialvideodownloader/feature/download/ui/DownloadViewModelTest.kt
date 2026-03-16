@@ -6,7 +6,6 @@ import com.socialvideodownloader.core.domain.model.DownloadProgress
 import com.socialvideodownloader.core.domain.model.VideoFormatOption
 import com.socialvideodownloader.core.domain.model.VideoMetadata
 import com.socialvideodownloader.core.domain.usecase.ExtractVideoInfoUseCase
-import com.socialvideodownloader.core.domain.usecase.GetClipboardUrlUseCase
 import com.socialvideodownloader.feature.download.service.DownloadServiceState
 import com.socialvideodownloader.feature.download.service.DownloadServiceStateHolder
 import io.mockk.coEvery
@@ -32,7 +31,6 @@ class DownloadViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var extractVideoInfo: ExtractVideoInfoUseCase
-    private lateinit var getClipboardUrl: GetClipboardUrlUseCase
     private lateinit var errorMessageMapper: ErrorMessageMapper
     private lateinit var serviceStateHolder: DownloadServiceStateHolder
     private lateinit var context: Context
@@ -70,15 +68,12 @@ class DownloadViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         extractVideoInfo = mockk()
-        getClipboardUrl = mockk()
         errorMessageMapper = mockk()
         serviceStateHolder = DownloadServiceStateHolder()
         context = mockk(relaxed = true)
-        every { getClipboardUrl() } returns null
         every { errorMessageMapper.map(any()) } answers { firstArg<Throwable>().message ?: "Error" }
         viewModel = DownloadViewModel(
             extractVideoInfo = extractVideoInfo,
-            getClipboardUrl = getClipboardUrl,
             errorMessageMapper = errorMessageMapper,
             serviceStateHolder = serviceStateHolder,
             context = context,
@@ -236,29 +231,6 @@ class DownloadViewModelTest {
     }
 
     @Test
-    fun `ClipboardUrlDetected in Idle state sets clipboardUrl`() = runTest {
-        every { getClipboardUrl() } returns "https://youtube.com/watch?v=clipboard"
-        val freshViewModel = DownloadViewModel(
-            extractVideoInfo = extractVideoInfo,
-            getClipboardUrl = getClipboardUrl,
-            errorMessageMapper = errorMessageMapper,
-            serviceStateHolder = serviceStateHolder,
-            context = context,
-            savedStateHandle = androidx.lifecycle.SavedStateHandle(),
-        )
-
-        freshViewModel.uiState.test {
-            val state = awaitItem()
-            assertTrue(state is DownloadUiState.Idle)
-            assertEquals(
-                "https://youtube.com/watch?v=clipboard",
-                (state as DownloadUiState.Idle).clipboardUrl,
-            )
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
     fun `DownloadClicked transitions to Downloading state with correct selectedFormatId`() = runTest {
         coEvery { extractVideoInfo(any()) } returns Result.success(testMetadata)
 
@@ -324,7 +296,7 @@ class DownloadViewModelTest {
     }
 
     @Test
-    fun `PrefillUrl in Idle state sets clipboardUrl and currentUrl`() = runTest {
+    fun `PrefillUrl in Idle state auto-extracts`() = runTest {
         coEvery { extractVideoInfo(any()) } returns Result.success(testMetadata)
 
         viewModel.uiState.test {
@@ -332,18 +304,13 @@ class DownloadViewModelTest {
 
             viewModel.onIntent(DownloadIntent.PrefillUrl("https://youtube.com/watch?v=prefill"))
 
-            val idle = awaitItem() as DownloadUiState.Idle
-            assertEquals("https://youtube.com/watch?v=prefill", idle.clipboardUrl)
-
-            // currentUrl must also be set — ExtractClicked on non-blank url should proceed
-            viewModel.onIntent(DownloadIntent.ExtractClicked)
             assertTrue(awaitItem() is DownloadUiState.Extracting)
             cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
-    fun `PrefillUrl while Extracting does not overwrite state`() = runTest {
+    fun `PrefillUrl while Extracting resets and auto-extracts new URL`() = runTest {
         coEvery { extractVideoInfo(any()) } coAnswers {
             kotlinx.coroutines.delay(10_000)
             Result.success(testMetadata)
@@ -351,16 +318,18 @@ class DownloadViewModelTest {
 
         viewModel.onIntent(DownloadIntent.UrlChanged("https://youtube.com/watch?v=test"))
         viewModel.onIntent(DownloadIntent.ExtractClicked)
-        runCurrent() // processes pending coroutines without advancing past the delay
+        runCurrent()
 
         viewModel.uiState.test {
             val extracting = awaitItem()
             assertTrue(extracting is DownloadUiState.Extracting)
+            assertEquals("https://youtube.com/watch?v=test", (extracting as DownloadUiState.Extracting).url)
 
             viewModel.onIntent(DownloadIntent.PrefillUrl("https://youtube.com/watch?v=prefill"))
 
-            // State must remain Extracting — PrefillUrl should be a no-op
-            expectNoEvents()
+            // State must reset to Extracting with the new URL
+            val newExtracting = awaitItem() as DownloadUiState.Extracting
+            assertEquals("https://youtube.com/watch?v=prefill", newExtracting.url)
             cancelAndIgnoreRemainingEvents()
         }
     }
