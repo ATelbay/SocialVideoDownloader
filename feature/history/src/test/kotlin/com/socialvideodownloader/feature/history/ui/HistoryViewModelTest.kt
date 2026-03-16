@@ -502,6 +502,7 @@ class HistoryViewModelTest {
         title = title,
         formatLabel = null,
         thumbnailUrl = null,
+        sourceUrl = "https://example.com/video",
         status = status,
         createdAt = 0L,
         fileSizeBytes = null,

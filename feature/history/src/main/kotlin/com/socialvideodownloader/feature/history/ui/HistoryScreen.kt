@@ -71,6 +71,7 @@ fun HistoryScreen(
                         val intent = Intent(Intent.ACTION_VIEW).apply {
                             setDataAndType(Uri.parse(effect.contentUri), "video/*")
                             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         }
                         context.startActivity(intent)
                     } catch (e: Exception) {
