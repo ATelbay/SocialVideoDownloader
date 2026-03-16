@@ -92,3 +92,10 @@ io.github.junkfood02.youtubedl-android:aria2c:0.18.+
 - Do NOT create a backend service
 - Do NOT add authentication of any kind
 - Do NOT over-engineer: this is a focused utility, not a framework
+
+## Active Technologies
+- Kotlin 2.2.10 + Jetpack Compose (BOM 2026.03.00), Material 3, Hilt (KSP), Navigation Compose 2.9.7, Coil (005-ui-redesign-dark-theme)
+- No changes (Room + MediaStore unchanged) (005-ui-redesign-dark-theme)
+
+## Recent Changes
+- 005-ui-redesign-dark-theme: Added Kotlin 2.2.10 + Jetpack Compose (BOM 2026.03.00), Material 3, Hilt (KSP), Navigation Compose 2.9.7, Coil
