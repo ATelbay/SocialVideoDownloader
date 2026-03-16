@@ -62,6 +62,7 @@ fun HistoryScreen(
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
+            snackbarHostState.currentSnackbarData?.dismiss()
             when (effect) {
                 is HistoryEffect.ShowMessage -> {
                     snackbarHostState.showSnackbar(context.getString(effect.messageResId))
