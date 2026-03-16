@@ -17,6 +17,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
@@ -350,7 +351,7 @@ class DownloadViewModelTest {
 
         viewModel.onIntent(DownloadIntent.UrlChanged("https://youtube.com/watch?v=test"))
         viewModel.onIntent(DownloadIntent.ExtractClicked)
-        advanceUntilIdle() // moves to Extracting (coroutine suspended waiting for delay)
+        runCurrent() // processes pending coroutines without advancing past the delay
 
         viewModel.uiState.test {
             val extracting = awaitItem()
