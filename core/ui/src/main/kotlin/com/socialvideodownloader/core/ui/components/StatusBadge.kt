@@ -22,8 +22,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.socialvideodownloader.core.domain.model.DownloadStatus
+import com.socialvideodownloader.core.ui.R
 import com.socialvideodownloader.core.ui.theme.AppShapesInstance
 import com.socialvideodownloader.core.ui.theme.extendedColors
 
@@ -43,32 +45,32 @@ fun StatusBadge(
         DownloadStatus.COMPLETED -> Triple(
             MaterialTheme.extendedColors.successContainer,
             MaterialTheme.extendedColors.success,
-            "Completed",
+            stringResource(R.string.status_completed),
         )
         DownloadStatus.FAILED -> Triple(
             MaterialTheme.colorScheme.errorContainer,
             MaterialTheme.colorScheme.error,
-            "Failed",
+            stringResource(R.string.status_failed),
         )
         DownloadStatus.DOWNLOADING -> Triple(
             if (isDark) DownloadingContainerColorDark else DownloadingContainerColor,
             if (isDark) DownloadingContentColorDark else DownloadingContentColor,
-            "Downloading",
+            stringResource(R.string.status_downloading),
         )
         DownloadStatus.PENDING -> Triple(
             MaterialTheme.colorScheme.surfaceVariant,
             MaterialTheme.colorScheme.onSurfaceVariant,
-            "Pending",
+            stringResource(R.string.status_pending),
         )
         DownloadStatus.QUEUED -> Triple(
             MaterialTheme.colorScheme.surfaceVariant,
             MaterialTheme.colorScheme.onSurfaceVariant,
-            "Queued",
+            stringResource(R.string.status_queued),
         )
         DownloadStatus.CANCELLED -> Triple(
             MaterialTheme.colorScheme.surfaceVariant,
             MaterialTheme.colorScheme.onSurfaceVariant,
-            "Cancelled",
+            stringResource(R.string.status_cancelled),
         )
     }
 
