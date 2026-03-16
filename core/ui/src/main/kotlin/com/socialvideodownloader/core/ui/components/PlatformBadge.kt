@@ -1,6 +1,7 @@
 package com.socialvideodownloader.core.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -21,28 +22,51 @@ fun PlatformBadge(
     platformName: String,
     platformColor: Color,
     modifier: Modifier = Modifier,
+    abbreviation: Boolean = false,
 ) {
+    val text = if (abbreviation) PlatformColors.abbreviation(platformName) else platformName
+    val textColor = PlatformColors.textColor(platformName)
+    val shape = if (abbreviation) AppShapesInstance.badge else AppShapesInstance.badgeLg
+    val textStyle = if (abbreviation) {
+        MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp, fontWeight = FontWeight.Bold)
+    } else {
+        MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Bold)
+    }
+    val padding = if (abbreviation) {
+        PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+    } else {
+        PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+    }
+
     Text(
-        text = platformName,
-        style = MaterialTheme.typography.labelSmall.copy(
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-        ),
+        text = text,
+        style = textStyle.copy(color = textColor),
         modifier = modifier
-            .clip(AppShapesInstance.extraLarge)
+            .clip(shape)
             .background(platformColor)
-            .padding(horizontal = 8.dp, vertical = 2.dp),
+            .padding(padding),
     )
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun PlatformBadgePreview() {
+private fun PlatformBadgeFullPreview() {
     SocialVideoDownloaderTheme {
         PlatformBadge(
             platformName = "YouTube",
             platformColor = PlatformColors.YouTube,
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PlatformBadgeAbbreviationPreview() {
+    SocialVideoDownloaderTheme {
+        PlatformBadge(
+            platformName = "TikTok",
+            platformColor = PlatformColors.TikTok,
+            abbreviation = true,
         )
     }
 }

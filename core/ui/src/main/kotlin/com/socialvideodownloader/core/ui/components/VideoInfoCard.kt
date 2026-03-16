@@ -34,6 +34,9 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.socialvideodownloader.core.ui.theme.AppShapesInstance
 import com.socialvideodownloader.core.ui.theme.SocialVideoDownloaderTheme
+import com.socialvideodownloader.core.ui.theme.SvdBorder
+import com.socialvideodownloader.core.ui.theme.SvdSurface
+import com.socialvideodownloader.core.ui.theme.SvdTextSecondary
 import com.socialvideodownloader.core.ui.tokens.PlatformColors
 
 private fun formatDuration(totalSeconds: Int): String {
@@ -91,11 +94,9 @@ private fun FullVideoInfoCard(
     modifier: Modifier = Modifier,
 ) {
     Card(
-        shape = AppShapesInstance.large,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        shape = AppShapesInstance.extraLarge,
+        colors = CardDefaults.cardColors(containerColor = SvdSurface),
+        border = BorderStroke(1.dp, SvdBorder),
         modifier = modifier,
     ) {
         Column {
@@ -110,8 +111,8 @@ private fun FullVideoInfoCard(
                         .height(180.dp)
                         .clip(
                             RoundedCornerShape(
-                                topStart = 16.dp,
-                                topEnd = 16.dp,
+                                topStart = 20.dp,
+                                topEnd = 20.dp,
                                 bottomStart = 0.dp,
                                 bottomEnd = 0.dp,
                             ),
@@ -121,7 +122,7 @@ private fun FullVideoInfoCard(
                 // Play button overlay
                 Box(
                     modifier = Modifier
-                        .size(48.dp)
+                        .size(44.dp)
                         .align(Alignment.Center)
                         .clip(CircleShape)
                         .background(Color(0x80000000)),
@@ -131,48 +132,58 @@ private fun FullVideoInfoCard(
                         imageVector = Icons.Filled.PlayArrow,
                         contentDescription = null,
                         tint = Color.White,
-                        modifier = Modifier.size(24.dp),
+                        modifier = Modifier.size(20.dp),
                     )
                 }
 
-                // Duration badge
+                // Duration badge — bottom-start
                 if (durationSeconds != null) {
                     Text(
                         text = formatDuration(durationSeconds),
-                        style = MaterialTheme.typography.labelSmall.copy(color = Color.White),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White,
+                        ),
                         modifier = Modifier
-                            .align(Alignment.BottomEnd)
+                            .align(Alignment.BottomStart)
                             .padding(8.dp)
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(Color(0xCC000000))
+                            .clip(AppShapesInstance.badgeLg)
+                            .background(Color(0xAA000000))
                             .padding(horizontal = 6.dp, vertical = 2.dp),
                     )
                 }
+
+                // Platform badge — bottom-end overlay on thumbnail
+                if (platformName != null) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(8.dp),
+                    ) {
+                        PlatformBadge(
+                            platformName = platformName,
+                            platformColor = platformColor ?: PlatformColors.forPlatform(platformName),
+                        )
+                    }
+                }
             }
 
-            Column(modifier = Modifier.padding(12.dp)) {
-                // Platform badge
-                if (platformName != null) {
-                    PlatformBadge(
-                        platformName = platformName,
-                        platformColor = platformColor ?: PlatformColors.forPlatform(platformName),
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-
+            Column(modifier = Modifier.padding(top = 14.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                    style = MaterialTheme.typography.titleSmall,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
+                    color = Color.White,
                 )
 
                 if (uploaderName != null) {
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = uploaderName,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = SvdTextSecondary,
                     )
                 }
             }
@@ -189,55 +200,64 @@ private fun CompactVideoInfoCard(
     platformColor: Color?,
     modifier: Modifier = Modifier,
 ) {
-    Row(
+    Card(
+        shape = AppShapesInstance.large,
+        colors = CardDefaults.cardColors(containerColor = SvdSurface),
+        border = BorderStroke(1.dp, SvdBorder),
         modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Thumbnail with platform badge overlay
-        Box(modifier = Modifier.size(width = 72.dp, height = 54.dp)) {
-            AsyncImage(
-                model = thumbnailUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .matchParentSize()
-                    .clip(AppShapesInstance.small),
-            )
-
-            if (platformName != null) {
-                Text(
-                    text = platformName,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                    ),
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // Thumbnail with platform badge overlay
+            Box(modifier = Modifier.size(width = 72.dp, height = 54.dp)) {
+                AsyncImage(
+                    model = thumbnailUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(platformColor ?: PlatformColors.forPlatform(platformName))
-                        .padding(horizontal = 4.dp, vertical = 1.dp),
+                        .matchParentSize()
+                        .clip(AppShapesInstance.small),
                 )
+
+                if (platformName != null) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(2.dp),
+                    ) {
+                        PlatformBadge(
+                            platformName = platformName,
+                            platformColor = platformColor ?: PlatformColors.forPlatform(platformName),
+                            abbreviation = true,
+                        )
+                    }
+                }
             }
-        }
 
-        Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-
-            if (uploaderName != null) {
-                Spacer(modifier = Modifier.height(2.dp))
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = uploaderName,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    color = Color.White,
                 )
+
+                if (uploaderName != null) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = uploaderName,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = SvdTextSecondary,
+                    )
+                }
             }
         }
     }

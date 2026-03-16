@@ -6,7 +6,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,61 +23,62 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.socialvideodownloader.core.domain.model.DownloadStatus
 import com.socialvideodownloader.core.ui.R
 import com.socialvideodownloader.core.ui.theme.AppShapesInstance
-import com.socialvideodownloader.core.ui.theme.extendedColors
-
-private val DownloadingContainerColor = Color(0xFFDCEEFD)
-private val DownloadingContentColor = Color(0xFF1565C0)
-private val DownloadingContainerColorDark = Color(0xFF1A2E42)
-private val DownloadingContentColorDark = Color(0xFF90CAF9)
+import com.socialvideodownloader.core.ui.theme.SvdError
+import com.socialvideodownloader.core.ui.theme.SvdErrorContainer
+import com.socialvideodownloader.core.ui.theme.SvdPrimary
+import com.socialvideodownloader.core.ui.theme.SvdPrimaryContainer
+import com.socialvideodownloader.core.ui.theme.SvdSuccess
+import com.socialvideodownloader.core.ui.theme.SvdSuccessContainer
+import com.socialvideodownloader.core.ui.theme.SvdTextSecondary
+import com.socialvideodownloader.core.ui.theme.SvdSurface
 
 @Composable
 fun StatusBadge(
     status: DownloadStatus,
     modifier: Modifier = Modifier,
 ) {
-    val isDark = isSystemInDarkTheme()
-
     val (containerColor, contentColor, label) = when (status) {
         DownloadStatus.COMPLETED -> Triple(
-            MaterialTheme.extendedColors.successContainer,
-            MaterialTheme.extendedColors.success,
+            SvdSuccessContainer,
+            SvdSuccess,
             stringResource(R.string.status_completed),
         )
         DownloadStatus.FAILED -> Triple(
-            MaterialTheme.colorScheme.errorContainer,
-            MaterialTheme.colorScheme.error,
+            SvdErrorContainer,
+            SvdError,
             stringResource(R.string.status_failed),
         )
         DownloadStatus.DOWNLOADING -> Triple(
-            if (isDark) DownloadingContainerColorDark else DownloadingContainerColor,
-            if (isDark) DownloadingContentColorDark else DownloadingContentColor,
+            SvdPrimaryContainer,
+            SvdPrimary,
             stringResource(R.string.status_downloading),
         )
         DownloadStatus.PENDING -> Triple(
-            MaterialTheme.colorScheme.surfaceVariant,
-            MaterialTheme.colorScheme.onSurfaceVariant,
+            SvdSurface,
+            SvdTextSecondary,
             stringResource(R.string.status_pending),
         )
         DownloadStatus.QUEUED -> Triple(
-            MaterialTheme.colorScheme.surfaceVariant,
-            MaterialTheme.colorScheme.onSurfaceVariant,
+            SvdSurface,
+            SvdTextSecondary,
             stringResource(R.string.status_queued),
         )
         DownloadStatus.CANCELLED -> Triple(
-            MaterialTheme.colorScheme.surfaceVariant,
-            MaterialTheme.colorScheme.onSurfaceVariant,
+            SvdSurface,
+            SvdTextSecondary,
             stringResource(R.string.status_cancelled),
         )
     }
 
     Row(
         modifier = modifier
-            .clip(AppShapesInstance.full)
+            .clip(AppShapesInstance.badge)
             .background(containerColor)
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(horizontal = 8.dp, vertical = 3.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -87,7 +87,7 @@ fun StatusBadge(
         }
         Text(
             text = label,
-            style = MaterialTheme.typography.labelSmall,
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
             color = contentColor,
         )
     }
