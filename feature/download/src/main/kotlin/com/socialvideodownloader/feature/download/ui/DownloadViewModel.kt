@@ -119,6 +119,7 @@ class DownloadViewModel @Inject constructor(
             is DownloadIntent.ShareFileClicked -> handleShareFile()
             is DownloadIntent.NewDownloadClicked -> handleNewDownload()
             is DownloadIntent.ClipboardUrlDetected -> handleClipboardUrl(intent.url)
+            is DownloadIntent.PrefillUrl -> handlePrefillUrl(intent.url)
         }
     }
 
@@ -263,6 +264,11 @@ class DownloadViewModel @Inject constructor(
             currentUrl = url
             _uiState.value = DownloadUiState.Idle(clipboardUrl = url)
         }
+    }
+
+    private fun handlePrefillUrl(url: String) {
+        currentUrl = url
+        _uiState.value = DownloadUiState.Idle(clipboardUrl = url)
     }
 }
 
