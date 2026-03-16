@@ -11,6 +11,7 @@ import com.socialvideodownloader.feature.history.navigation.historyScreen
 @Composable
 fun AppNavHost(
     navController: NavHostController,
+    isDarkTheme: Boolean,
     modifier: Modifier = Modifier,
     onToggleTheme: () -> Unit = {},
 ) {
@@ -19,7 +20,7 @@ fun AppNavHost(
         startDestination = DownloadRoute,
         modifier = modifier,
     ) {
-        downloadScreen(onToggleTheme = onToggleTheme)
+        downloadScreen(isDarkTheme = isDarkTheme, onToggleTheme = onToggleTheme)
         historyScreen()
     }
 }

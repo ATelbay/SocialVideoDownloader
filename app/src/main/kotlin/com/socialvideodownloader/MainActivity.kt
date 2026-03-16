@@ -93,6 +93,7 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
                     AppNavHost(
                         navController = navController,
+                        isDarkTheme = darkTheme,
                         modifier = Modifier.padding(innerPadding),
                         onToggleTheme = settingsViewModel::toggleTheme,
                     )

@@ -11,7 +11,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -63,6 +62,7 @@ import com.socialvideodownloader.feature.download.ui.components.IdleContent
 
 @Composable
 fun DownloadScreen(
+    isDarkTheme: Boolean,
     viewModel: DownloadViewModel = hiltViewModel(),
     onToggleTheme: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -99,6 +99,7 @@ fun DownloadScreen(
     DownloadScreenContent(
         uiState = uiState,
         onIntent = viewModel::onIntent,
+        isDarkTheme = isDarkTheme,
         onToggleTheme = onToggleTheme,
         modifier = modifier,
     )
@@ -109,6 +110,7 @@ fun DownloadScreen(
 private fun DownloadScreenContent(
     uiState: DownloadUiState,
     onIntent: (DownloadIntent) -> Unit,
+    isDarkTheme: Boolean,
     onToggleTheme: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -123,7 +125,7 @@ private fun DownloadScreenContent(
         }
     }
 
-    val isDark = isSystemInDarkTheme()
+    val isDark = isDarkTheme
     val iconColor by animateColorAsState(
         targetValue = MaterialTheme.colorScheme.onSurface,
         animationSpec = tween(durationMillis = 300),
