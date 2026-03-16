@@ -17,7 +17,7 @@ fun AppNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = DownloadRoute,
+        startDestination = DownloadRoute(),
         modifier = modifier,
     ) {
         downloadScreen(isDarkTheme = isDarkTheme, onToggleTheme = onToggleTheme)

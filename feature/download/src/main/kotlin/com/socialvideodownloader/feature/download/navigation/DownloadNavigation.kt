@@ -6,7 +6,7 @@ import com.socialvideodownloader.feature.download.ui.DownloadScreen
 import kotlinx.serialization.Serializable
 
 @Serializable
-object DownloadRoute
+data class DownloadRoute(val initialUrl: String? = null)
 
 fun NavGraphBuilder.downloadScreen(isDarkTheme: Boolean, onToggleTheme: () -> Unit = {}) {
     composable<DownloadRoute> {
