@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import com.socialvideodownloader.core.ui.theme.AppShapesInstance
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Checkbox
@@ -62,7 +62,7 @@ fun HistoryDeleteDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         Surface(
-            shape = RoundedCornerShape(24.dp),
+            shape = AppShapesInstance.full,
             color = SvdSurfaceElevated,
             tonalElevation = 6.dp,
             shadowElevation = 6.dp,
@@ -113,14 +113,14 @@ fun HistoryDeleteDialog(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
+                            .clip(AppShapesInstance.medium)
                             .background(SvdSurfaceElevated)
                             .clickable { onDeleteFilesSelectionChanged(!state.deleteFilesSelected) }
                             .padding(horizontal = 12.dp, vertical = 8.dp),
                     ) {
                         Checkbox(
                             checked = state.deleteFilesSelected,
-                            onCheckedChange = onDeleteFilesSelectionChanged,
+                            onCheckedChange = null,
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(

@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import com.socialvideodownloader.core.ui.theme.AppShapesInstance
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.outlined.Schedule
@@ -85,7 +85,7 @@ fun HistoryEmptyState(
         if (!isSearchResult) {
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(14.dp))
+                    .clip(AppShapesInstance.cardSm)
                     .background(Brush.verticalGradient(listOf(SvdPrimary, SvdPrimaryEnd)))
                     .clickable(onClick = onStartDownloading)
                     .padding(vertical = 12.dp, horizontal = 24.dp),

@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material3.CircularProgressIndicator
@@ -49,9 +48,9 @@ fun ExtractingContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
-                .clip(RoundedCornerShape(16.dp))
+                .clip(AppShapesInstance.large)
                 .background(SvdSurface)
-                .border(1.dp, SvdBorder, RoundedCornerShape(16.dp))
+                .border(1.dp, SvdBorder, AppShapesInstance.large)
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),

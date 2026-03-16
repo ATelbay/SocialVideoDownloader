@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
@@ -159,7 +158,7 @@ fun HistoryScreen(
                     Box(
                         modifier = Modifier
                             .size(36.dp)
-                            .clip(RoundedCornerShape(12.dp))
+                            .clip(AppShapesInstance.medium)
                             .background(SvdSurface),
                         contentAlignment = Alignment.Center,
                     ) {
@@ -192,7 +191,7 @@ fun HistoryScreen(
                     Box(
                         modifier = Modifier
                             .size(36.dp)
-                            .clip(RoundedCornerShape(12.dp))
+                            .clip(AppShapesInstance.medium)
                             .background(SvdSurface),
                         contentAlignment = Alignment.Center,
                     ) {
@@ -210,7 +209,7 @@ fun HistoryScreen(
                         Box(
                             modifier = Modifier
                                 .size(36.dp)
-                                .clip(RoundedCornerShape(12.dp))
+                                .clip(AppShapesInstance.medium)
                                 .background(SvdSurface),
                             contentAlignment = Alignment.Center,
                         ) {

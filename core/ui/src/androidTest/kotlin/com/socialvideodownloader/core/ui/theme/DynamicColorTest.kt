@@ -65,7 +65,7 @@ class DynamicColorTest {
     fun platformColors_areAlwaysFixed() {
         assertEquals(Color(0xFFFF0000), PlatformColors.YouTube)
         assertEquals(Color(0xFFC13584), PlatformColors.Instagram)
-        assertEquals(Color(0xFF010101), PlatformColors.TikTok)
+        assertEquals(Color(0xFF69C9D0), PlatformColors.TikTok)
         assertEquals(Color(0xFF1DA1F2), PlatformColors.Twitter)
         assertEquals(Color(0xFF1AB7EA), PlatformColors.Vimeo)
         assertEquals(Color(0xFF1877F2), PlatformColors.Facebook)
@@ -76,7 +76,7 @@ class DynamicColorTest {
     fun platformColors_forPlatform_returnsCorrectBrandColor() {
         assertEquals(Color(0xFFFF0000), PlatformColors.forPlatform("YouTube"))
         assertEquals(Color(0xFFC13584), PlatformColors.forPlatform("instagram"))
-        assertEquals(Color(0xFF010101), PlatformColors.forPlatform("TikTok"))
+        assertEquals(Color(0xFF69C9D0), PlatformColors.forPlatform("TikTok"))
         assertEquals(Color(0xFF1DA1F2), PlatformColors.forPlatform("twitter"))
         assertEquals(Color(0xFF1AB7EA), PlatformColors.forPlatform("vimeo"))
         assertEquals(Color(0xFF1877F2), PlatformColors.forPlatform("Facebook"))

@@ -15,7 +15,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.OpenInNew
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -27,7 +26,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.socialvideodownloader.core.domain.model.VideoMetadata
@@ -157,29 +155,7 @@ fun DownloadCompleteContent(
             }
         }
 
-        // New Download link
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(AppShapesInstance.cardSm)
-                .clickable(onClick = onNewDownloadClicked)
-                .padding(vertical = 10.dp, horizontal = 16.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Add,
-                contentDescription = null,
-                tint = SvdPrimary,
-                modifier = Modifier.size(16.dp),
-            )
-            Text(
-                text = stringResource(R.string.download_new_download),
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                color = SvdPrimary,
-                modifier = Modifier.padding(start = 6.dp),
-            )
-        }
+        NewDownloadLink(onClick = onNewDownloadClicked)
     }
 }
 

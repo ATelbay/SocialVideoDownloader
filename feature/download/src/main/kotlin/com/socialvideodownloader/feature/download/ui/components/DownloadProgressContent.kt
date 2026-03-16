@@ -1,5 +1,6 @@
 package com.socialvideodownloader.feature.download.ui.components
 
+import android.text.format.Formatter
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -21,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.socialvideodownloader.core.domain.model.DownloadProgress
@@ -40,6 +42,7 @@ fun DownloadProgressContent(
     onCancelClicked: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
     val animatedProgress by animateFloatAsState(
         targetValue = progress.progressPercent / 100f,
         label = "progress",
@@ -106,7 +109,7 @@ fun DownloadProgressContent(
                 )
                 StatColumn(
                     label = stringResource(R.string.download_size),
-                    value = progress.totalBytes?.let { formatSize(it) } ?: "—",
+                    value = progress.totalBytes?.let { Formatter.formatFileSize(context, it) } ?: "—",
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -169,11 +172,3 @@ private fun formatEta(seconds: Long): String {
     return "%d:%02d".format(minutes, secs)
 }
 
-private fun formatSize(bytes: Long): String {
-    return when {
-        bytes >= 1_073_741_824 -> "%.1f GB".format(bytes / 1_073_741_824.0)
-        bytes >= 1_048_576 -> "%.1f MB".format(bytes / 1_048_576.0)
-        bytes >= 1024 -> "%.0f KB".format(bytes / 1024.0)
-        else -> "$bytes B"
-    }
-}

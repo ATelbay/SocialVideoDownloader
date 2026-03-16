@@ -1,18 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- URL Input -->
-    <string name="download_extract_button">Extract</string>
-    <string name="download_extracting">Extracting video info…</string>
-
     <!-- Format Selection -->
-    <string name="download_video_formats">Video</string>
-    <string name="download_audio_formats">Audio Only</string>
     <string name="download_button">Download</string>
-    <string name="download_file_size_mb">%.1f MB</string>
-    <string name="download_file_size_gb">%.1f GB</string>
 
     <!-- Download Progress -->
     <string name="download_cancel">Cancel</string>
+    <string name="download_progress_cancel">Cancel</string>
 
     <!-- Download Complete -->
     <string name="download_open">Open</string>
@@ -26,16 +19,6 @@
     <string name="download_error_network">No internet connection. Check your network and try again.</string>
     <string name="download_error_storage">Not enough storage space. Free up space and try again.</string>
     <string name="download_error_generic">Something went wrong. Please try again.</string>
-
-    <!-- Clipboard -->
-    <string name="download_clipboard_detected">URL detected from clipboard</string>
-
-    <!-- UrlInputContent composable -->
-    <string name="url_input_label">Video URL</string>
-    <string name="url_input_placeholder">Paste video URL here</string>
-    <string name="url_input_extract_button">Extract</string>
-    <string name="video_info_duration_format">%1$02d:%2$02d</string>
-    <string name="download_progress_cancel">Cancel</string>
 
     <!-- Notifications -->
     <string name="notification_downloading">Downloading… %1$d%%</string>
@@ -54,42 +37,29 @@
     <string name="download_hero_title">Download Videos</string>
     <string name="download_hero_subtitle">Paste any social media URL to get started</string>
     <string name="download_paste_button">Paste</string>
-    <string name="download_supported_platforms">Supported Platforms</string>
-
-    <!-- Extracting state -->
-    <string name="download_extracting_title">Extracting video info…</string>
-    <string name="download_extracting_subtitle">Fetching available formats</string>
+    <string name="download_supported_platforms_label">SUPPORTED PLATFORMS</string>
 
     <!-- Format selection -->
-    <string name="download_select_quality">SELECT QUALITY</string>
     <string name="download_format_info_unknown_size">Unknown size</string>
-
-    <!-- Complete state -->
-    <string name="download_complete_title">Download complete!</string>
-    <string name="download_complete_subtitle">Your video has been saved</string>
-
-    <!-- Error state -->
-    <string name="download_error_title">Failed to extract</string>
-
-    <!-- Speed/ETA labels -->
-    <string name="download_speed_label">SPEED</string>
-    <string name="download_eta_label">ETA</string>
-
-    <!-- UI Redesign strings -->
-    <string name="download_extract_video">Extract Video</string>
-    <string name="download_supported_platforms_label">SUPPORTED PLATFORMS</string>
     <string name="download_video_quality_label">VIDEO QUALITY</string>
     <string name="download_audio_quality_label">AUDIO QUALITY</string>
     <string name="download_selected_format">Selected Format</string>
-    <string name="download_downloading_status">Downloading video…</string>
+
+    <!-- Download state -->
+    <string name="download_extract_video">Extract Video</string>
+    <string name="download_url_placeholder">https://…</string>
     <string name="download_extracting_status">Extracting video info…</string>
+    <string name="download_downloading_status">Downloading video…</string>
     <string name="download_cancel_download">Cancel Download</string>
-    <string name="download_complete_message">Download Complete!</string>
-    <string name="download_saved_message">Saved to your Downloads folder</string>
-    <string name="download_new_download">New Download</string>
     <string name="download_speed">Speed</string>
     <string name="download_eta">ETA</string>
     <string name="download_size">Size</string>
-    <string name="download_title_extracting">Extracting…</string>
-    <string name="download_url_placeholder">https://…</string>
+
+    <!-- Complete state -->
+    <string name="download_complete_message">Download Complete!</string>
+    <string name="download_saved_message">Saved to your Downloads folder</string>
+    <string name="download_new_download">New Download</string>
+
+    <!-- Error state -->
+    <string name="download_error_title">Failed to extract</string>
 </resources>

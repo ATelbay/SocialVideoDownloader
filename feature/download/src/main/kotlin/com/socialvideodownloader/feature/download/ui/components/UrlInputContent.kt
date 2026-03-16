@@ -10,12 +10,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,12 +25,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.socialvideodownloader.core.ui.theme.Inter
+import com.socialvideodownloader.core.ui.theme.AppShapesInstance
 import com.socialvideodownloader.core.ui.theme.SvdBorder
+import com.socialvideodownloader.core.ui.tokens.Spacing
 import com.socialvideodownloader.core.ui.theme.SvdPrimary
 import com.socialvideodownloader.core.ui.theme.SvdSurface
 import com.socialvideodownloader.core.ui.theme.SvdText
@@ -48,10 +48,10 @@ fun UrlInputContent(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .height(Spacing.InputHeight)
+            .clip(AppShapesInstance.large)
             .background(SvdSurface)
-            .border(1.dp, SvdBorder, RoundedCornerShape(16.dp))
+            .border(1.dp, SvdBorder, AppShapesInstance.large)
             .padding(start = 16.dp, end = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -63,16 +63,16 @@ fun UrlInputContent(
             modifier = Modifier.size(20.dp),
         )
 
+        val urlTextStyle = MaterialTheme.typography.bodyMedium.copy(
+            fontWeight = FontWeight.Normal,
+            fontSize = 15.sp,
+            color = SvdText,
+        )
         BasicTextField(
             value = url,
             onValueChange = onUrlChanged,
             singleLine = true,
-            textStyle = TextStyle(
-                fontFamily = Inter,
-                fontWeight = FontWeight.Normal,
-                fontSize = 15.sp,
-                color = SvdText,
-            ),
+            textStyle = urlTextStyle,
             cursorBrush = SolidColor(SvdPrimary),
             modifier = Modifier.weight(1f),
             decorationBox = { innerTextField ->
@@ -80,12 +80,7 @@ fun UrlInputContent(
                     if (url.isEmpty()) {
                         Text(
                             text = stringResource(R.string.download_url_placeholder),
-                            style = TextStyle(
-                                fontFamily = Inter,
-                                fontWeight = FontWeight.Normal,
-                                fontSize = 15.sp,
-                                color = SvdTextTertiary,
-                            ),
+                            style = urlTextStyle.copy(color = SvdTextTertiary),
                         )
                     }
                     innerTextField()
@@ -95,7 +90,7 @@ fun UrlInputContent(
 
         Row(
             modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
+                .clip(AppShapesInstance.medium)
                 .background(SvdPrimary)
                 .clickable {
                     clipboardManager.getText()?.text?.let { text ->
@@ -114,12 +109,7 @@ fun UrlInputContent(
             )
             Text(
                 text = stringResource(R.string.download_paste_button),
-                style = TextStyle(
-                    fontFamily = Inter,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 13.sp,
-                    color = Color.White,
-                ),
+                style = MaterialTheme.typography.labelMedium.copy(color = Color.White),
             )
         }
     }

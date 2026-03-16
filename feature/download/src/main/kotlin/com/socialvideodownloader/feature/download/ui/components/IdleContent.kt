@@ -11,12 +11,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import com.socialvideodownloader.core.ui.theme.AppShapesInstance
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,14 +25,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.socialvideodownloader.core.ui.components.GradientButton
-import com.socialvideodownloader.core.ui.theme.Inter
-import com.socialvideodownloader.core.ui.theme.PlusJakartaSans
 import com.socialvideodownloader.core.ui.theme.SvdBorder
 import com.socialvideodownloader.core.ui.theme.SvdPrimary
 import com.socialvideodownloader.core.ui.theme.SvdPrimaryContainer
@@ -89,21 +87,14 @@ fun IdleContent(
 
             Text(
                 text = stringResource(R.string.download_hero_title),
-                style = TextStyle(
-                    fontFamily = PlusJakartaSans,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 28.sp,
-                    color = SvdText,
-                ),
+                style = MaterialTheme.typography.titleLarge.copy(color = SvdText),
                 textAlign = TextAlign.Center,
             )
 
             Text(
                 text = stringResource(R.string.download_hero_subtitle),
-                style = TextStyle(
-                    fontFamily = Inter,
+                style = MaterialTheme.typography.bodyMedium.copy(
                     fontWeight = FontWeight.Normal,
-                    fontSize = 14.sp,
                     color = SvdTextSecondary,
                 ),
                 textAlign = TextAlign.Center,
@@ -134,10 +125,7 @@ fun IdleContent(
             )
             Text(
                 text = stringResource(R.string.download_supported_platforms_label),
-                style = TextStyle(
-                    fontFamily = Inter,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 11.sp,
+                style = MaterialTheme.typography.labelSmall.copy(
                     color = SvdTextTertiary,
                     letterSpacing = 1.sp,
                 ),
@@ -158,9 +146,9 @@ fun IdleContent(
             supportedPlatforms.forEach { platform ->
                 Row(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(AppShapesInstance.medium)
                         .background(SvdSurface)
-                        .border(1.dp, SvdBorder, RoundedCornerShape(12.dp))
+                        .border(1.dp, SvdBorder, AppShapesInstance.medium)
                         .padding(vertical = 10.dp, horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -173,10 +161,8 @@ fun IdleContent(
                     )
                     Text(
                         text = platform.name,
-                        style = TextStyle(
-                            fontFamily = Inter,
+                        style = MaterialTheme.typography.labelMedium.copy(
                             fontWeight = FontWeight.Medium,
-                            fontSize = 13.sp,
                             color = SvdText,
                         ),
                     )

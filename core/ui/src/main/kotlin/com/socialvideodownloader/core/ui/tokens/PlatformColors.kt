@@ -26,17 +26,6 @@ object PlatformColors {
         }
     }
 
-    fun abbreviation(platformName: String?): String = when {
-        platformName == null -> "?"
-        platformName.contains("youtube", ignoreCase = true) -> "YT"
-        platformName.contains("instagram", ignoreCase = true) -> "IG"
-        platformName.contains("tiktok", ignoreCase = true) -> "TT"
-        platformName.contains("twitter", ignoreCase = true) || platformName.contains("x.com", ignoreCase = true) -> "X"
-        platformName.contains("vimeo", ignoreCase = true) -> "VI"
-        platformName.contains("facebook", ignoreCase = true) -> "FB"
-        else -> "?"
-    }
-
     fun textColor(platformName: String?): Color = when {
         platformName != null && platformName.contains("tiktok", ignoreCase = true) -> Color.Black
         else -> Color.White

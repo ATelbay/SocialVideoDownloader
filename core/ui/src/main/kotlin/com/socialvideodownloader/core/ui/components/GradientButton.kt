@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,7 +22,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.socialvideodownloader.core.ui.theme.AppShapesInstance
 import com.socialvideodownloader.core.ui.theme.SocialVideoDownloaderTheme
+import com.socialvideodownloader.core.ui.tokens.Spacing
 import com.socialvideodownloader.core.ui.theme.SvdPrimary
 import com.socialvideodownloader.core.ui.theme.SvdPrimaryEnd
 
@@ -38,8 +39,8 @@ fun GradientButton(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(52.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .height(Spacing.ButtonHeightLg)
+            .clip(AppShapesInstance.large)
             .alpha(if (enabled) 1f else 0.5f)
             .background(Brush.verticalGradient(listOf(SvdPrimary, SvdPrimaryEnd)))
             .clickable(enabled = enabled, onClick = onClick),

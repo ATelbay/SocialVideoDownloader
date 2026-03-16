@@ -21,9 +21,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.socialvideodownloader.core.ui.R
 import com.socialvideodownloader.core.ui.theme.AppShapesInstance
 import com.socialvideodownloader.core.ui.theme.SvdBorder
 import com.socialvideodownloader.core.ui.theme.SvdPrimary
@@ -37,8 +39,8 @@ fun PillNavigationBar(
     modifier: Modifier = Modifier,
 ) {
     val tabs = listOf(
-        TabData(label = "DOWNLOAD", icon = Icons.Default.Download),
-        TabData(label = "HISTORY", icon = Icons.Default.History),
+        TabData(label = stringResource(R.string.nav_tab_download), icon = Icons.Default.Download),
+        TabData(label = stringResource(R.string.nav_tab_history), icon = Icons.Default.History),
     )
 
     Row(

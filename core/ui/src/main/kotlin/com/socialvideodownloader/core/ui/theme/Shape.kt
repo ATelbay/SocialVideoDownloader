@@ -15,6 +15,7 @@ data class AppShapes(
     val badge: RoundedCornerShape = RoundedCornerShape(6.dp),
     val badgeLg: RoundedCornerShape = RoundedCornerShape(8.dp),
     val progress: RoundedCornerShape = RoundedCornerShape(5.dp),
+    val bottomSheet: RoundedCornerShape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
 )
 
 val AppShapesInstance = AppShapes()

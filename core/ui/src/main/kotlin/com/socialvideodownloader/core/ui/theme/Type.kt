@@ -89,3 +89,10 @@ val StatsValue = TextStyle(
     fontWeight = FontWeight.Bold,
     fontSize = 16.sp,
 )
+
+/** Used for URL input field text and its placeholder. Inter Normal 15sp. */
+val UrlInputText = TextStyle(
+    fontFamily = Inter,
+    fontWeight = FontWeight.Normal,
+    fontSize = 15.sp,
+)

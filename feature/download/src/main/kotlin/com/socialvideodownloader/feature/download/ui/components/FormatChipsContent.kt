@@ -1,5 +1,6 @@
 package com.socialvideodownloader.feature.download.ui.components
 
+import android.text.format.Formatter
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,6 +43,7 @@ fun FormatChipsContent(
     onDownloadClicked: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
     val videoFormats = remember(formats) { formats.filter { !it.isAudioOnly } }
     val audioFormats = remember(formats) { formats.filter { it.isAudioOnly } }
     val selectedFormat = remember(formats, selectedFormatId) {
@@ -123,11 +126,7 @@ fun FormatChipsContent(
             }
             Text(
                 text = selectedFormat?.fileSizeBytes?.let { bytes ->
-                    if (bytes >= 1_073_741_824) {
-                        stringResource(R.string.download_file_size_gb, bytes / 1_073_741_824.0)
-                    } else {
-                        stringResource(R.string.download_file_size_mb, bytes / 1_048_576.0)
-                    }
+                    Formatter.formatFileSize(context, bytes)
                 } ?: stringResource(R.string.download_format_info_unknown_size),
                 style = StatsValue,
                 color = SvdPrimary,
