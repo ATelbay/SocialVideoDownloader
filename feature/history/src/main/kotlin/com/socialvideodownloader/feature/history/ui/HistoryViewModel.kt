@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -36,13 +38,18 @@ class HistoryViewModel @Inject constructor(
     // Keep a reference to all items for delete operations that need access to the full list
     private val _allItems = MutableStateFlow<List<HistoryListItem>>(emptyList())
 
+    init {
+        observeHistoryItems()
+            .onEach { _allItems.value = it }
+            .launchIn(viewModelScope)
+    }
+
     val uiState: StateFlow<HistoryUiState> = combine(
-        observeHistoryItems(),
+        _allItems,
         _searchQuery,
         _openMenuItemId,
         _deleteConfirmation,
     ) { allItems, query, openMenuItemId, deleteConfirmation ->
-        _allItems.value = allItems
         val trimmedQuery = query.trim()
         if (allItems.isEmpty()) {
             HistoryUiState.Empty(query = trimmedQuery, isFiltering = false)
@@ -83,8 +90,10 @@ class HistoryViewModel @Inject constructor(
             when {
                 item.status == DownloadStatus.FAILED ->
                     _effect.emit(HistoryEffect.RetryDownload(item.sourceUrl))
-                item.status == DownloadStatus.COMPLETED && item.isFileAccessible ->
-                    _effect.emit(HistoryEffect.OpenContent(item.contentUri!!))
+                item.status == DownloadStatus.COMPLETED && item.isFileAccessible -> {
+                    val uri = item.contentUri ?: return@launch
+                    _effect.emit(HistoryEffect.OpenContent(uri))
+                }
                 else ->
                     _effect.emit(HistoryEffect.ShowMessage(R.string.history_file_unavailable))
             }
@@ -95,7 +104,8 @@ class HistoryViewModel @Inject constructor(
         val item = (uiState.value as? HistoryUiState.Content)?.items?.find { it.id == itemId } ?: return
         viewModelScope.launch {
             if (item.isFileAccessible) {
-                _effect.emit(HistoryEffect.ShareContent(item.contentUri!!))
+                val uri = item.contentUri ?: return@launch
+                _effect.emit(HistoryEffect.ShareContent(uri))
             } else {
                 _effect.emit(HistoryEffect.ShowMessage(R.string.history_file_unavailable))
             }

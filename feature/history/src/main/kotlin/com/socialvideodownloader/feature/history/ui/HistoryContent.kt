@@ -10,13 +10,15 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.socialvideodownloader.core.ui.tokens.Spacing
+import androidx.compose.ui.unit.dp
+import com.socialvideodownloader.core.ui.theme.SvdPrimary
 import com.socialvideodownloader.feature.history.components.HistoryEmptyState
 
 @Composable
 fun HistoryContent(
     uiState: HistoryUiState,
     onIntent: (HistoryIntent) -> Unit,
+    onStartDownloading: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     when (uiState) {
@@ -25,7 +27,7 @@ fun HistoryContent(
                 modifier = modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
             ) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = SvdPrimary)
             }
         }
 
@@ -34,15 +36,18 @@ fun HistoryContent(
                 modifier = modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
             ) {
-                HistoryEmptyState(isSearchResult = uiState.isFiltering)
+                HistoryEmptyState(
+                    isSearchResult = uiState.isFiltering,
+                    onStartDownloading = onStartDownloading,
+                )
             }
         }
 
         is HistoryUiState.Content -> {
             LazyColumn(
                 modifier = modifier.fillMaxSize(),
-                contentPadding = PaddingValues(Spacing.ContentPadding),
-                verticalArrangement = Arrangement.spacedBy(Spacing.ListItemGap),
+                contentPadding = PaddingValues(top = 8.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 items(uiState.items, key = { it.id }) { item ->
                     HistoryListItemRow(

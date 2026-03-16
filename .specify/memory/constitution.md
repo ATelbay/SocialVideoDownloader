@@ -1,20 +1,20 @@
 <!--
   SYNC IMPACT REPORT
   ==================
-  Version change: (new) → 1.0.0
-  Modified principles: N/A (initial creation)
-  Added sections:
-    - 7 Core Principles (I–VII)
-    - Tech Stack & Constraints
-    - Quality Gates & Git Workflow
-    - Governance
+  Version change: 1.0.0 → 1.1.0
+  Modified principles:
+    - III. Modern Android Stack: Removed Dynamic Color mandate. Dynamic Color
+      is now optional; a fixed branded palette is acceptable when design
+      consistency across devices is required.
+  Added sections: N/A
   Removed sections: N/A
   Templates requiring updates:
     ✅ plan-template.md — "Constitution Check" is dynamic, no changes needed
-    ✅ spec-template.md — generic, compatible with constitution principles
-    ✅ tasks-template.md — generic, compatible with constitution principles
+    ✅ spec-template.md — generic, compatible with updated principle
+    ✅ tasks-template.md — generic, compatible with updated principle
     ✅ No command files exist in .specify/templates/commands/
-  Follow-up TODOs: None
+  Follow-up TODOs: Update plan.md Constitution Check table status from
+    VIOLATION to PASS (Dynamic Color no longer mandated).
 -->
 
 # Social Video Downloader Constitution
@@ -41,7 +41,9 @@
 
 ### III. Modern Android Stack (Compose + KSP + MVI)
 
-- UI MUST be built exclusively with Jetpack Compose + Material 3 (Dynamic Color).
+- UI MUST be built exclusively with Jetpack Compose + Material 3.
+  Dynamic Color is optional; a fixed branded palette is acceptable when
+  design consistency across devices is required.
   XML layouts and Android View system are forbidden for new code.
 - Code generation MUST use KSP only. kapt is forbidden (build performance).
 - Fragments are forbidden. Navigation uses Compose Navigation with composable
@@ -95,7 +97,7 @@
 ## Tech Stack & Constraints
 
 - **Language**: Kotlin 2.0+ (Java forbidden for new code)
-- **UI**: Jetpack Compose + Material 3 + Dynamic Color
+- **UI**: Jetpack Compose + Material 3
 - **Architecture**: MVI (`sealed interface` for State + Intent)
 - **DI**: Hilt with KSP
 - **Database**: Room with KSP (download history)
@@ -141,4 +143,4 @@
   these principles. Violations MUST be flagged before merge.
 - Runtime development guidance lives in `AGENTS.md` for Codex and `.claude/CLAUDE.md` for Claude Code.
 
-**Version**: 1.0.0 | **Ratified**: 2026-03-14 | **Last Amended**: 2026-03-14
+**Version**: 1.1.0 | **Ratified**: 2026-03-14 | **Last Amended**: 2026-03-16

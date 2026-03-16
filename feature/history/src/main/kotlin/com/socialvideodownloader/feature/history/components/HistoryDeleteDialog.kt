@@ -13,17 +13,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import com.socialvideodownloader.core.ui.theme.AppShapesInstance
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +30,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.socialvideodownloader.core.ui.theme.SvdBorder
+import com.socialvideodownloader.core.ui.theme.SvdError
+import com.socialvideodownloader.core.ui.theme.SvdErrorContainer
+import com.socialvideodownloader.core.ui.theme.SvdPrimary
+import com.socialvideodownloader.core.ui.theme.SvdSurfaceElevated
+import com.socialvideodownloader.core.ui.theme.SvdText
 import com.socialvideodownloader.feature.history.R
 import com.socialvideodownloader.feature.history.ui.DeleteConfirmationState
 import com.socialvideodownloader.feature.history.ui.DeleteTarget
@@ -58,8 +62,8 @@ fun HistoryDeleteDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         Surface(
-            shape = RoundedCornerShape(24.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            shape = AppShapesInstance.full,
+            color = SvdSurfaceElevated,
             tonalElevation = 6.dp,
             shadowElevation = 6.dp,
             modifier = Modifier
@@ -76,12 +80,12 @@ fun HistoryDeleteDialog(
                     modifier = Modifier
                         .size(52.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.errorContainer),
+                        .background(SvdErrorContainer),
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Delete,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onErrorContainer,
+                        tint = SvdError,
                         modifier = Modifier.size(28.dp),
                     )
                 }
@@ -90,16 +94,16 @@ fun HistoryDeleteDialog(
 
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    style = androidx.compose.material3.MaterialTheme.typography.titleLarge,
+                    color = SvdText,
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = bodyText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+                    color = SvdText,
                 )
 
                 if (state.hasAnyAccessibleFile) {
@@ -109,46 +113,52 @@ fun HistoryDeleteDialog(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                            .clip(AppShapesInstance.medium)
+                            .background(SvdSurfaceElevated)
                             .clickable { onDeleteFilesSelectionChanged(!state.deleteFilesSelected) }
                             .padding(horizontal = 12.dp, vertical = 8.dp),
                     ) {
                         Checkbox(
                             checked = state.deleteFilesSelected,
-                            onCheckedChange = onDeleteFilesSelectionChanged,
+                            onCheckedChange = null,
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = stringResource(R.string.history_delete_checkbox_label),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+                            color = SvdText,
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+
+                HorizontalDivider(color = SvdBorder)
+
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    OutlinedButton(
+                    TextButton(
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f),
                     ) {
-                        Text(text = stringResource(R.string.history_delete_cancel))
+                        Text(
+                            text = stringResource(R.string.history_delete_cancel),
+                            color = SvdPrimary,
+                        )
                     }
 
-                    Button(
+                    TextButton(
                         onClick = onConfirm,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.error,
-                            contentColor = MaterialTheme.colorScheme.onError,
-                        ),
                         modifier = Modifier.weight(1f),
                     ) {
-                        Text(text = stringResource(R.string.history_delete_confirm))
+                        Text(
+                            text = stringResource(R.string.history_delete_confirm),
+                            color = SvdError,
+                        )
                     }
                 }
             }

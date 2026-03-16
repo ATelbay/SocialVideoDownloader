@@ -32,6 +32,7 @@ abstract class AppDatabase : RoomDatabase() {
                     UPDATE downloads
                     SET mediaStoreUri = filePath, filePath = NULL
                     WHERE filePath LIKE 'content://%'
+                    AND mediaStoreUri IS NULL
                 """.trimIndent())
             }
         }

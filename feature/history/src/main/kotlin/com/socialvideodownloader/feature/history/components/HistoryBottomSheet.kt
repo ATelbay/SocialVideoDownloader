@@ -11,13 +11,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import com.socialvideodownloader.core.ui.theme.AppShapesInstance
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
@@ -29,6 +29,11 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.socialvideodownloader.core.ui.theme.SvdBorder
+import com.socialvideodownloader.core.ui.theme.SvdError
+import com.socialvideodownloader.core.ui.theme.SvdSurface
+import com.socialvideodownloader.core.ui.theme.SvdText
+import com.socialvideodownloader.core.ui.theme.SvdTextTertiary
 import com.socialvideodownloader.feature.history.R
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,8 +50,8 @@ fun HistoryBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = AppShapesInstance.bottomSheet,
+        containerColor = SvdSurface,
         dragHandle = {
             Box(
                 modifier = Modifier
@@ -55,7 +60,7 @@ fun HistoryBottomSheet(
                     .height(4.dp)
                     .alpha(0.5f)
                     .background(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = SvdTextTertiary,
                         shape = RoundedCornerShape(2.dp),
                     ),
             )
@@ -65,8 +70,8 @@ fun HistoryBottomSheet(
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+                color = SvdText,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
@@ -74,7 +79,7 @@ fun HistoryBottomSheet(
                     .padding(horizontal = 16.dp, vertical = 12.dp),
             )
 
-            HorizontalDivider()
+            HorizontalDivider(color = SvdBorder)
 
             if (showShare) {
                 Row(
@@ -87,17 +92,17 @@ fun HistoryBottomSheet(
                     Icon(
                         imageVector = Icons.Outlined.Share,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurface,
+                        tint = SvdText,
                     )
                     Spacer(modifier = Modifier.width(16.dp))
                     Text(
                         text = stringResource(R.string.history_bottom_sheet_share),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        style = androidx.compose.material3.MaterialTheme.typography.bodyLarge,
+                        color = SvdText,
                     )
                 }
 
-                HorizontalDivider()
+                HorizontalDivider(color = SvdBorder)
             }
 
             Row(
@@ -110,13 +115,13 @@ fun HistoryBottomSheet(
                 Icon(
                     imageVector = Icons.Outlined.Delete,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error,
+                    tint = SvdError,
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 Text(
                     text = stringResource(R.string.history_bottom_sheet_delete),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.error,
+                    style = androidx.compose.material3.MaterialTheme.typography.bodyLarge,
+                    color = SvdError,
                 )
             }
         }

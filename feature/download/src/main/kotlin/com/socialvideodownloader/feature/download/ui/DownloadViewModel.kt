@@ -220,16 +220,9 @@ class DownloadViewModel @Inject constructor(
     private fun handleRetry() {
         val state = _uiState.value
         if (state !is DownloadUiState.Error) return
-        when (val action = state.retryAction) {
-            is RetryAction.RetryExtraction -> {
-                currentUrl = action.url
-                handleExtract()
-            }
-            is RetryAction.RetryDownload -> {
-                currentUrl = action.request.sourceUrl
-                handleExtract()
-            }
-        }
+        val action = state.retryAction as RetryAction.RetryExtraction
+        currentUrl = action.url
+        handleExtract()
     }
 
     private fun handleOpenFile() {
@@ -267,6 +260,7 @@ class DownloadViewModel @Inject constructor(
     }
 
     private fun handlePrefillUrl(url: String) {
+        if (_uiState.value !is DownloadUiState.Idle) return
         currentUrl = url
         _uiState.value = DownloadUiState.Idle(clipboardUrl = url)
     }

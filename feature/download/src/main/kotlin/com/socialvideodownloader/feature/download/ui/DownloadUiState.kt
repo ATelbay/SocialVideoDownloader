@@ -1,7 +1,6 @@
 package com.socialvideodownloader.feature.download.ui
 
 import com.socialvideodownloader.core.domain.model.DownloadProgress
-import com.socialvideodownloader.core.domain.model.DownloadRequest
 import com.socialvideodownloader.core.domain.model.VideoMetadata
 
 sealed interface DownloadUiState {
@@ -28,5 +27,4 @@ sealed interface DownloadUiState {
 
 sealed interface RetryAction {
     data class RetryExtraction(val url: String) : RetryAction
-    data class RetryDownload(val request: DownloadRequest) : RetryAction
 }

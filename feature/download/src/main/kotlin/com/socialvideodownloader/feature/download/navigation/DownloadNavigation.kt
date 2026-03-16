@@ -9,12 +9,10 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class DownloadRoute(val initialUrl: String? = null)
 
-fun NavGraphBuilder.downloadScreen(isDarkTheme: Boolean, onToggleTheme: () -> Unit = {}) {
+fun NavGraphBuilder.downloadScreen() {
     composable<DownloadRoute> { backStackEntry ->
         val route = backStackEntry.toRoute<DownloadRoute>()
         DownloadScreen(
-            isDarkTheme = isDarkTheme,
-            onToggleTheme = onToggleTheme,
             initialUrl = route.initialUrl,
         )
     }
