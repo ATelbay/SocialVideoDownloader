@@ -260,7 +260,6 @@ class DownloadViewModel @Inject constructor(
     }
 
     private fun handlePrefillUrl(url: String) {
-        if (_uiState.value !is DownloadUiState.Idle) return
         currentUrl = url
         _uiState.value = DownloadUiState.Idle(clipboardUrl = url)
     }

@@ -343,7 +343,7 @@ class DownloadViewModelTest {
     }
 
     @Test
-    fun `PrefillUrl while Extracting does not overwrite state`() = runTest {
+    fun `PrefillUrl while Extracting resets to Idle with new URL`() = runTest {
         coEvery { extractVideoInfo(any()) } coAnswers {
             kotlinx.coroutines.delay(10_000)
             Result.success(testMetadata)
@@ -359,8 +359,9 @@ class DownloadViewModelTest {
 
             viewModel.onIntent(DownloadIntent.PrefillUrl("https://youtube.com/watch?v=prefill"))
 
-            // State must remain Extracting — PrefillUrl should be a no-op
-            expectNoEvents()
+            // State must reset to Idle with the new URL
+            val idle = awaitItem() as DownloadUiState.Idle
+            assertEquals("https://youtube.com/watch?v=prefill", idle.clipboardUrl)
             cancelAndIgnoreRemainingEvents()
         }
     }
