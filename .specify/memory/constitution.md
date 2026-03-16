@@ -123,7 +123,8 @@
 ### Git workflow
 
 - Never push directly to `main` — always branch + PR.
-- Branch naming: `feature/{name}`, `fix/{name}`, `refactor/{name}`.
+- Repository history uses `feature/{name}`, `fix/{name}`, `refactor/{name}`.
+- Codex-created branches MUST use `codex/{name}` to satisfy local agent workflow requirements.
 - Commit messages follow conventional commits:
   `feat:`, `fix:`, `refactor:`, `test:`, `docs:`.
 - Each Spec Kit task = one commit.

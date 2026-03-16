@@ -20,3 +20,8 @@ firebase-debug.log
 /components*/
 theme.css
 
+# Local Codex runtime state
+/.codex/*
+!/.codex/prompts/
+/.codex/prompts/*
+!/.codex/prompts/*.md

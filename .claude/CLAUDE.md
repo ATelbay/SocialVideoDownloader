@@ -55,11 +55,11 @@ Built on yt-dlp via youtubedl-android. Personal tool.
 ## SDD Tooling: GitHub Spec Kit
 - Spec Kit manages feature specs via `/speckit.*` slash commands
 - Constitution: `.specify/memory/constitution.md` (high-level principles)
+- Baseline spec artifacts live in: `specs/001-project-foundation/`
 - Feature specs generated to: `specs/{NNN-feature-name}/` (spec.md, plan.md, tasks.md)
-- Product spec (reference): `docs/PRODUCT_SPEC.md`
 - Workflow per feature: `/speckit.specify` → `/speckit.clarify` → `/speckit.plan` → `/speckit.tasks` → `/speckit.implement`
 - Use Spec Kit for NEW FEATURES only. Bug fixes and small tweaks — direct implementation.
-- Always reference `docs/PRODUCT_SPEC.md` when running `/speckit.specify`
+- There is no `docs/PRODUCT_SPEC.md` in this repo right now
 
 ## Key dependencies
 ```kotlin
@@ -82,7 +82,7 @@ io.github.junkfood02.youtubedl-android:aria2c:0.18.+
 
 ## Git workflow
 - IMPORTANT: Always push to a branch and create a PR. Never push directly to main.
-- Branch naming: `feature/{name}`, `fix/{name}`, `refactor/{name}`
+- Repository history uses `feature/{name}`, `fix/{name}`, `refactor/{name}`; Codex-created branches use `codex/{name}`
 - Conventional commits: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`
 
 ## What NOT to do

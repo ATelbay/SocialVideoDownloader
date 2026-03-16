@@ -8,7 +8,7 @@ description: "Task list template for feature implementation"
 **Input**: Design documents from `/specs/[###-feature-name]/`
 **Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
 
-**Tests**: The examples below include test tasks. Tests are OPTIONAL - only include them if explicitly requested in the feature specification.
+**Tests**: Include unit-test tasks for use cases and ViewModels unless the feature is documentation-only.
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
@@ -20,10 +20,12 @@ description: "Task list template for feature implementation"
 
 ## Path Conventions
 
-- **Single project**: `src/`, `tests/` at repository root
-- **Web app**: `backend/src/`, `frontend/src/`
-- **Mobile**: `api/src/`, `ios/src/` or `android/src/`
-- Paths shown below assume single project - adjust based on plan.md structure
+- `app/src/main/...` for app entry points, navigation, and manifest changes
+- `feature/<name>/src/main/...` and `feature/<name>/src/test/...` for feature UI, ViewModels, and feature-specific services
+- `core/domain/src/main/...` and `core/domain/src/test/...` for domain models, repository interfaces, and use cases
+- `core/data/src/main/...` and `core/data/src/test/...` for Room, MediaStore, repository implementations, and mappers
+- `core/ui/src/main/...` for shared Compose UI and theme primitives
+- `src/main/res/values/strings.xml` in the touched module for user-facing strings
 
 <!-- 
   ============================================================================
@@ -46,11 +48,11 @@ description: "Task list template for feature implementation"
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-**Purpose**: Project initialization and basic structure
+**Purpose**: Feature scaffolding and shared wiring
 
 - [ ] T001 Create project structure per implementation plan
-- [ ] T002 Initialize [language] project with [framework] dependencies
-- [ ] T003 [P] Configure linting and formatting tools
+- [ ] T002 Add or update module dependencies required for the feature
+- [ ] T003 [P] Wire navigation, DI entry points, or manifest declarations needed by the feature
 
 ---
 
@@ -62,12 +64,12 @@ description: "Task list template for feature implementation"
 
 Examples of foundational tasks (adjust based on your project):
 
-- [ ] T004 Setup database schema and migrations framework
-- [ ] T005 [P] Implement authentication/authorization framework
-- [ ] T006 [P] Setup API routing and middleware structure
-- [ ] T007 Create base models/entities that all stories depend on
-- [ ] T008 Configure error handling and logging infrastructure
-- [ ] T009 Setup environment configuration management
+- [ ] T004 Define or update shared domain models in `core/domain/src/main/...`
+- [ ] T005 [P] Add repository interfaces and use cases in `core/domain/src/main/...`
+- [ ] T006 [P] Add repository bindings, data sources, or Room migrations in `core/data/src/main/...`
+- [ ] T007 Configure injected dispatchers, service hooks, or notification channels used across stories
+- [ ] T008 Add shared error mapping and UI state contracts
+- [ ] T009 Add required string resources and shared UI components
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -79,21 +81,21 @@ Examples of foundational tasks (adjust based on your project):
 
 **Independent Test**: [How to verify this story works on its own]
 
-### Tests for User Story 1 (OPTIONAL - only if tests requested) ⚠️
+### Tests for User Story 1 ⚠️
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T010 [P] [US1] Contract test for [endpoint] in tests/contract/test_[name].py
-- [ ] T011 [P] [US1] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T010 [P] [US1] Add use case test in `core/domain/src/test/kotlin/.../[UseCase]Test.kt`
+- [ ] T011 [P] [US1] Add ViewModel test in `feature/[feature]/src/test/kotlin/.../[Feature]ViewModelTest.kt`
 
 ### Implementation for User Story 1
 
-- [ ] T012 [P] [US1] Create [Entity1] model in src/models/[entity1].py
-- [ ] T013 [P] [US1] Create [Entity2] model in src/models/[entity2].py
-- [ ] T014 [US1] Implement [Service] in src/services/[service].py (depends on T012, T013)
-- [ ] T015 [US1] Implement [endpoint/feature] in src/[location]/[file].py
-- [ ] T016 [US1] Add validation and error handling
-- [ ] T017 [US1] Add logging for user story 1 operations
+- [ ] T012 [P] [US1] Add or update domain model in `core/domain/src/main/kotlin/.../[Entity].kt`
+- [ ] T013 [P] [US1] Implement use case or repository interface in `core/domain/src/main/kotlin/.../[UseCase].kt`
+- [ ] T014 [US1] Implement repository/data source in `core/data/src/main/kotlin/.../[RepositoryImpl].kt`
+- [ ] T015 [US1] Implement screen, state, or intent handling in `feature/[feature]/src/main/kotlin/.../[ScreenOrViewModel].kt`
+- [ ] T016 [US1] Add validation, error mapping, and string resources
+- [ ] T017 [US1] Wire navigation, service integration, or persistence needed for User Story 1
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -105,17 +107,17 @@ Examples of foundational tasks (adjust based on your project):
 
 **Independent Test**: [How to verify this story works on its own]
 
-### Tests for User Story 2 (OPTIONAL - only if tests requested) ⚠️
+### Tests for User Story 2 ⚠️
 
-- [ ] T018 [P] [US2] Contract test for [endpoint] in tests/contract/test_[name].py
-- [ ] T019 [P] [US2] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T018 [P] [US2] Add use case or mapper test in `core/domain/src/test/kotlin/...` or `core/data/src/test/kotlin/...`
+- [ ] T019 [P] [US2] Add ViewModel or UI-state test in `feature/[feature]/src/test/kotlin/...`
 
 ### Implementation for User Story 2
 
-- [ ] T020 [P] [US2] Create [Entity] model in src/models/[entity].py
-- [ ] T021 [US2] Implement [Service] in src/services/[service].py
-- [ ] T022 [US2] Implement [endpoint/feature] in src/[location]/[file].py
-- [ ] T023 [US2] Integrate with User Story 1 components (if needed)
+- [ ] T020 [P] [US2] Extend shared model, mapper, or UI contract in the owning module
+- [ ] T021 [US2] Implement the feature logic in the relevant domain or data layer file
+- [ ] T022 [US2] Implement the Compose UI or service behavior in `feature/[feature]/src/main/kotlin/...`
+- [ ] T023 [US2] Integrate with User Story 1 flows without regressing independent behavior
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -127,16 +129,16 @@ Examples of foundational tasks (adjust based on your project):
 
 **Independent Test**: [How to verify this story works on its own]
 
-### Tests for User Story 3 (OPTIONAL - only if tests requested) ⚠️
+### Tests for User Story 3 ⚠️
 
-- [ ] T024 [P] [US3] Contract test for [endpoint] in tests/contract/test_[name].py
-- [ ] T025 [P] [US3] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T024 [P] [US3] Add domain/data-layer test in the touched module test source set
+- [ ] T025 [P] [US3] Add feature ViewModel or state transition test in `feature/[feature]/src/test/kotlin/...`
 
 ### Implementation for User Story 3
 
-- [ ] T026 [P] [US3] Create [Entity] model in src/models/[entity].py
-- [ ] T027 [US3] Implement [Service] in src/services/[service].py
-- [ ] T028 [US3] Implement [endpoint/feature] in src/[location]/[file].py
+- [ ] T026 [P] [US3] Add or update supporting model, contract, or shared UI component
+- [ ] T027 [US3] Implement the required domain/data behavior in the owning module
+- [ ] T028 [US3] Implement the corresponding Compose UI, service, or navigation behavior
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -150,11 +152,11 @@ Examples of foundational tasks (adjust based on your project):
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] TXXX [P] Documentation updates in docs/
+- [ ] TXXX [P] Documentation updates in `specs/[###-feature-name]/quickstart.md` or module README content
 - [ ] TXXX Code cleanup and refactoring
 - [ ] TXXX Performance optimization across all stories
-- [ ] TXXX [P] Additional unit tests (if requested) in tests/unit/
-- [ ] TXXX Security hardening
+- [ ] TXXX [P] Additional unit tests in the touched module `src/test/kotlin/...`
+- [ ] TXXX Validate manifest entries, permissions, and notification behavior
 - [ ] TXXX Run quickstart.md validation
 
 ---
@@ -178,9 +180,9 @@ Examples of foundational tasks (adjust based on your project):
 
 ### Within Each User Story
 
-- Tests (if included) MUST be written and FAIL before implementation
-- Models before services
-- Services before endpoints
+- Tests MUST be written and FAIL before implementation
+- Domain contracts before repository implementations
+- Repository and use case work before UI wiring
 - Core implementation before integration
 - Story complete before moving to next priority
 
@@ -198,13 +200,13 @@ Examples of foundational tasks (adjust based on your project):
 ## Parallel Example: User Story 1
 
 ```bash
-# Launch all tests for User Story 1 together (if tests requested):
-Task: "Contract test for [endpoint] in tests/contract/test_[name].py"
-Task: "Integration test for [user journey] in tests/integration/test_[name].py"
+# Launch all tests for User Story 1 together:
+Task: "Add use case test in core/domain/src/test/kotlin/.../[UseCase]Test.kt"
+Task: "Add ViewModel test in feature/[feature]/src/test/kotlin/.../[Feature]ViewModelTest.kt"
 
 # Launch all models for User Story 1 together:
-Task: "Create [Entity1] model in src/models/[entity1].py"
-Task: "Create [Entity2] model in src/models/[entity2].py"
+Task: "Add or update domain model in core/domain/src/main/kotlin/.../[Entity1].kt"
+Task: "Add or update domain model in core/domain/src/main/kotlin/.../[Entity2].kt"
 ```
 
 ---
