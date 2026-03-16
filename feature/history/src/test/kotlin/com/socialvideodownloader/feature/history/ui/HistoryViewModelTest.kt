@@ -198,7 +198,7 @@ class HistoryViewModelTest {
     }
 
     @Test
-    fun `historyItemClicked on failed item emits ShowMessage`() = runTest {
+    fun `historyItemClicked on failed item emits RetryDownload`() = runTest {
         val failedItem = historyListItem(
             id = 12L,
             title = "Failed Video",
@@ -213,7 +213,8 @@ class HistoryViewModelTest {
             vm.effect.test {
                 vm.onIntent(HistoryIntent.HistoryItemClicked(12L))
                 val effect = awaitItem()
-                assertTrue(effect is HistoryEffect.ShowMessage)
+                assertTrue(effect is HistoryEffect.RetryDownload)
+                assertEquals("https://example.com/video", (effect as HistoryEffect.RetryDownload).sourceUrl)
                 cancelAndIgnoreRemainingEvents()
             }
             cancelAndIgnoreRemainingEvents()

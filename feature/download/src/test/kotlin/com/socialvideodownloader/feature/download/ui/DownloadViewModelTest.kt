@@ -81,6 +81,7 @@ class DownloadViewModelTest {
             errorMessageMapper = errorMessageMapper,
             serviceStateHolder = serviceStateHolder,
             context = context,
+            savedStateHandle = androidx.lifecycle.SavedStateHandle(),
         )
     }
 
@@ -242,6 +243,7 @@ class DownloadViewModelTest {
             errorMessageMapper = errorMessageMapper,
             serviceStateHolder = serviceStateHolder,
             context = context,
+            savedStateHandle = androidx.lifecycle.SavedStateHandle(),
         )
 
         freshViewModel.uiState.test {
