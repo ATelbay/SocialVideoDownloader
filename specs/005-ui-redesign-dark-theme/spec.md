@@ -77,7 +77,8 @@ While video info is being fetched, the screen shows a full custom extracting sta
 2. **Given** the extracting state, **Then** the URL is shown in a non-editable compact bar (corner radius 16, `#1A1726` fill, 1px `#2E2844` border, height 56, padding 16px horizontal) with a link icon (20px, `#6B6580`) and the URL text in Inter 15sp `#A09BB0`, truncated with ellipsis.
 3. **Given** the extracting state, **Then** a large circular spinner (56px diameter) is displayed centered, using `#8B5CF6` color. Below it: "Extracting video info..." in Inter 14sp `#A09BB0`, centered.
 4. **Given** the cancel button, **Then** it matches the cancel button spec from the downloading screen (full width, height 48, corner radius 14, no fill, 1.5px `#FF6B6B` border, "Cancel" text Inter 15sp weight 600 `#FF6B6B`, centered).
-5. **Given** the content layout, **Then** there is 32px gap between major sections (URL bar, spinner section, cancel button).
+5. **Given** the user taps the back button during extraction, **Then** the extraction is cancelled and the screen returns to Idle state with the URL still populated in the input field.
+6. **Given** the content layout, **Then** there is 32px gap between major sections (URL bar, spinner section, cancel button).
 
 ---
 
@@ -133,10 +134,11 @@ After a successful download, the screen shows the compact video card, a success 
 1. **Given** download completion, **Then** the compact video card is identical to the downloading state variant (same specs as User Story 6, scenario 1).
 2. **Given** the success indicator, **Then** an 88px circle (corner radius 44, `#1B3D25` fill) contains a 40px check icon in `#6ECF83`. Below: "Download Complete!" in Plus Jakarta Sans 24sp weight 700 white, then "Saved to your Downloads folder" in Inter 14sp `#A09BB0`. Elements are center-aligned with 12px gap.
 3. **Given** the Open button, **Then** it is full-width, height 48, corner radius 14, no fill, 1.5px `#8B5CF6` border, with external-link icon 18px `#8B5CF6` + "Open" text Inter 15sp weight 600 `#8B5CF6`, centered, 8px gap.
-4. **Given** the Share button, **Then** it is full-width, height 48, corner radius 14, gradient fill `#8B5CF6` to `#7C3AED`, with share-2 icon 18px white + "Share" text Inter 15sp weight 600 white, centered, 8px gap. Open and Share buttons have 12px gap between them.
-5. **Given** the New Download link, **Then** it shows a plus icon 16px `#8B5CF6` + "New Download" text Inter 14sp weight 500 `#8B5CF6`, centered, 6px gap, padding 10px vertical / 16px horizontal.
-6. **Given** the user taps "New Download", **Then** the download screen resets to Idle state with an empty URL field. Any completed download state is cleared. The user sees the idle hero section.
-7. **Given** the content layout, **Then** 24px gap between major sections.
+4. **Given** the user taps "Open", **Then** the app launches an ACTION_VIEW intent with the downloaded file's content URI and video MIME type, opening the system's default video player or chooser.
+5. **Given** the Share button, **Then** it is full-width, height 48, corner radius 14, gradient fill `#8B5CF6` to `#7C3AED`, with share-2 icon 18px white + "Share" text Inter 15sp weight 600 white, centered, 8px gap. Open and Share buttons have 12px gap between them.
+6. **Given** the New Download link, **Then** it shows a plus icon 16px `#8B5CF6` + "New Download" text Inter 14sp weight 500 `#8B5CF6`, centered, 6px gap, padding 10px vertical / 16px horizontal.
+7. **Given** the user taps "New Download", **Then** the download screen resets to Idle state with an empty URL field. Any completed download state is cleared. The user sees the idle hero section.
+8. **Given** the content layout, **Then** 24px gap between major sections.
 
 ---
 
@@ -258,5 +260,6 @@ When there are no downloads in history, the screen shows a centered empty state 
 - The theme toggle button currently in the top bar is removed since there is only one theme.
 - The existing M3 TopAppBar on the download screen is replaced with a custom top bar (back button + title) for non-idle states, and no top bar for the idle state.
 - The history screen top bar search and more-options buttons reuse existing functionality — no new search or menu features are added, only visual restyling.
+- The history screen search functionality is already implemented. The redesign only restyles the existing search UI — no new search features are added.
 - Platform abbreviations are: YT (YouTube), IG (Instagram), TT (TikTok), X (Twitter), VI (Vimeo), FB (Facebook).
 - The TikTok platform badge uses black text on the `#69C9D0` background; all other platform badges use white text.
