@@ -9,6 +9,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -140,6 +141,7 @@ private fun DownloadScreenContent(
                 .verticalScroll(rememberScrollState()),
             label = "downloadStateTransition",
         ) { targetState ->
+            val nonIdlePadding = Modifier.padding(top = 8.dp, start = 20.dp, end = 20.dp, bottom = 20.dp)
             when (targetState) {
                 is DownloadUiState.Idle -> {
                     IdleContent(
@@ -156,45 +158,50 @@ private fun DownloadScreenContent(
                     ExtractingContent(
                         url = targetState.url,
                         onCancelClicked = { onIntent(DownloadIntent.NewDownloadClicked) },
+                        modifier = nonIdlePadding,
                     )
                 }
 
                 is DownloadUiState.FormatSelection -> {
-                    VideoInfoCard(
-                        thumbnailUrl = targetState.metadata.thumbnailUrl,
-                        title = targetState.metadata.title,
-                        uploaderName = targetState.metadata.author,
-                        durationSeconds = targetState.metadata.durationSeconds,
-                        platformName = PlatformColors.nameFromUrl(targetState.metadata.sourceUrl),
-                        platformColor = PlatformColors.nameFromUrl(targetState.metadata.sourceUrl)
-                            ?.let { PlatformColors.forPlatform(it) },
-                        compact = false,
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    FormatChipsContent(
-                        formats = targetState.metadata.formats,
-                        selectedFormatId = targetState.selectedFormatId,
-                        onFormatSelected = { onIntent(DownloadIntent.FormatSelected(it)) },
-                        onDownloadClicked = { onIntent(DownloadIntent.DownloadClicked) },
-                    )
+                    Column(modifier = nonIdlePadding) {
+                        VideoInfoCard(
+                            thumbnailUrl = targetState.metadata.thumbnailUrl,
+                            title = targetState.metadata.title,
+                            uploaderName = targetState.metadata.author,
+                            durationSeconds = targetState.metadata.durationSeconds,
+                            platformName = PlatformColors.nameFromUrl(targetState.metadata.sourceUrl),
+                            platformColor = PlatformColors.nameFromUrl(targetState.metadata.sourceUrl)
+                                ?.let { PlatformColors.forPlatform(it) },
+                            compact = false,
+                        )
+                        Spacer(modifier = Modifier.height(20.dp))
+                        FormatChipsContent(
+                            formats = targetState.metadata.formats,
+                            selectedFormatId = targetState.selectedFormatId,
+                            onFormatSelected = { onIntent(DownloadIntent.FormatSelected(it)) },
+                            onDownloadClicked = { onIntent(DownloadIntent.DownloadClicked) },
+                        )
+                    }
                 }
 
                 is DownloadUiState.Downloading -> {
-                    VideoInfoCard(
-                        thumbnailUrl = targetState.metadata.thumbnailUrl,
-                        title = targetState.metadata.title,
-                        uploaderName = targetState.metadata.author,
-                        durationSeconds = targetState.metadata.durationSeconds,
-                        platformName = PlatformColors.nameFromUrl(targetState.metadata.sourceUrl),
-                        platformColor = PlatformColors.nameFromUrl(targetState.metadata.sourceUrl)
-                            ?.let { PlatformColors.forPlatform(it) },
-                        compact = false,
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    DownloadProgressContent(
-                        progress = targetState.progress,
-                        onCancelClicked = { onIntent(DownloadIntent.CancelDownloadClicked) },
-                    )
+                    Column(modifier = nonIdlePadding) {
+                        VideoInfoCard(
+                            thumbnailUrl = targetState.metadata.thumbnailUrl,
+                            title = targetState.metadata.title,
+                            uploaderName = targetState.metadata.author,
+                            durationSeconds = targetState.metadata.durationSeconds,
+                            platformName = PlatformColors.nameFromUrl(targetState.metadata.sourceUrl),
+                            platformColor = PlatformColors.nameFromUrl(targetState.metadata.sourceUrl)
+                                ?.let { PlatformColors.forPlatform(it) },
+                            compact = false,
+                        )
+                        Spacer(modifier = Modifier.height(32.dp))
+                        DownloadProgressContent(
+                            progress = targetState.progress,
+                            onCancelClicked = { onIntent(DownloadIntent.CancelDownloadClicked) },
+                        )
+                    }
                 }
 
                 is DownloadUiState.Done -> {
@@ -203,6 +210,7 @@ private fun DownloadScreenContent(
                         onOpenClicked = { onIntent(DownloadIntent.OpenFileClicked) },
                         onShareClicked = { onIntent(DownloadIntent.ShareFileClicked) },
                         onNewDownloadClicked = { onIntent(DownloadIntent.NewDownloadClicked) },
+                        modifier = nonIdlePadding,
                     )
                 }
 
@@ -211,6 +219,7 @@ private fun DownloadScreenContent(
                         message = targetState.message,
                         onRetryClicked = { onIntent(DownloadIntent.RetryClicked) },
                         onNewDownloadClicked = { onIntent(DownloadIntent.NewDownloadClicked) },
+                        modifier = nonIdlePadding,
                     )
                 }
             }
