@@ -28,8 +28,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.socialvideodownloader.core.ui.components.SvdTopBar
 import com.socialvideodownloader.core.ui.components.VideoInfoCard
@@ -80,10 +78,6 @@ fun DownloadScreen(
         }
     }
 
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-        viewModel.checkClipboard()
-    }
-
     DownloadScreenContent(
         uiState = uiState,
         onIntent = viewModel::onIntent,
@@ -99,13 +93,6 @@ private fun DownloadScreenContent(
 ) {
     var urlText by rememberSaveable { mutableStateOf("") }
     val isIdle = uiState is DownloadUiState.Idle
-    val clipboardUrl = (uiState as? DownloadUiState.Idle)?.clipboardUrl
-
-    LaunchedEffect(isIdle, clipboardUrl) {
-        if (isIdle) {
-            urlText = clipboardUrl ?: ""
-        }
-    }
 
     val titleResId = when (uiState) {
         is DownloadUiState.Idle, is DownloadUiState.Extracting -> R.string.download_screen_title

@@ -4,7 +4,7 @@ import com.socialvideodownloader.core.domain.model.DownloadProgress
 import com.socialvideodownloader.core.domain.model.VideoMetadata
 
 sealed interface DownloadUiState {
-    data class Idle(val clipboardUrl: String? = null) : DownloadUiState
+    data object Idle : DownloadUiState
     data class Extracting(val url: String) : DownloadUiState
     data class FormatSelection(
         val metadata: VideoMetadata,

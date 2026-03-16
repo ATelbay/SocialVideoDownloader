@@ -10,6 +10,5 @@ sealed interface DownloadIntent {
     data object OpenFileClicked : DownloadIntent
     data object ShareFileClicked : DownloadIntent
     data object NewDownloadClicked : DownloadIntent
-    data class ClipboardUrlDetected(val url: String) : DownloadIntent
     data class PrefillUrl(val url: String) : DownloadIntent
 }

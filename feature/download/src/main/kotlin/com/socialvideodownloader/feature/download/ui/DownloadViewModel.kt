@@ -8,7 +8,6 @@ import androidx.lifecycle.viewModelScope
 import com.socialvideodownloader.core.domain.model.DownloadProgress
 import com.socialvideodownloader.core.domain.model.DownloadRequest
 import com.socialvideodownloader.core.domain.usecase.ExtractVideoInfoUseCase
-import com.socialvideodownloader.core.domain.usecase.GetClipboardUrlUseCase
 import com.socialvideodownloader.feature.download.service.DownloadService
 import com.socialvideodownloader.feature.download.service.DownloadServiceState
 import com.socialvideodownloader.feature.download.service.DownloadServiceStateHolder
@@ -26,35 +25,27 @@ import javax.inject.Inject
 @HiltViewModel
 class DownloadViewModel @Inject constructor(
     private val extractVideoInfo: ExtractVideoInfoUseCase,
-    private val getClipboardUrl: GetClipboardUrlUseCase,
     private val errorMessageMapper: ErrorMessageMapper,
     private val serviceStateHolder: DownloadServiceStateHolder,
     @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<DownloadUiState>(DownloadUiState.Idle())
+    private val _uiState = MutableStateFlow<DownloadUiState>(DownloadUiState.Idle)
     val uiState: StateFlow<DownloadUiState> = _uiState.asStateFlow()
 
     private val _events = Channel<DownloadEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
 
     private var currentUrl: String = ""
-    private var lastClipboardUrl: String? = null
 
     init {
         collectServiceState()
-        checkClipboard()
         val initialUrl: String? = savedStateHandle["initialUrl"]
         if (initialUrl != null) {
             currentUrl = initialUrl
-            _uiState.value = DownloadUiState.Idle(clipboardUrl = initialUrl)
+            _uiState.value = DownloadUiState.Idle
         }
-    }
-
-    fun checkClipboard() {
-        val url = getClipboardUrl() ?: return
-        onIntent(DownloadIntent.ClipboardUrlDetected(url))
     }
 
     private fun collectServiceState() {
@@ -118,17 +109,12 @@ class DownloadViewModel @Inject constructor(
             is DownloadIntent.OpenFileClicked -> handleOpenFile()
             is DownloadIntent.ShareFileClicked -> handleShareFile()
             is DownloadIntent.NewDownloadClicked -> handleNewDownload()
-            is DownloadIntent.ClipboardUrlDetected -> handleClipboardUrl(intent.url)
             is DownloadIntent.PrefillUrl -> handlePrefillUrl(intent.url)
         }
     }
 
     private fun handleUrlChanged(url: String) {
         currentUrl = url
-        val state = _uiState.value
-        if (state is DownloadUiState.Idle) {
-            _uiState.value = DownloadUiState.Idle(clipboardUrl = state.clipboardUrl)
-        }
     }
 
     private fun handleExtract() {
@@ -245,24 +231,12 @@ class DownloadViewModel @Inject constructor(
 
     private fun handleNewDownload() {
         currentUrl = ""
-        lastClipboardUrl = null
-        _uiState.value = DownloadUiState.Idle()
-    }
-
-    private fun handleClipboardUrl(url: String) {
-        if (url == lastClipboardUrl) return
-        lastClipboardUrl = url
-        val state = _uiState.value
-        if (state is DownloadUiState.Idle) {
-            currentUrl = url
-            _uiState.value = DownloadUiState.Idle(clipboardUrl = url)
-        }
+        _uiState.value = DownloadUiState.Idle
     }
 
     private fun handlePrefillUrl(url: String) {
-        if (_uiState.value !is DownloadUiState.Idle) return
         currentUrl = url
-        _uiState.value = DownloadUiState.Idle(clipboardUrl = url)
+        handleExtract()
     }
 }
 
