@@ -1,6 +1,5 @@
 package com.socialvideodownloader.core.ui.theme
 
-import android.os.Build
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -8,27 +7,18 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.socialvideodownloader.core.ui.tokens.PlatformColors
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * T040: Verify dynamic color behavior on API 31+ emulator.
- *
- * Checks:
- * 1. On API 31+ with dynamicColor=true, M3 palette primary/secondary are wallpaper-derived
- *    (i.e. they differ from the static Figma palette values).
- * 2. ExtendedColors (success) are always fixed — never changed by dynamic color.
- * 3. PlatformColors (badge colors) are always fixed constants.
+ * Verify SVD theme applies the correct fixed color tokens.
  */
 @RunWith(AndroidJUnit4::class)
 class DynamicColorTest {
 
     @get:Rule
     val composeRule = createComposeRule()
-
-    // --- Helpers to capture colors out of composition ---
 
     private var capturedPrimary = Color.Unspecified
     private var capturedSuccess = Color.Unspecified
@@ -43,119 +33,34 @@ class DynamicColorTest {
         capturedSuccessContainer = MaterialTheme.extendedColors.successContainer
     }
 
-    // --- Tests ---
-
-    /**
-     * On API 31+, dynamic color is enabled so the M3 primary color should come from
-     * the wallpaper palette, NOT from the static Figma value #6750A4.
-     *
-     * On API < 31 the static palette is used, so primary equals the Figma value.
-     */
     @Test
-    fun dynamicColor_api31Plus_primaryDiffersFromStaticPalette() {
+    fun theme_primaryMatchesSvdPalette() {
         composeRule.setContent {
-            SocialVideoDownloaderTheme(darkTheme = false, dynamicColor = true) {
-                CaptureColors()
-            }
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            // Dynamic color overrides the static Figma primary
-            assertNotEquals(
-                "On API 31+ with dynamic color, primary should be wallpaper-derived, not the static #6750A4",
-                LightColorScheme.primary,
-                capturedPrimary,
-            )
-        } else {
-            // Below API 31 fallback to static palette
-            assertEquals(
-                "Below API 31, primary must equal the static Figma palette value",
-                LightColorScheme.primary,
-                capturedPrimary,
-            )
-        }
-    }
-
-    /**
-     * When dynamicColor=false, even on API 31+, the static Figma primary is used.
-     */
-    @Test
-    fun dynamicColorDisabled_primaryMatchesStaticPalette() {
-        composeRule.setContent {
-            SocialVideoDownloaderTheme(darkTheme = false, dynamicColor = false) {
+            SocialVideoDownloaderTheme {
                 CaptureColors()
             }
         }
 
         assertEquals(
-            "With dynamicColor=false, primary must match the static Figma palette value",
-            LightColorScheme.primary,
+            "Primary must match SvdPrimary",
+            SvdPrimary,
             capturedPrimary,
         )
     }
 
-    /**
-     * ExtendedColors.success is always fixed — never influenced by dynamic color.
-     */
     @Test
-    fun extendedColors_success_isFixedRegardlessOfDynamicColor() {
-        // With dynamic color ON
+    fun extendedColors_successMatchesSvdPalette() {
         composeRule.setContent {
-            SocialVideoDownloaderTheme(darkTheme = false, dynamicColor = true) {
-                CaptureColors()
-            }
-        }
-        val successWithDynamic = capturedSuccess
-        val onSuccessWithDynamic = capturedOnSuccess
-        val successContainerWithDynamic = capturedSuccessContainer
-
-        // With dynamic color OFF
-        composeRule.setContent {
-            SocialVideoDownloaderTheme(darkTheme = false, dynamicColor = false) {
+            SocialVideoDownloaderTheme {
                 CaptureColors()
             }
         }
 
-        assertEquals(
-            "success color must be the same whether dynamic color is on or off",
-            successWithDynamic,
-            capturedSuccess,
-        )
-        assertEquals(
-            "onSuccess color must be the same whether dynamic color is on or off",
-            onSuccessWithDynamic,
-            capturedOnSuccess,
-        )
-        assertEquals(
-            "successContainer color must be the same whether dynamic color is on or off",
-            successContainerWithDynamic,
-            capturedSuccessContainer,
-        )
-
-        // Also assert exact values match design spec
-        assertEquals(LightExtendedColors.success, capturedSuccess)
-        assertEquals(LightExtendedColors.onSuccess, capturedOnSuccess)
-        assertEquals(LightExtendedColors.successContainer, capturedSuccessContainer)
+        assertEquals(SvdExtendedColors.success, capturedSuccess)
+        assertEquals(SvdExtendedColors.onSuccess, capturedOnSuccess)
+        assertEquals(SvdExtendedColors.successContainer, capturedSuccessContainer)
     }
 
-    /**
-     * Dark theme ExtendedColors.success uses dark palette values regardless of dynamic color.
-     */
-    @Test
-    fun extendedColors_darkTheme_success_isFixedRegardlessOfDynamicColor() {
-        composeRule.setContent {
-            SocialVideoDownloaderTheme(darkTheme = true, dynamicColor = true) {
-                CaptureColors()
-            }
-        }
-        assertEquals(DarkExtendedColors.success, capturedSuccess)
-        assertEquals(DarkExtendedColors.onSuccess, capturedOnSuccess)
-        assertEquals(DarkExtendedColors.successContainer, capturedSuccessContainer)
-    }
-
-    /**
-     * PlatformColors are plain Color constants — they must never be changed by theming.
-     */
     @Test
     fun platformColors_areAlwaysFixed() {
         assertEquals(Color(0xFFFF0000), PlatformColors.YouTube)
@@ -167,10 +72,6 @@ class DynamicColorTest {
         assertEquals(Color.White, PlatformColors.TextOnPlatform)
     }
 
-    /**
-     * PlatformColors.forPlatform() returns the right brand color for known platforms
-     * and the fallback outline color for unknowns.
-     */
     @Test
     fun platformColors_forPlatform_returnsCorrectBrandColor() {
         assertEquals(Color(0xFFFF0000), PlatformColors.forPlatform("YouTube"))
