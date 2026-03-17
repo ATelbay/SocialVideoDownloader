@@ -9,10 +9,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,20 +20,23 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.socialvideodownloader.core.domain.model.DownloadProgress
 import com.socialvideodownloader.core.ui.theme.AppShapesInstance
-import com.socialvideodownloader.core.ui.theme.StatsValue
-import com.socialvideodownloader.core.ui.theme.SvdError
+import com.socialvideodownloader.core.ui.theme.SvdBorder
+import com.socialvideodownloader.core.ui.theme.SvdBorderStrong
+import com.socialvideodownloader.core.ui.theme.SvdForeground
+import com.socialvideodownloader.core.ui.theme.SvdMutedForeground
 import com.socialvideodownloader.core.ui.theme.SvdPrimary
-import com.socialvideodownloader.core.ui.theme.SvdPrimarySoft
-import com.socialvideodownloader.core.ui.theme.SvdSurfaceElevated
-import com.socialvideodownloader.core.ui.theme.SvdTextSecondary
-import com.socialvideodownloader.core.ui.theme.SvdTextTertiary
+import com.socialvideodownloader.core.ui.theme.SvdPrimaryStrong
+import com.socialvideodownloader.core.ui.theme.SvdSurfaceAlt
+import com.socialvideodownloader.core.ui.theme.SvdSurfaceStrong
+import com.socialvideodownloader.core.ui.theme.StatsValue
+import com.socialvideodownloader.core.ui.tokens.Spacing
 import com.socialvideodownloader.feature.download.R
 
 @Composable
@@ -50,11 +53,16 @@ fun DownloadProgressContent(
 
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(32.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
-        // Progress section
+        // Progress card
         Column(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(AppShapesInstance.cardLg)
+                .background(SvdSurfaceAlt)
+                .border(1.dp, SvdBorder, AppShapesInstance.cardLg)
+                .padding(Spacing.ProgressCardPadding),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
@@ -62,99 +70,71 @@ fun DownloadProgressContent(
             Text(
                 text = "${progress.progressPercent.toInt()}%",
                 style = MaterialTheme.typography.displayLarge,
-                color = SvdPrimary,
+                color = SvdPrimaryStrong,
             )
 
+            // Time estimate
             Text(
                 text = stringResource(R.string.download_downloading_status),
-                style = MaterialTheme.typography.bodyMedium,
-                color = SvdTextSecondary,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                color = SvdMutedForeground,
             )
 
             // Progress bar
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(10.dp)
-                    .clip(AppShapesInstance.progress)
-                    .background(SvdSurfaceElevated),
+                    .height(Spacing.ProgressTrackHeight)
+                    .clip(AppShapesInstance.pill)
+                    .background(SvdSurfaceStrong),
             ) {
                 if (animatedProgress > 0f) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth(animatedProgress)
                             .fillMaxHeight()
-                            .background(
-                                Brush.verticalGradient(listOf(SvdPrimary, SvdPrimarySoft)),
-                                AppShapesInstance.progress,
-                            ),
+                            .background(SvdPrimary, AppShapesInstance.pill),
                     )
                 }
             }
 
-            // Stats row: Speed, ETA, Size
+            // Stats row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                StatColumn(
-                    label = stringResource(R.string.download_speed),
-                    value = if (progress.speedBytesPerSec > 0) formatSpeed(progress.speedBytesPerSec) else "—",
-                    modifier = Modifier.weight(1f),
+                Text(
+                    text = progress.totalBytes?.let { Formatter.formatFileSize(context, it) } ?: "—",
+                    style = StatsValue,
+                    color = SvdForeground,
                 )
-                StatColumn(
-                    label = stringResource(R.string.download_eta),
-                    value = if (progress.etaSeconds > 0) formatEta(progress.etaSeconds) else "—",
-                    modifier = Modifier.weight(1f),
-                )
-                StatColumn(
-                    label = stringResource(R.string.download_size),
-                    value = progress.totalBytes?.let { Formatter.formatFileSize(context, it) } ?: "—",
-                    modifier = Modifier.weight(1f),
+                Text(
+                    text = if (progress.speedBytesPerSec > 0) formatSpeed(progress.speedBytesPerSec) else "—",
+                    style = StatsValue,
+                    color = SvdForeground,
                 )
             }
         }
 
-        // Cancel button
+        // Cancel button — neutral borderStrong style
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp)
-                .clip(AppShapesInstance.cardSm)
-                .border(1.5.dp, SvdError, AppShapesInstance.cardSm)
+                .height(Spacing.SecondaryButtonHeight)
+                .clip(AppShapesInstance.control)
+                .border(1.dp, SvdBorderStrong, AppShapesInstance.control)
                 .clickable(onClick = onCancelClicked),
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = stringResource(R.string.download_cancel_download),
-                style = MaterialTheme.typography.labelLarge,
-                color = SvdError,
+                style = MaterialTheme.typography.labelLarge.copy(
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                ),
+                color = SvdForeground,
             )
         }
-    }
-}
-
-@Composable
-private fun StatColumn(
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = SvdTextTertiary,
-        )
-        Text(
-            text = value,
-            style = StatsValue,
-            color = Color.White,
-        )
     }
 }
 
@@ -165,10 +145,3 @@ private fun formatSpeed(bytesPerSec: Long): String {
         else -> "$bytesPerSec B/s"
     }
 }
-
-private fun formatEta(seconds: Long): String {
-    val minutes = seconds / 60
-    val secs = seconds % 60
-    return "%d:%02d".format(minutes, secs)
-}
-

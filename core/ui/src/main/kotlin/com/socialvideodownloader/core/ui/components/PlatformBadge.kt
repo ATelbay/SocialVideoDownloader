@@ -1,85 +1,93 @@
 package com.socialvideodownloader.core.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CameraAlt
+import androidx.compose.material.icons.outlined.MusicNote
+import androidx.compose.material.icons.outlined.OndemandVideo
+import androidx.compose.material.icons.outlined.PlayCircle
+import androidx.compose.material.icons.outlined.Public
+import androidx.compose.material.icons.outlined.SmartDisplay
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.socialvideodownloader.core.ui.R
 import com.socialvideodownloader.core.ui.theme.AppShapesInstance
 import com.socialvideodownloader.core.ui.theme.SocialVideoDownloaderTheme
-import com.socialvideodownloader.core.ui.tokens.PlatformColors
+import com.socialvideodownloader.core.ui.theme.SvdBorder
+import com.socialvideodownloader.core.ui.theme.SvdForeground
+import com.socialvideodownloader.core.ui.theme.SvdPrimaryStrong
+import com.socialvideodownloader.core.ui.theme.SvdSurfaceAlt
+import com.socialvideodownloader.core.ui.tokens.Spacing
 
 @Composable
 fun PlatformBadge(
     platformName: String,
-    platformColor: Color,
     modifier: Modifier = Modifier,
-    abbreviation: Boolean = false,
 ) {
-    val text = if (abbreviation) platformAbbreviation(platformName) else platformName
-    val textColor = PlatformColors.textColor(platformName)
-    val shape = if (abbreviation) AppShapesInstance.badge else AppShapesInstance.badgeLg
-    val textStyle = if (abbreviation) {
-        MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp, fontWeight = FontWeight.Bold)
-    } else {
-        MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Bold)
-    }
-    val padding = if (abbreviation) {
-        PaddingValues(horizontal = 6.dp, vertical = 2.dp)
-    } else {
-        PaddingValues(horizontal = 8.dp, vertical = 2.dp)
-    }
+    val icon = platformIcon(platformName)
 
-    Text(
-        text = text,
-        style = textStyle.copy(color = textColor),
+    Row(
         modifier = modifier
-            .clip(shape)
-            .background(platformColor)
-            .padding(padding),
-    )
+            .clip(AppShapesInstance.pill)
+            .background(SvdSurfaceAlt)
+            .border(1.dp, SvdBorder, AppShapesInstance.pill)
+            .padding(vertical = Spacing.ChipPaddingV, horizontal = Spacing.ChipPaddingH),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = SvdPrimaryStrong,
+            modifier = Modifier.size(14.dp),
+        )
+        Text(
+            text = platformName,
+            style = MaterialTheme.typography.labelMedium.copy(
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+            ),
+            color = SvdForeground,
+        )
+    }
 }
 
-@Composable
-private fun platformAbbreviation(platformName: String): String = when {
-    platformName.contains("youtube", ignoreCase = true) -> stringResource(R.string.platform_abbr_youtube)
-    platformName.contains("instagram", ignoreCase = true) -> stringResource(R.string.platform_abbr_instagram)
-    platformName.contains("tiktok", ignoreCase = true) -> stringResource(R.string.platform_abbr_tiktok)
-    platformName.contains("twitter", ignoreCase = true) || platformName.contains("x.com", ignoreCase = true) -> stringResource(R.string.platform_abbr_twitter)
-    platformName.contains("vimeo", ignoreCase = true) -> stringResource(R.string.platform_abbr_vimeo)
-    platformName.contains("facebook", ignoreCase = true) -> stringResource(R.string.platform_abbr_facebook)
-    else -> stringResource(R.string.platform_abbr_unknown)
+private fun platformIcon(platformName: String): ImageVector = when {
+    platformName.contains("youtube", ignoreCase = true) -> Icons.Outlined.SmartDisplay
+    platformName.contains("instagram", ignoreCase = true) -> Icons.Outlined.CameraAlt
+    platformName.contains("tiktok", ignoreCase = true) -> Icons.Outlined.MusicNote
+    platformName.contains("twitter", ignoreCase = true) || platformName.contains("x.com", ignoreCase = true) -> Icons.Outlined.Public
+    platformName.contains("vimeo", ignoreCase = true) -> Icons.Outlined.PlayCircle
+    platformName.contains("facebook", ignoreCase = true) -> Icons.Outlined.OndemandVideo
+    else -> Icons.Outlined.Public
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun PlatformBadgeFullPreview() {
+private fun PlatformBadgePreview() {
     SocialVideoDownloaderTheme {
-        PlatformBadge(
-            platformName = "YouTube",
-            platformColor = PlatformColors.YouTube,
-        )
+        PlatformBadge(platformName = "YouTube")
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun PlatformBadgeAbbreviationPreview() {
+private fun PlatformBadgeTikTokPreview() {
     SocialVideoDownloaderTheme {
-        PlatformBadge(
-            platformName = "TikTok",
-            platformColor = PlatformColors.TikTok,
-            abbreviation = true,
-        )
+        PlatformBadge(platformName = "TikTok")
     }
 }

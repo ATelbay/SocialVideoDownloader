@@ -17,7 +17,6 @@ data class HistoryListItem(
 
 sealed interface DeleteTarget {
     data class Single(val itemId: Long) : DeleteTarget
-    data object All : DeleteTarget
 }
 
 data class DeleteConfirmationState(

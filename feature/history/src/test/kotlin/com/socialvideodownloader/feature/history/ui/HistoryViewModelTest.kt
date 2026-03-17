@@ -2,12 +2,9 @@ package com.socialvideodownloader.feature.history.ui
 
 import app.cash.turbine.test
 import com.socialvideodownloader.core.domain.model.DownloadStatus
-import com.socialvideodownloader.feature.history.domain.DeleteAllHistoryResult
-import com.socialvideodownloader.feature.history.domain.DeleteAllHistoryUseCase
 import com.socialvideodownloader.feature.history.domain.DeleteHistoryItemUseCase
 import com.socialvideodownloader.feature.history.domain.ObserveHistoryItemsUseCase
 import com.socialvideodownloader.feature.history.testutil.MainDispatcherRule
-import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -29,8 +26,6 @@ class HistoryViewModelTest {
 
     private val observeHistoryItems = mockk<ObserveHistoryItemsUseCase>()
     private val deleteHistoryItem = mockk<DeleteHistoryItemUseCase>(relaxed = true)
-    private val deleteAllHistory = mockk<DeleteAllHistoryUseCase>()
-
     private lateinit var viewModel: HistoryViewModel
 
     private lateinit var testItems: List<HistoryListItem>
@@ -43,8 +38,7 @@ class HistoryViewModelTest {
             historyListItem(id = 3L, title = "kotlin advanced"),
         )
         every { observeHistoryItems() } returns flowOf(testItems)
-        coEvery { deleteAllHistory(any()) } returns DeleteAllHistoryResult(failedFileDeletions = 0)
-        viewModel = HistoryViewModel(observeHistoryItems, deleteHistoryItem, deleteAllHistory)
+        viewModel = HistoryViewModel(observeHistoryItems, deleteHistoryItem)
     }
 
     @Test
@@ -53,7 +47,7 @@ class HistoryViewModelTest {
         // With UnconfinedTestDispatcher the flow starts immediately, so we verify the sealed type
         // by recreating with a never-emitting flow
         every { observeHistoryItems() } returns kotlinx.coroutines.flow.flow { /* never emits */ }
-        val vm = HistoryViewModel(observeHistoryItems, deleteHistoryItem, deleteAllHistory)
+        val vm = HistoryViewModel(observeHistoryItems, deleteHistoryItem)
         assertEquals(HistoryUiState.Loading, vm.uiState.value)
     }
 
@@ -70,7 +64,7 @@ class HistoryViewModelTest {
     @Test
     fun `when use case emits empty list state becomes Empty with isFiltering false`() = runTest {
         every { observeHistoryItems() } returns flowOf(emptyList())
-        val vm = HistoryViewModel(observeHistoryItems, deleteHistoryItem, deleteAllHistory)
+        val vm = HistoryViewModel(observeHistoryItems, deleteHistoryItem)
         vm.uiState.test {
             val state = awaitItem()
             assertTrue(state is HistoryUiState.Empty)
@@ -159,7 +153,7 @@ class HistoryViewModelTest {
             contentUri = "content://media/external/video/10",
         )
         every { observeHistoryItems() } returns flowOf(listOf(accessibleItem))
-        val vm = HistoryViewModel(observeHistoryItems, deleteHistoryItem, deleteAllHistory)
+        val vm = HistoryViewModel(observeHistoryItems, deleteHistoryItem)
 
         vm.uiState.test {
             awaitItem() // subscribe so _allItems is populated
@@ -183,7 +177,7 @@ class HistoryViewModelTest {
             isFileAccessible = false,
         )
         every { observeHistoryItems() } returns flowOf(listOf(inaccessibleItem))
-        val vm = HistoryViewModel(observeHistoryItems, deleteHistoryItem, deleteAllHistory)
+        val vm = HistoryViewModel(observeHistoryItems, deleteHistoryItem)
 
         vm.uiState.test {
             awaitItem()
@@ -206,7 +200,7 @@ class HistoryViewModelTest {
             isFileAccessible = false,
         )
         every { observeHistoryItems() } returns flowOf(listOf(failedItem))
-        val vm = HistoryViewModel(observeHistoryItems, deleteHistoryItem, deleteAllHistory)
+        val vm = HistoryViewModel(observeHistoryItems, deleteHistoryItem)
 
         vm.uiState.test {
             awaitItem()
@@ -231,7 +225,7 @@ class HistoryViewModelTest {
             contentUri = "content://media/external/video/20",
         )
         every { observeHistoryItems() } returns flowOf(listOf(accessibleItem))
-        val vm = HistoryViewModel(observeHistoryItems, deleteHistoryItem, deleteAllHistory)
+        val vm = HistoryViewModel(observeHistoryItems, deleteHistoryItem)
 
         vm.uiState.test {
             awaitItem()
@@ -255,7 +249,7 @@ class HistoryViewModelTest {
             isFileAccessible = false,
         )
         every { observeHistoryItems() } returns flowOf(listOf(inaccessibleItem))
-        val vm = HistoryViewModel(observeHistoryItems, deleteHistoryItem, deleteAllHistory)
+        val vm = HistoryViewModel(observeHistoryItems, deleteHistoryItem)
 
         vm.uiState.test {
             awaitItem()
@@ -343,26 +337,6 @@ class HistoryViewModelTest {
     }
 
     @Test
-    fun `DeleteAllClicked shows confirmation dialog targeting All items ignoring search filter`() = runTest {
-        viewModel.uiState.test {
-            awaitItem() // initial Content
-
-            viewModel.onIntent(HistoryIntent.SearchQueryChanged("kotlin"))
-            awaitItem() // filtered to 2 items
-
-            viewModel.onIntent(HistoryIntent.DeleteAllClicked)
-
-            val state = awaitItem() as HistoryUiState.Content
-            assertNotNull(state.deleteConfirmation)
-            val confirmation = state.deleteConfirmation!!
-            assertTrue(confirmation.target is DeleteTarget.All)
-            // affectedCount should be total (3), not filtered (2)
-            assertEquals(3, confirmation.affectedCount)
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
     fun `DismissDeletionDialog clears deleteConfirmation`() = runTest {
         viewModel.uiState.test {
             awaitItem() // initial Content
@@ -432,60 +406,6 @@ class HistoryViewModelTest {
             val finalState = awaitItem()
             assertTrue(finalState is HistoryUiState.Content)
             assertNull((finalState as HistoryUiState.Content).deleteConfirmation)
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun `ConfirmDeletion for All calls DeleteAllHistoryUseCase`() = runTest {
-        viewModel.uiState.test {
-            awaitItem() // initial Content
-
-            viewModel.onIntent(HistoryIntent.DeleteAllClicked)
-            awaitItem() // confirmation shown
-
-            viewModel.onIntent(HistoryIntent.ConfirmDeletion)
-
-            cancelAndIgnoreRemainingEvents()
-        }
-
-        coVerify { deleteAllHistory(deleteFiles = false) }
-    }
-
-    @Test
-    fun `ConfirmDeletion for All with file-cleanup failures emits ShowMessage`() = runTest {
-        coEvery { deleteAllHistory(any()) } returns DeleteAllHistoryResult(failedFileDeletions = 2)
-
-        viewModel.uiState.test {
-            awaitItem() // initial Content
-            viewModel.onIntent(HistoryIntent.DeleteAllClicked)
-            awaitItem() // confirmation shown
-            viewModel.onIntent(HistoryIntent.ConfirmDeletion)
-            cancelAndIgnoreRemainingEvents()
-        }
-
-        viewModel.effect.test {
-            // effect should have been emitted during the ConfirmDeletion handling above;
-            // re-trigger to capture it in a fresh subscription
-            cancelAndIgnoreRemainingEvents()
-        }
-
-        // Re-run to capture the effect properly
-        val items = listOf(historyListItem(id = 1L, title = "Video"))
-        every { observeHistoryItems() } returns flowOf(items)
-        coEvery { deleteAllHistory(any()) } returns DeleteAllHistoryResult(failedFileDeletions = 2)
-        val vm2 = HistoryViewModel(observeHistoryItems, deleteHistoryItem, deleteAllHistory)
-
-        vm2.effect.test {
-            vm2.uiState.test {
-                awaitItem()
-                vm2.onIntent(HistoryIntent.DeleteAllClicked)
-                awaitItem()
-                vm2.onIntent(HistoryIntent.ConfirmDeletion)
-                cancelAndIgnoreRemainingEvents()
-            }
-            val effect = awaitItem()
-            assertTrue(effect is HistoryEffect.ShowMessage)
             cancelAndIgnoreRemainingEvents()
         }
     }

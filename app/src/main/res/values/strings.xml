@@ -1,7 +1,9 @@
 <resources>
     <string name="app_name">Social Video Downloader</string>
     <string name="nav_download">Download</string>
+    <string name="nav_library">Library</string>
     <string name="nav_history">History</string>
+    <string name="library_coming_soon">Library coming soon</string>
     <string name="download_notification_channel_name">Download Progress</string>
     <string name="download_notification_channel_description">Shows progress of video downloads</string>
 

@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -22,19 +23,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.socialvideodownloader.core.domain.model.DownloadStatus
 import com.socialvideodownloader.core.ui.R
 import com.socialvideodownloader.core.ui.theme.AppShapesInstance
+import com.socialvideodownloader.core.ui.theme.SvdAccent
+import com.socialvideodownloader.core.ui.theme.SvdAccentSoft
 import com.socialvideodownloader.core.ui.theme.SvdError
-import com.socialvideodownloader.core.ui.theme.SvdErrorContainer
-import com.socialvideodownloader.core.ui.theme.SvdPrimary
-import com.socialvideodownloader.core.ui.theme.SvdPrimaryContainer
+import com.socialvideodownloader.core.ui.theme.SvdErrorSoft
+import com.socialvideodownloader.core.ui.theme.SvdPrimarySoft
+import com.socialvideodownloader.core.ui.theme.SvdPrimaryStrong
 import com.socialvideodownloader.core.ui.theme.SvdSuccess
-import com.socialvideodownloader.core.ui.theme.SvdSuccessContainer
-import com.socialvideodownloader.core.ui.theme.SvdTextSecondary
-import com.socialvideodownloader.core.ui.theme.SvdSurface
+import com.socialvideodownloader.core.ui.theme.SvdSuccessSoft
+import com.socialvideodownloader.core.ui.tokens.Spacing
 
 @Composable
 fun StatusBadge(
@@ -43,42 +46,41 @@ fun StatusBadge(
 ) {
     val (containerColor, contentColor, label) = when (status) {
         DownloadStatus.COMPLETED -> Triple(
-            SvdSuccessContainer,
+            SvdSuccessSoft,
             SvdSuccess,
             stringResource(R.string.status_completed),
         )
         DownloadStatus.FAILED -> Triple(
-            SvdErrorContainer,
+            SvdErrorSoft,
             SvdError,
             stringResource(R.string.status_failed),
         )
         DownloadStatus.DOWNLOADING -> Triple(
-            SvdPrimaryContainer,
-            SvdPrimary,
+            SvdPrimarySoft,
+            SvdPrimaryStrong,
             stringResource(R.string.status_downloading),
         )
-        DownloadStatus.PENDING -> Triple(
-            SvdSurface,
-            SvdTextSecondary,
-            stringResource(R.string.status_pending),
-        )
-        DownloadStatus.QUEUED -> Triple(
-            SvdSurface,
-            SvdTextSecondary,
-            stringResource(R.string.status_queued),
+        DownloadStatus.PENDING, DownloadStatus.QUEUED -> Triple(
+            SvdAccentSoft,
+            SvdAccent,
+            stringResource(
+                if (status == DownloadStatus.PENDING) R.string.status_pending
+                else R.string.status_queued,
+            ),
         )
         DownloadStatus.CANCELLED -> Triple(
-            SvdSurface,
-            SvdTextSecondary,
+            SvdAccentSoft,
+            SvdAccent,
             stringResource(R.string.status_cancelled),
         )
     }
 
     Row(
         modifier = modifier
-            .clip(AppShapesInstance.badge)
+            .height(Spacing.StatusChipHeight)
+            .clip(AppShapesInstance.pill)
             .background(containerColor)
-            .padding(horizontal = 8.dp, vertical = 3.dp),
+            .padding(horizontal = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -87,7 +89,10 @@ fun StatusBadge(
         }
         Text(
             text = label,
-            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+            ),
             color = contentColor,
         )
     }

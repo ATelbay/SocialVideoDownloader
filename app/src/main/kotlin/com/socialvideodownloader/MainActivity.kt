@@ -3,6 +3,7 @@ package com.socialvideodownloader
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +21,7 @@ import com.socialvideodownloader.core.ui.theme.SvdBg
 import com.socialvideodownloader.feature.download.navigation.DownloadRoute
 import com.socialvideodownloader.feature.history.navigation.HistoryRoute
 import com.socialvideodownloader.navigation.AppNavHost
+import com.socialvideodownloader.navigation.LibraryRoute
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -29,7 +31,16 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.light(
+                android.graphics.Color.TRANSPARENT,
+                android.graphics.Color.TRANSPARENT,
+            ),
+            navigationBarStyle = SystemBarStyle.light(
+                android.graphics.Color.TRANSPARENT,
+                android.graphics.Color.TRANSPARENT,
+            ),
+        )
         val sharedUrl = getSharedUrl(intent)
         setContent {
             SocialVideoDownloaderTheme {
@@ -38,7 +49,8 @@ class MainActivity : ComponentActivity() {
                 val currentDestination = currentBackStack?.destination
 
                 val selectedIndex = when {
-                    currentDestination?.hasRoute<HistoryRoute>() == true -> 1
+                    currentDestination?.hasRoute<HistoryRoute>() == true -> 2
+                    currentDestination?.hasRoute<LibraryRoute>() == true -> 1
                     else -> 0
                 }
 
@@ -55,7 +67,12 @@ class MainActivity : ComponentActivity() {
                                         launchSingleTop = true
                                         restoreState = true
                                     }
-                                    1 -> navController.navigate(HistoryRoute) {
+                                    1 -> navController.navigate(LibraryRoute) {
+                                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                    2 -> navController.navigate(HistoryRoute) {
                                         popUpTo(navController.graph.startDestinationId) { saveState = true }
                                         launchSingleTop = true
                                         restoreState = true

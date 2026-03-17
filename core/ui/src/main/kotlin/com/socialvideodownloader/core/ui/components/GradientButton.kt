@@ -22,11 +22,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.socialvideodownloader.core.ui.theme.AppShapesInstance
 import com.socialvideodownloader.core.ui.theme.SocialVideoDownloaderTheme
-import com.socialvideodownloader.core.ui.tokens.Spacing
 import com.socialvideodownloader.core.ui.theme.SvdPrimary
-import com.socialvideodownloader.core.ui.theme.SvdPrimaryEnd
+import com.socialvideodownloader.core.ui.theme.SvdWarning
+import com.socialvideodownloader.core.ui.tokens.Spacing
 
 @Composable
 fun GradientButton(
@@ -39,10 +40,10 @@ fun GradientButton(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(Spacing.ButtonHeightLg)
-            .clip(AppShapesInstance.large)
+            .height(Spacing.PrimaryButtonHeight)
+            .clip(AppShapesInstance.control)
             .alpha(if (enabled) 1f else 0.5f)
-            .background(Brush.verticalGradient(listOf(SvdPrimary, SvdPrimaryEnd)))
+            .background(Brush.verticalGradient(listOf(SvdPrimary, SvdWarning)))
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -50,7 +51,13 @@ fun GradientButton(
             if (icon != null) {
                 Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
             }
-            Text(text, style = MaterialTheme.typography.bodyLarge, color = Color.White)
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelLarge.copy(
+                    letterSpacing = 0.6.sp,
+                    color = Color.White,
+                ),
+            )
         }
     }
 }
@@ -60,7 +67,7 @@ fun GradientButton(
 private fun GradientButtonPreview() {
     SocialVideoDownloaderTheme {
         GradientButton(
-            text = "Download",
+            text = "EXTRACT VIDEO",
             onClick = {},
             modifier = Modifier.padding(16.dp),
         )

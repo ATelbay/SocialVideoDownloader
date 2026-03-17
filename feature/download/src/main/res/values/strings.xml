@@ -27,17 +27,24 @@
     <string name="notification_download_failed">Download failed</string>
 
     <!-- Screen titles -->
-    <string name="download_screen_title">Video Downloader</string>
-    <string name="download_title_select_format">Select Format</string>
+    <string name="download_screen_title">New download</string>
+    <string name="download_title_select_format">Select format</string>
     <string name="download_title_downloading">Downloading</string>
     <string name="download_title_complete">Complete</string>
     <string name="download_title_error">Error</string>
 
+    <!-- Top bar actions -->
+    <string name="download_action_tips">Tips</string>
+    <string name="download_action_back">Back</string>
+    <string name="download_action_hide">Hide</string>
+
     <!-- Idle state -->
-    <string name="download_hero_title">Download Videos</string>
+    <string name="download_hero_title">Download Videos\nFrom Anywhere</string>
     <string name="download_hero_subtitle">Paste any social media URL to get started</string>
     <string name="download_paste_button">Paste</string>
+    <string name="download_url_input_placeholder">Paste a video link</string>
     <string name="download_supported_platforms_label">SUPPORTED PLATFORMS</string>
+    <string name="download_footer_text">Supports 1700+ sites</string>
 
     <!-- Format selection -->
     <string name="download_format_info_unknown_size">Unknown size</string>
@@ -46,8 +53,7 @@
     <string name="download_selected_format">Selected Format</string>
 
     <!-- Download state -->
-    <string name="download_extract_video">Extract Video</string>
-    <string name="download_url_placeholder">https://…</string>
+    <string name="download_extract_video">EXTRACT VIDEO</string>
     <string name="download_extracting_status">Extracting video info…</string>
     <string name="download_downloading_status">Downloading video…</string>
     <string name="download_cancel_download">Cancel Download</string>

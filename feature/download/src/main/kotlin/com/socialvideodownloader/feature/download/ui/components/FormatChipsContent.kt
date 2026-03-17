@@ -2,6 +2,7 @@ package com.socialvideodownloader.feature.download.ui.components
 
 import android.text.format.Formatter
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,23 +17,23 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.socialvideodownloader.core.ui.theme.SectionLabel
 import com.socialvideodownloader.core.domain.model.VideoFormatOption
 import com.socialvideodownloader.core.ui.components.FormatChip
 import com.socialvideodownloader.core.ui.components.GradientButton
 import com.socialvideodownloader.core.ui.theme.AppShapesInstance
+import com.socialvideodownloader.core.ui.theme.SvdBorder
+import com.socialvideodownloader.core.ui.theme.SvdForeground
+import com.socialvideodownloader.core.ui.theme.SvdSubtleForeground
+import com.socialvideodownloader.core.ui.theme.SvdSurfaceAlt
 import com.socialvideodownloader.core.ui.theme.StatsValue
-import com.socialvideodownloader.core.ui.theme.SvdPrimary
-import com.socialvideodownloader.core.ui.theme.SvdSurfaceElevated
-import com.socialvideodownloader.core.ui.theme.SvdTextTertiary
+import com.socialvideodownloader.core.ui.tokens.Spacing
 import com.socialvideodownloader.feature.download.R
 
 @Composable
@@ -52,18 +53,18 @@ fun FormatChipsContent(
 
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+        verticalArrangement = Arrangement.spacedBy(Spacing.SectionGap),
     ) {
         // VIDEO QUALITY label
         if (videoFormats.isNotEmpty()) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     text = stringResource(R.string.download_video_quality_label),
-                    style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.sp),
-                    color = SvdTextTertiary,
+                    style = SectionLabel,
+                    color = SvdSubtleForeground,
                 )
                 LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.ChipRowGap),
                     contentPadding = PaddingValues(horizontal = 0.dp),
                 ) {
                     items(videoFormats, key = { it.formatId }) { format ->
@@ -71,7 +72,6 @@ fun FormatChipsContent(
                             label = formatChipLabel(format),
                             selected = format.formatId == selectedFormatId,
                             onClick = { onFormatSelected(format.formatId) },
-                            isAudio = false,
                         )
                     }
                 }
@@ -83,11 +83,11 @@ fun FormatChipsContent(
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     text = stringResource(R.string.download_audio_quality_label),
-                    style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.sp),
-                    color = SvdTextTertiary,
+                    style = SectionLabel,
+                    color = SvdSubtleForeground,
                 )
                 LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.ChipRowGap),
                     contentPadding = PaddingValues(horizontal = 0.dp),
                 ) {
                     items(audioFormats, key = { it.formatId }) { format ->
@@ -95,7 +95,6 @@ fun FormatChipsContent(
                             label = formatChipLabel(format),
                             selected = format.formatId == selectedFormatId,
                             onClick = { onFormatSelected(format.formatId) },
-                            isAudio = true,
                         )
                     }
                 }
@@ -103,34 +102,37 @@ fun FormatChipsContent(
         }
 
         // Format summary bar
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(AppShapesInstance.cardSm)
-                .background(SvdSurfaceElevated)
-                .padding(vertical = 14.dp, horizontal = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+                .clip(AppShapesInstance.summary)
+                .background(SvdSurfaceAlt)
+                .border(1.dp, SvdBorder, AppShapesInstance.summary)
+                .padding(Spacing.SummaryBarPadding),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    text = stringResource(R.string.download_selected_format),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = SvdTextTertiary,
-                )
+            Text(
+                text = stringResource(R.string.download_selected_format),
+                style = SectionLabel,
+                color = SvdSubtleForeground,
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
                 Text(
                     text = selectedFormat?.label ?: "",
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = Color.White,
+                    color = SvdForeground,
+                )
+                Text(
+                    text = selectedFormat?.fileSizeBytes?.let { bytes ->
+                        Formatter.formatFileSize(context, bytes)
+                    } ?: stringResource(R.string.download_format_info_unknown_size),
+                    style = StatsValue,
+                    color = SvdForeground,
                 )
             }
-            Text(
-                text = selectedFormat?.fileSizeBytes?.let { bytes ->
-                    Formatter.formatFileSize(context, bytes)
-                } ?: stringResource(R.string.download_format_info_unknown_size),
-                style = StatsValue,
-                color = SvdPrimary,
-            )
         }
 
         // Download button

@@ -13,12 +13,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import com.socialvideodownloader.core.ui.theme.AppShapesInstance
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -30,15 +30,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.socialvideodownloader.core.ui.theme.AppShapesInstance
 import com.socialvideodownloader.core.ui.theme.SvdBorder
 import com.socialvideodownloader.core.ui.theme.SvdError
-import com.socialvideodownloader.core.ui.theme.SvdErrorContainer
-import com.socialvideodownloader.core.ui.theme.SvdPrimary
-import com.socialvideodownloader.core.ui.theme.SvdSurfaceElevated
-import com.socialvideodownloader.core.ui.theme.SvdText
+import com.socialvideodownloader.core.ui.theme.SvdErrorSoft
+import com.socialvideodownloader.core.ui.theme.SvdForeground
+import com.socialvideodownloader.core.ui.theme.SvdPrimaryStrong
+import com.socialvideodownloader.core.ui.theme.SvdSurfaceAlt
 import com.socialvideodownloader.feature.history.R
 import com.socialvideodownloader.feature.history.ui.DeleteConfirmationState
-import com.socialvideodownloader.feature.history.ui.DeleteTarget
 
 @Composable
 fun HistoryDeleteDialog(
@@ -47,23 +47,16 @@ fun HistoryDeleteDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val title = when (state.target) {
-        is DeleteTarget.Single -> stringResource(R.string.history_delete_single_title)
-        DeleteTarget.All -> stringResource(R.string.history_delete_all_title)
-    }
-
-    val bodyText = when (state.target) {
-        is DeleteTarget.Single -> stringResource(R.string.history_delete_message_single)
-        DeleteTarget.All -> stringResource(R.string.history_delete_message_all, state.affectedCount)
-    }
+    val title = stringResource(R.string.history_delete_single_title)
+    val bodyText = stringResource(R.string.history_delete_message_single)
 
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         Surface(
-            shape = AppShapesInstance.full,
-            color = SvdSurfaceElevated,
+            shape = AppShapesInstance.cardLg,
+            color = SvdSurfaceAlt,
             tonalElevation = 6.dp,
             shadowElevation = 6.dp,
             modifier = Modifier
@@ -74,13 +67,13 @@ fun HistoryDeleteDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(24.dp),
             ) {
-                // Trash icon in errorContainer circle
+                // Trash icon in errorSoft circle
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .size(52.dp)
                         .clip(CircleShape)
-                        .background(SvdErrorContainer),
+                        .background(SvdErrorSoft),
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Delete,
@@ -94,16 +87,16 @@ fun HistoryDeleteDialog(
 
                 Text(
                     text = title,
-                    style = androidx.compose.material3.MaterialTheme.typography.titleLarge,
-                    color = SvdText,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = SvdForeground,
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = bodyText,
-                    style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
-                    color = SvdText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = SvdForeground,
                 )
 
                 if (state.hasAnyAccessibleFile) {
@@ -113,8 +106,8 @@ fun HistoryDeleteDialog(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(AppShapesInstance.medium)
-                            .background(SvdSurfaceElevated)
+                            .clip(AppShapesInstance.control)
+                            .background(SvdSurfaceAlt)
                             .clickable { onDeleteFilesSelectionChanged(!state.deleteFilesSelected) }
                             .padding(horizontal = 12.dp, vertical = 8.dp),
                     ) {
@@ -125,8 +118,8 @@ fun HistoryDeleteDialog(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = stringResource(R.string.history_delete_checkbox_label),
-                            style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
-                            color = SvdText,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = SvdForeground,
                         )
                     }
                 }
@@ -147,7 +140,7 @@ fun HistoryDeleteDialog(
                     ) {
                         Text(
                             text = stringResource(R.string.history_delete_cancel),
-                            color = SvdPrimary,
+                            color = SvdPrimaryStrong,
                         )
                     }
 
