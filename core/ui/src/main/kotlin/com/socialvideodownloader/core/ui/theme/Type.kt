@@ -8,10 +8,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.socialvideodownloader.core.ui.R
 
-val PlusJakartaSans = FontFamily(
-    Font(R.font.plus_jakarta_sans_semibold, FontWeight.SemiBold),
-    Font(R.font.plus_jakarta_sans_bold, FontWeight.Bold),
-    Font(R.font.plus_jakarta_sans_extrabold, FontWeight.ExtraBold),
+val SpaceGrotesk = FontFamily(
+    Font(R.font.space_grotesk_bold, FontWeight.Bold),
 )
 
 val Inter = FontFamily(
@@ -23,32 +21,32 @@ val Inter = FontFamily(
 
 val Typography = Typography(
     displayLarge = TextStyle(
-        fontFamily = PlusJakartaSans,
-        fontWeight = FontWeight.ExtraBold,
-        fontSize = 64.sp,
+        fontFamily = SpaceGrotesk,
+        fontWeight = FontWeight.Bold,
+        fontSize = 62.sp,
     ),
     titleLarge = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = SpaceGrotesk,
         fontWeight = FontWeight.Bold,
         fontSize = 28.sp,
     ),
     headlineMedium = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = Inter,
         fontWeight = FontWeight.Bold,
         fontSize = 24.sp,
     ),
     headlineSmall = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = Inter,
         fontWeight = FontWeight.Bold,
         fontSize = 20.sp,
     ),
     titleMedium = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = Inter,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 18.sp,
+        fontSize = 17.sp,
     ),
     titleSmall = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = Inter,
         fontWeight = FontWeight.SemiBold,
         fontSize = 15.sp,
     ),
@@ -69,8 +67,8 @@ val Typography = Typography(
     ),
     labelLarge = TextStyle(
         fontFamily = Inter,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 15.sp,
+        fontWeight = FontWeight.Bold,
+        fontSize = 14.sp,
     ),
     labelMedium = TextStyle(
         fontFamily = Inter,
@@ -80,14 +78,14 @@ val Typography = Typography(
     labelSmall = TextStyle(
         fontFamily = Inter,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 11.sp,
+        fontSize = 12.sp,
     ),
 )
 
 val StatsValue = TextStyle(
-    fontFamily = PlusJakartaSans,
-    fontWeight = FontWeight.Bold,
-    fontSize = 16.sp,
+    fontFamily = Inter,
+    fontWeight = FontWeight.SemiBold,
+    fontSize = 13.sp,
 )
 
 /** Used for URL input field text and its placeholder. Inter Normal 15sp. */
