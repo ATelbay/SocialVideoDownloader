@@ -23,10 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.socialvideodownloader.core.ui.components.StatusBadge
 import com.socialvideodownloader.core.ui.theme.AppShapesInstance
@@ -85,10 +83,7 @@ fun HistoryListItemRow(
                 // Title
                 Text(
                     text = item.title,
-                    style = MaterialTheme.typography.titleSmall.copy(
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    ),
+                    style = MaterialTheme.typography.titleSmall,
                     color = SvdForeground,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -105,19 +100,19 @@ fun HistoryListItemRow(
                             System.currentTimeMillis(),
                             DateUtils.MINUTE_IN_MILLIS,
                         ).toString(),
-                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 13.sp),
+                        style = MaterialTheme.typography.labelMedium,
                         color = SvdMutedForeground,
                     )
                     val sizeText = item.fileSizeBytes?.let { Formatter.formatFileSize(context, it) }
                     if (sizeText != null) {
                         Text(
                             text = "·",
-                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 13.sp),
+                            style = MaterialTheme.typography.labelMedium,
                             color = SvdSubtleForeground,
                         )
                         Text(
                             text = sizeText,
-                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 13.sp),
+                            style = MaterialTheme.typography.labelMedium,
                             color = SvdMutedForeground,
                         )
                     }

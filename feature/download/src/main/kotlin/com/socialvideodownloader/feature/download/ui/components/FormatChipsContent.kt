@@ -23,7 +23,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.socialvideodownloader.core.ui.theme.SectionLabel
 import com.socialvideodownloader.core.domain.model.VideoFormatOption
 import com.socialvideodownloader.core.ui.components.FormatChip
 import com.socialvideodownloader.core.ui.components.GradientButton
@@ -60,10 +60,7 @@ fun FormatChipsContent(
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     text = stringResource(R.string.download_video_quality_label),
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        letterSpacing = 1.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    ),
+                    style = SectionLabel,
                     color = SvdSubtleForeground,
                 )
                 LazyRow(
@@ -86,10 +83,7 @@ fun FormatChipsContent(
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     text = stringResource(R.string.download_audio_quality_label),
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        letterSpacing = 1.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    ),
+                    style = SectionLabel,
                     color = SvdSubtleForeground,
                 )
                 LazyRow(
@@ -119,10 +113,7 @@ fun FormatChipsContent(
         ) {
             Text(
                 text = stringResource(R.string.download_selected_format),
-                style = MaterialTheme.typography.labelSmall.copy(
-                    letterSpacing = 1.sp,
-                    fontWeight = FontWeight.SemiBold,
-                ),
+                style = SectionLabel,
                 color = SvdSubtleForeground,
             )
             Row(

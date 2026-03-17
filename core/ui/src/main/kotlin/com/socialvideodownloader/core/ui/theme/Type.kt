@@ -88,6 +88,14 @@ val StatsValue = TextStyle(
     fontSize = 13.sp,
 )
 
+/** Used for uppercase section headers (e.g., "VIDEO QUALITY", "AUDIO QUALITY"). */
+val SectionLabel = TextStyle(
+    fontFamily = Inter,
+    fontWeight = FontWeight.SemiBold,
+    fontSize = 12.sp,
+    letterSpacing = 1.sp,
+)
+
 /** Used for URL input field text and its placeholder. Inter Normal 15sp. */
 val UrlInputText = TextStyle(
     fontFamily = Inter,
