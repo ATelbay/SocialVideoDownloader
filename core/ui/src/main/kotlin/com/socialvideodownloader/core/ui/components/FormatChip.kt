@@ -7,7 +7,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -15,9 +14,11 @@ import androidx.compose.ui.unit.sp
 import com.socialvideodownloader.core.ui.theme.AppShapesInstance
 import com.socialvideodownloader.core.ui.theme.SocialVideoDownloaderTheme
 import com.socialvideodownloader.core.ui.theme.SvdBorder
-import com.socialvideodownloader.core.ui.theme.SvdPrimary
-import com.socialvideodownloader.core.ui.theme.SvdPrimaryContainer
+import com.socialvideodownloader.core.ui.theme.SvdForeground
+import com.socialvideodownloader.core.ui.theme.SvdPrimarySoft
+import com.socialvideodownloader.core.ui.theme.SvdPrimaryStrong
 import com.socialvideodownloader.core.ui.theme.SvdSurface
+import com.socialvideodownloader.core.ui.tokens.Spacing
 
 @Composable
 fun FormatChip(
@@ -27,18 +28,16 @@ fun FormatChip(
     modifier: Modifier = Modifier,
     isAudio: Boolean = false,
 ) {
-    val borderColor = if (selected) SvdPrimary else SvdBorder
-    val borderWidth = if (selected) 1.5.dp else 1.dp
-    val backgroundColor = if (selected) SvdPrimaryContainer else SvdSurface
-    val labelColor = if (selected) SvdPrimary else Color.White
-    val fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
-    val horizontalPadding = if (isAudio) 14.dp else 16.dp
+    val backgroundColor = if (selected) SvdPrimarySoft else SvdSurface
+    val border = if (selected) null else BorderStroke(1.dp, SvdBorder)
+    val labelColor = if (selected) SvdPrimaryStrong else SvdForeground
+    val fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold
 
     Surface(
         onClick = onClick,
-        shape = AppShapesInstance.medium,
+        shape = AppShapesInstance.pill,
         color = backgroundColor,
-        border = BorderStroke(width = borderWidth, color = borderColor),
+        border = border,
         modifier = modifier,
     ) {
         Text(
@@ -48,7 +47,10 @@ fun FormatChip(
                 fontWeight = fontWeight,
                 color = labelColor,
             ),
-            modifier = Modifier.padding(horizontal = horizontalPadding, vertical = 10.dp),
+            modifier = Modifier.padding(
+                horizontal = Spacing.ChipPaddingH,
+                vertical = Spacing.ChipPaddingV,
+            ),
         )
     }
 }
@@ -66,13 +68,5 @@ private fun FormatChipSelectedPreview() {
 private fun FormatChipUnselectedPreview() {
     SocialVideoDownloaderTheme {
         FormatChip(label = "MP4 720p", selected = false, onClick = {})
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun FormatChipAudioPreview() {
-    SocialVideoDownloaderTheme {
-        FormatChip(label = "MP3 320kbps", selected = true, onClick = {}, isAudio = true)
     }
 }
