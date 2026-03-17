@@ -11,8 +11,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.FolderOpen
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,9 +29,11 @@ import androidx.compose.ui.unit.sp
 import com.socialvideodownloader.core.ui.R
 import com.socialvideodownloader.core.ui.theme.AppShapesInstance
 import com.socialvideodownloader.core.ui.theme.SvdBorder
-import com.socialvideodownloader.core.ui.theme.SvdPrimary
+import com.socialvideodownloader.core.ui.theme.SvdPrimarySoft
+import com.socialvideodownloader.core.ui.theme.SvdPrimaryStrong
+import com.socialvideodownloader.core.ui.theme.SvdSubtleForeground
 import com.socialvideodownloader.core.ui.theme.SvdSurface
-import com.socialvideodownloader.core.ui.theme.SvdTextTertiary
+import com.socialvideodownloader.core.ui.tokens.Spacing
 
 @Composable
 fun PillNavigationBar(
@@ -39,19 +42,25 @@ fun PillNavigationBar(
     modifier: Modifier = Modifier,
 ) {
     val tabs = listOf(
-        TabData(label = stringResource(R.string.nav_tab_download), icon = Icons.Default.Download),
-        TabData(label = stringResource(R.string.nav_tab_history), icon = Icons.Default.History),
+        TabData(label = stringResource(R.string.nav_tab_download), icon = Icons.Outlined.Download),
+        TabData(label = stringResource(R.string.nav_tab_library), icon = Icons.Outlined.FolderOpen),
+        TabData(label = stringResource(R.string.nav_tab_history), icon = Icons.Outlined.History),
     )
 
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 12.dp, start = 21.dp, end = 21.dp, bottom = 21.dp)
-            .height(62.dp)
+            .padding(
+                top = Spacing.NavBarPaddingTop,
+                start = Spacing.NavBarPaddingH,
+                end = Spacing.NavBarPaddingH,
+                bottom = Spacing.NavBarPaddingBottom,
+            )
+            .height(Spacing.NavBarHeight)
             .clip(AppShapesInstance.pill)
             .background(SvdSurface)
             .border(width = 1.dp, color = SvdBorder, shape = AppShapesInstance.pill)
-            .padding(4.dp),
+            .padding(Spacing.NavBarInternalPadding),
     ) {
         tabs.forEachIndexed { index, tab ->
             val isSelected = index == selectedIndex
@@ -59,8 +68,8 @@ fun PillNavigationBar(
                 modifier = Modifier
                     .weight(1f)
                     .height(54.dp)
-                    .clip(AppShapesInstance.pillTab)
-                    .background(if (isSelected) SvdPrimary else Color.Transparent)
+                    .clip(AppShapesInstance.navTab)
+                    .background(if (isSelected) SvdPrimarySoft else Color.Transparent)
                     .clickable { onSelect(index) },
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
@@ -68,14 +77,14 @@ fun PillNavigationBar(
                 Icon(
                     imageVector = tab.icon,
                     contentDescription = tab.label,
-                    tint = if (isSelected) Color.White else SvdTextTertiary,
+                    tint = if (isSelected) SvdPrimaryStrong else SvdSubtleForeground,
                     modifier = Modifier.size(18.dp),
                 )
                 Text(
                     text = tab.label,
-                    color = if (isSelected) Color.White else SvdTextTertiary,
+                    color = if (isSelected) SvdPrimaryStrong else SvdSubtleForeground,
                     fontSize = 10.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
                     letterSpacing = 0.5.sp,
                 )
             }

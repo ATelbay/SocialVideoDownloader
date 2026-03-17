@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -29,14 +28,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.socialvideodownloader.core.domain.model.VideoMetadata
+import com.socialvideodownloader.core.ui.components.TextActionLink
 import com.socialvideodownloader.core.ui.components.VideoInfoCard
 import com.socialvideodownloader.core.ui.theme.AppShapesInstance
+import com.socialvideodownloader.core.ui.theme.SvdForeground
+import com.socialvideodownloader.core.ui.theme.SvdMutedForeground
 import com.socialvideodownloader.core.ui.theme.SvdPrimary
-import com.socialvideodownloader.core.ui.theme.SvdPrimaryEnd
+import com.socialvideodownloader.core.ui.theme.SvdPrimaryStrong
 import com.socialvideodownloader.core.ui.theme.SvdSuccess
-import com.socialvideodownloader.core.ui.theme.SvdSuccessContainer
-import com.socialvideodownloader.core.ui.theme.SvdTextSecondary
+import com.socialvideodownloader.core.ui.theme.SvdSuccessSoft
+import com.socialvideodownloader.core.ui.theme.SvdWarning
 import com.socialvideodownloader.core.ui.tokens.PlatformColors
+import com.socialvideodownloader.core.ui.tokens.Spacing
 import com.socialvideodownloader.feature.download.R
 
 @Composable
@@ -58,7 +61,6 @@ fun DownloadCompleteContent(
             title = metadata.title,
             uploaderName = metadata.author,
             platformName = platformName,
-            platformColor = PlatformColors.forPlatform(platformName),
             compact = true,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -71,8 +73,8 @@ fun DownloadCompleteContent(
         ) {
             Box(
                 modifier = Modifier
-                    .size(88.dp)
-                    .background(SvdSuccessContainer, CircleShape),
+                    .size(Spacing.HeroIconSize)
+                    .background(SvdSuccessSoft, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -85,13 +87,13 @@ fun DownloadCompleteContent(
             Text(
                 text = stringResource(R.string.download_complete_message),
                 style = MaterialTheme.typography.headlineMedium,
-                color = Color.White,
+                color = SvdForeground,
                 textAlign = TextAlign.Center,
             )
             Text(
                 text = stringResource(R.string.download_saved_message),
                 style = MaterialTheme.typography.bodyMedium,
-                color = SvdTextSecondary,
+                color = SvdMutedForeground,
                 textAlign = TextAlign.Center,
             )
         }
@@ -102,9 +104,9 @@ fun DownloadCompleteContent(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
-                    .clip(AppShapesInstance.cardSm)
-                    .border(1.5.dp, SvdPrimary, AppShapesInstance.cardSm)
+                    .height(Spacing.SecondaryButtonHeight)
+                    .clip(AppShapesInstance.control)
+                    .border(1.dp, SvdPrimaryStrong, AppShapesInstance.control)
                     .clickable(onClick = onOpenClicked),
                 contentAlignment = Alignment.Center,
             ) {
@@ -115,13 +117,13 @@ fun DownloadCompleteContent(
                     Icon(
                         imageVector = Icons.Outlined.OpenInNew,
                         contentDescription = null,
-                        tint = SvdPrimary,
+                        tint = SvdPrimaryStrong,
                         modifier = Modifier.size(18.dp),
                     )
                     Text(
                         text = stringResource(R.string.download_open),
                         style = MaterialTheme.typography.labelLarge,
-                        color = SvdPrimary,
+                        color = SvdPrimaryStrong,
                     )
                 }
             }
@@ -130,9 +132,9 @@ fun DownloadCompleteContent(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
-                    .clip(AppShapesInstance.cardSm)
-                    .background(Brush.verticalGradient(listOf(SvdPrimary, SvdPrimaryEnd)))
+                    .height(Spacing.SecondaryButtonHeight)
+                    .clip(AppShapesInstance.control)
+                    .background(Brush.verticalGradient(listOf(SvdPrimary, SvdWarning)))
                     .clickable(onClick = onShareClicked),
                 contentAlignment = Alignment.Center,
             ) {
@@ -155,7 +157,9 @@ fun DownloadCompleteContent(
             }
         }
 
-        NewDownloadLink(onClick = onNewDownloadClicked)
+        TextActionLink(
+            text = stringResource(R.string.download_new_download),
+            onClick = onNewDownloadClicked,
+        )
     }
 }
-

@@ -10,14 +10,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -26,17 +28,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.socialvideodownloader.core.domain.model.DownloadStatus
-import com.socialvideodownloader.core.ui.components.PlatformBadge
 import com.socialvideodownloader.core.ui.components.StatusBadge
 import com.socialvideodownloader.core.ui.theme.AppShapesInstance
 import com.socialvideodownloader.core.ui.theme.SvdBorder
+import com.socialvideodownloader.core.ui.theme.SvdForeground
+import com.socialvideodownloader.core.ui.theme.SvdMutedForeground
+import com.socialvideodownloader.core.ui.theme.SvdSubtleForeground
 import com.socialvideodownloader.core.ui.theme.SvdSurface
-import com.socialvideodownloader.core.ui.theme.SvdSurfaceElevated
-import com.socialvideodownloader.core.ui.theme.SvdText
-import com.socialvideodownloader.core.ui.theme.SvdTextSecondary
-import com.socialvideodownloader.core.ui.theme.SvdTextTertiary
-import com.socialvideodownloader.core.ui.tokens.PlatformColors
+import com.socialvideodownloader.core.ui.theme.SvdSurfaceStrong
 import com.socialvideodownloader.core.ui.tokens.Spacing
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -48,87 +47,57 @@ fun HistoryListItemRow(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val isFailed = item.status == DownloadStatus.FAILED
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .alpha(if (isFailed) 0.6f else 1f)
-            .clip(AppShapesInstance.large)
+            .clip(AppShapesInstance.card)
             .background(SvdSurface)
-            .border(1.dp, SvdBorder, AppShapesInstance.large)
+            .border(1.dp, SvdBorder, AppShapesInstance.card)
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
-            .padding(12.dp),
+            .padding(Spacing.CardInnerPaddingCompact),
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            // Thumbnail with platform badge overlay at bottom-start
-            val platformName = PlatformColors.nameFromUrl(item.sourceUrl)
-            Box(modifier = Modifier.size(width = Spacing.ThumbnailCompactWidth, height = Spacing.ThumbnailCompactHeight)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // Thumbnail placeholder 72x72
+            Box(
+                modifier = Modifier
+                    .size(Spacing.ThumbnailHistorySize)
+                    .clip(AppShapesInstance.thumbnail)
+                    .background(SvdSurfaceStrong),
+            ) {
                 AsyncImage(
                     model = item.thumbnailUrl,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .matchParentSize()
-                        .clip(AppShapesInstance.small),
+                        .clip(AppShapesInstance.thumbnail),
                 )
-                if (platformName != null) {
-                    PlatformBadge(
-                        platformName = platformName,
-                        platformColor = PlatformColors.forPlatform(platformName),
-                        abbreviation = true,
-                        modifier = Modifier
-                            .align(Alignment.BottomStart)
-                            .padding(start = 2.dp, bottom = 2.dp),
-                    )
-                }
             }
+
+            Spacer(modifier = Modifier.width(12.dp))
 
             // Info column
             Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = Spacing.InnerGap),
+                modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 // Title
                 Text(
                     text = item.title,
-                    style = androidx.compose.material3.MaterialTheme.typography.titleSmall.copy(
-                        fontSize = 13.sp,
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.SemiBold,
                     ),
-                    color = SvdText,
+                    color = SvdForeground,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
 
-                // Format badge + StatusBadge row
+                // Meta + status row
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    val formatLabel = item.formatLabel
-                    if (formatLabel != null) {
-                        Text(
-                            text = formatLabel,
-                            style = androidx.compose.material3.MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                            color = SvdTextSecondary,
-                            modifier = Modifier
-                                .clip(AppShapesInstance.badge)
-                                .background(SvdSurfaceElevated)
-                                .padding(horizontal = 8.dp, vertical = 3.dp),
-                        )
-                    }
-                    StatusBadge(status = item.status)
-                }
-
-                // Timestamp + separator + file size row
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Text(
                         text = DateUtils.getRelativeTimeSpanString(
@@ -136,25 +105,25 @@ fun HistoryListItemRow(
                             System.currentTimeMillis(),
                             DateUtils.MINUTE_IN_MILLIS,
                         ).toString(),
-                        style = androidx.compose.material3.MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                        color = SvdTextTertiary,
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 13.sp),
+                        color = SvdMutedForeground,
                     )
-                    Text(
-                        text = "·",
-                        style = androidx.compose.material3.MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                        color = SvdTextTertiary,
-                    )
-                    val sizeText = if (item.fileSizeBytes != null && !isFailed) {
-                        Formatter.formatFileSize(context, item.fileSizeBytes)
-                    } else {
-                        "—"
+                    val sizeText = item.fileSizeBytes?.let { Formatter.formatFileSize(context, it) }
+                    if (sizeText != null) {
+                        Text(
+                            text = "·",
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 13.sp),
+                            color = SvdSubtleForeground,
+                        )
+                        Text(
+                            text = sizeText,
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 13.sp),
+                            color = SvdMutedForeground,
+                        )
                     }
-                    Text(
-                        text = sizeText,
-                        style = androidx.compose.material3.MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                        color = SvdTextTertiary,
-                    )
                 }
+
+                StatusBadge(status = item.status)
             }
         }
     }

@@ -26,11 +26,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.socialvideodownloader.core.ui.theme.AppShapesInstance
 import com.socialvideodownloader.core.ui.theme.SvdBorder
-import com.socialvideodownloader.core.ui.theme.SvdError
+import com.socialvideodownloader.core.ui.theme.SvdBorderStrong
+import com.socialvideodownloader.core.ui.theme.SvdForeground
+import com.socialvideodownloader.core.ui.theme.SvdMutedForeground
 import com.socialvideodownloader.core.ui.theme.SvdPrimary
+import com.socialvideodownloader.core.ui.theme.SvdSubtleForeground
 import com.socialvideodownloader.core.ui.theme.SvdSurface
-import com.socialvideodownloader.core.ui.theme.SvdTextSecondary
-import com.socialvideodownloader.core.ui.theme.SvdTextTertiary
+import com.socialvideodownloader.core.ui.tokens.Spacing
 import com.socialvideodownloader.feature.download.R
 
 @Composable
@@ -47,10 +49,10 @@ fun ExtractingContent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
-                .clip(AppShapesInstance.large)
+                .height(Spacing.InputHeight)
+                .clip(AppShapesInstance.control)
                 .background(SvdSurface)
-                .border(1.dp, SvdBorder, AppShapesInstance.large)
+                .border(1.dp, SvdBorder, AppShapesInstance.control)
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -58,13 +60,13 @@ fun ExtractingContent(
             Icon(
                 imageVector = Icons.Outlined.Link,
                 contentDescription = null,
-                tint = SvdTextTertiary,
+                tint = SvdSubtleForeground,
                 modifier = Modifier.size(20.dp),
             )
             Text(
                 text = url,
                 style = MaterialTheme.typography.bodyMedium,
-                color = SvdTextSecondary,
+                color = SvdMutedForeground,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
@@ -85,24 +87,24 @@ fun ExtractingContent(
             Text(
                 text = stringResource(R.string.download_extracting_status),
                 style = MaterialTheme.typography.bodyMedium,
-                color = SvdTextSecondary,
+                color = SvdMutedForeground,
             )
         }
 
-        // Cancel button
+        // Cancel button — neutral borderStrong style
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp)
-                .clip(AppShapesInstance.cardSm)
-                .border(1.5.dp, SvdError, AppShapesInstance.cardSm)
+                .height(Spacing.SecondaryButtonHeight)
+                .clip(AppShapesInstance.control)
+                .border(1.dp, SvdBorderStrong, AppShapesInstance.control)
                 .clickable(onClick = onCancelClicked),
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = stringResource(R.string.download_cancel),
                 style = MaterialTheme.typography.labelLarge,
-                color = SvdError,
+                color = SvdForeground,
             )
         }
     }

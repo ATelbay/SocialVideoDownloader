@@ -16,14 +16,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.socialvideodownloader.core.ui.components.GradientButton
+import com.socialvideodownloader.core.ui.components.TextActionLink
 import com.socialvideodownloader.core.ui.theme.SvdError
-import com.socialvideodownloader.core.ui.theme.SvdErrorContainer
-import com.socialvideodownloader.core.ui.theme.SvdTextSecondary
+import com.socialvideodownloader.core.ui.theme.SvdErrorSoft
+import com.socialvideodownloader.core.ui.theme.SvdForeground
+import com.socialvideodownloader.core.ui.theme.SvdMutedForeground
+import com.socialvideodownloader.core.ui.tokens.Spacing
 import com.socialvideodownloader.feature.download.R
 
 @Composable
@@ -45,8 +47,8 @@ fun DownloadErrorContent(
         ) {
             Box(
                 modifier = Modifier
-                    .size(88.dp)
-                    .background(SvdErrorContainer, CircleShape),
+                    .size(Spacing.HeroIconSize)
+                    .background(SvdErrorSoft, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -59,13 +61,13 @@ fun DownloadErrorContent(
             Text(
                 text = stringResource(R.string.download_error_title),
                 style = MaterialTheme.typography.headlineMedium,
-                color = Color.White,
+                color = SvdForeground,
                 textAlign = TextAlign.Center,
             )
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodyMedium,
-                color = SvdTextSecondary,
+                color = SvdMutedForeground,
                 textAlign = TextAlign.Center,
             )
         }
@@ -77,6 +79,9 @@ fun DownloadErrorContent(
             icon = Icons.Outlined.Refresh,
         )
 
-        NewDownloadLink(onClick = onNewDownloadClicked)
+        TextActionLink(
+            text = stringResource(R.string.download_new_download),
+            onClick = onNewDownloadClicked,
+        )
     }
 }

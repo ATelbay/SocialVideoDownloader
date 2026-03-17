@@ -33,6 +33,7 @@ import com.socialvideodownloader.core.ui.components.SvdTopBar
 import com.socialvideodownloader.core.ui.components.VideoInfoCard
 import com.socialvideodownloader.core.ui.theme.SvdBg
 import com.socialvideodownloader.core.ui.tokens.PlatformColors
+import com.socialvideodownloader.core.ui.tokens.Spacing
 import com.socialvideodownloader.feature.download.R
 import com.socialvideodownloader.feature.download.ui.components.DownloadCompleteContent
 import com.socialvideodownloader.feature.download.ui.components.DownloadErrorContent
@@ -92,25 +93,47 @@ private fun DownloadScreenContent(
     modifier: Modifier = Modifier,
 ) {
     var urlText by rememberSaveable { mutableStateOf("") }
-    val isIdle = uiState is DownloadUiState.Idle
-
-    val titleResId = when (uiState) {
-        is DownloadUiState.Idle, is DownloadUiState.Extracting -> R.string.download_screen_title
-        is DownloadUiState.FormatSelection -> R.string.download_title_select_format
-        is DownloadUiState.Downloading -> R.string.download_title_downloading
-        is DownloadUiState.Done -> R.string.download_title_complete
-        is DownloadUiState.Error -> R.string.download_title_error
-    }
 
     Scaffold(
         modifier = modifier,
         containerColor = SvdBg,
         topBar = {
-            if (!isIdle) {
-                SvdTopBar(
-                    title = stringResource(titleResId),
-                    onBack = { onIntent(DownloadIntent.NewDownloadClicked) },
-                )
+            when (uiState) {
+                is DownloadUiState.Idle -> {
+                    SvdTopBar(
+                        title = stringResource(R.string.download_screen_title),
+                        actionLabel = stringResource(R.string.download_action_tips),
+                    )
+                }
+                is DownloadUiState.Extracting -> {
+                    SvdTopBar(
+                        title = stringResource(R.string.download_screen_title),
+                    )
+                }
+                is DownloadUiState.FormatSelection -> {
+                    SvdTopBar(
+                        title = stringResource(R.string.download_title_select_format),
+                        actionLabel = stringResource(R.string.download_action_back),
+                        onActionClick = { onIntent(DownloadIntent.NewDownloadClicked) },
+                    )
+                }
+                is DownloadUiState.Downloading -> {
+                    SvdTopBar(
+                        title = stringResource(R.string.download_title_downloading),
+                        actionLabel = stringResource(R.string.download_action_hide),
+                        onActionClick = { onIntent(DownloadIntent.NewDownloadClicked) },
+                    )
+                }
+                is DownloadUiState.Done -> {
+                    SvdTopBar(
+                        title = stringResource(R.string.download_title_complete),
+                    )
+                }
+                is DownloadUiState.Error -> {
+                    SvdTopBar(
+                        title = stringResource(R.string.download_title_error),
+                    )
+                }
             }
         },
     ) { innerPadding ->
@@ -128,7 +151,12 @@ private fun DownloadScreenContent(
                 .verticalScroll(rememberScrollState()),
             label = "downloadStateTransition",
         ) { targetState ->
-            val nonIdlePadding = Modifier.padding(top = 8.dp, start = 20.dp, end = 20.dp, bottom = 20.dp)
+            val nonIdlePadding = Modifier.padding(
+                top = 8.dp,
+                start = Spacing.ScreenPadding,
+                end = Spacing.ScreenPadding,
+                bottom = Spacing.ScreenPadding,
+            )
             when (targetState) {
                 is DownloadUiState.Idle -> {
                     IdleContent(
@@ -161,7 +189,7 @@ private fun DownloadScreenContent(
                                 ?.let { PlatformColors.forPlatform(it) },
                             compact = false,
                         )
-                        Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(Spacing.SectionGap))
                         FormatChipsContent(
                             formats = targetState.metadata.formats,
                             selectedFormatId = targetState.selectedFormatId,
@@ -181,9 +209,9 @@ private fun DownloadScreenContent(
                             platformName = PlatformColors.nameFromUrl(targetState.metadata.sourceUrl),
                             platformColor = PlatformColors.nameFromUrl(targetState.metadata.sourceUrl)
                                 ?.let { PlatformColors.forPlatform(it) },
-                            compact = false,
+                            compact = true,
                         )
-                        Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(Spacing.SectionGap))
                         DownloadProgressContent(
                             progress = targetState.progress,
                             onCancelClicked = { onIntent(DownloadIntent.CancelDownloadClicked) },
