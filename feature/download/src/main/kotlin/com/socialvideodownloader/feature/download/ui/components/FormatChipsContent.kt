@@ -75,7 +75,6 @@ fun FormatChipsContent(
                             label = formatChipLabel(format),
                             selected = format.formatId == selectedFormatId,
                             onClick = { onFormatSelected(format.formatId) },
-                            isAudio = false,
                         )
                     }
                 }
@@ -102,7 +101,6 @@ fun FormatChipsContent(
                             label = formatChipLabel(format),
                             selected = format.formatId == selectedFormatId,
                             onClick = { onFormatSelected(format.formatId) },
-                            isAudio = true,
                         )
                     }
                 }

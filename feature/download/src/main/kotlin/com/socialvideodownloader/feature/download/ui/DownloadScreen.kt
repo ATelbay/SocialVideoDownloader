@@ -185,8 +185,6 @@ private fun DownloadScreenContent(
                             uploaderName = targetState.metadata.author,
                             durationSeconds = targetState.metadata.durationSeconds,
                             platformName = PlatformColors.nameFromUrl(targetState.metadata.sourceUrl),
-                            platformColor = PlatformColors.nameFromUrl(targetState.metadata.sourceUrl)
-                                ?.let { PlatformColors.forPlatform(it) },
                             compact = false,
                         )
                         Spacer(modifier = Modifier.height(Spacing.SectionGap))
@@ -207,8 +205,6 @@ private fun DownloadScreenContent(
                             uploaderName = targetState.metadata.author,
                             durationSeconds = targetState.metadata.durationSeconds,
                             platformName = PlatformColors.nameFromUrl(targetState.metadata.sourceUrl),
-                            platformColor = PlatformColors.nameFromUrl(targetState.metadata.sourceUrl)
-                                ?.let { PlatformColors.forPlatform(it) },
                             compact = true,
                         )
                         Spacer(modifier = Modifier.height(Spacing.SectionGap))

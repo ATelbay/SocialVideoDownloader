@@ -54,9 +54,6 @@
 
     <!-- Download state -->
     <string name="download_extract_video">EXTRACT VIDEO</string>
-    <string name="download_url_placeholder">https://…</string>
-    <string name="download_format_label">AVAILABLE FORMATS</string>
-    <string name="download_selected_format_label">SELECTED FORMAT</string>
     <string name="download_extracting_status">Extracting video info…</string>
     <string name="download_downloading_status">Downloading video…</string>
     <string name="download_cancel_download">Cancel Download</string>

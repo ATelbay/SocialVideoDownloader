@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.socialvideodownloader.core.domain.model.DownloadStatus
 import com.socialvideodownloader.feature.history.R
-import com.socialvideodownloader.feature.history.domain.DeleteAllHistoryUseCase
 import com.socialvideodownloader.feature.history.domain.DeleteHistoryItemUseCase
 import com.socialvideodownloader.feature.history.domain.ObserveHistoryItemsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,7 +24,6 @@ import javax.inject.Inject
 class HistoryViewModel @Inject constructor(
     private val observeHistoryItems: ObserveHistoryItemsUseCase,
     private val deleteHistoryItem: DeleteHistoryItemUseCase,
-    private val deleteAllHistory: DeleteAllHistoryUseCase,
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -77,7 +75,6 @@ class HistoryViewModel @Inject constructor(
             is HistoryIntent.HistoryItemLongPressed -> _openMenuItemId.value = intent.itemId
             is HistoryIntent.DismissItemMenu -> _openMenuItemId.value = null
             is HistoryIntent.DeleteItemClicked -> handleDeleteItemClicked(intent.itemId)
-            is HistoryIntent.DeleteAllClicked -> handleDeleteAllClicked()
             is HistoryIntent.DeleteFilesSelectionChanged -> handleDeleteFilesSelectionChanged(intent.selected)
             is HistoryIntent.ConfirmDeletion -> handleConfirmDeletion()
             is HistoryIntent.DismissDeletionDialog -> _deleteConfirmation.value = null
@@ -121,15 +118,6 @@ class HistoryViewModel @Inject constructor(
         )
     }
 
-    private fun handleDeleteAllClicked() {
-        val allItems = _allItems.value
-        _deleteConfirmation.value = DeleteConfirmationState(
-            target = DeleteTarget.All,
-            hasAnyAccessibleFile = allItems.any { it.isFileAccessible },
-            affectedCount = allItems.size,
-        )
-    }
-
     private fun handleDeleteFilesSelectionChanged(selected: Boolean) {
         val current = _deleteConfirmation.value ?: return
         _deleteConfirmation.value = current.copy(deleteFilesSelected = selected)
@@ -143,12 +131,6 @@ class HistoryViewModel @Inject constructor(
                     val result = deleteHistoryItem(target.itemId, confirmation.deleteFilesSelected)
                     if (result.fileDeleteFailed) {
                         _effect.emit(HistoryEffect.ShowMessage(R.string.history_delete_single_file_failed))
-                    }
-                }
-                is DeleteTarget.All -> {
-                    val result = deleteAllHistory(deleteFiles = confirmation.deleteFilesSelected)
-                    if (result.failedFileDeletions > 0) {
-                        _effect.emit(HistoryEffect.ShowMessage(R.string.history_delete_file_cleanup_failed))
                     }
                 }
             }

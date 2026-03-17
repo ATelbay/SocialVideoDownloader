@@ -6,15 +6,11 @@
     <string name="history_open_error">Could not open file</string>
     <string name="history_share_error">Could not share file</string>
     <string name="history_delete_single_title">Delete download?</string>
-    <string name="history_delete_all_title">Delete all downloads?</string>
     <string name="history_delete_message_single">This will remove the record from history</string>
-    <string name="history_delete_message_all">This will remove %d record(s) from history</string>
     <string name="history_delete_confirm">Delete</string>
     <string name="history_delete_cancel">Cancel</string>
     <string name="history_delete_file_cleanup_failed">Some files could not be removed</string>
     <string name="history_delete_single_file_failed">File could not be deleted from storage</string>
-    <string name="history_action_delete_all">Delete all</string>
-
     <!-- Screen title -->
     <string name="history_screen_title_full">History</string>
     <string name="history_action_filter">Filter</string>

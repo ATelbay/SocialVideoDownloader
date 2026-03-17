@@ -26,7 +26,6 @@ fun FormatChip(
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    isAudio: Boolean = false,
 ) {
     val backgroundColor = if (selected) SvdPrimarySoft else SvdSurface
     val border = if (selected) null else BorderStroke(1.dp, SvdBorder)

@@ -39,7 +39,6 @@ import com.socialvideodownloader.core.ui.theme.SvdPrimaryStrong
 import com.socialvideodownloader.core.ui.theme.SvdSurfaceAlt
 import com.socialvideodownloader.feature.history.R
 import com.socialvideodownloader.feature.history.ui.DeleteConfirmationState
-import com.socialvideodownloader.feature.history.ui.DeleteTarget
 
 @Composable
 fun HistoryDeleteDialog(
@@ -48,15 +47,8 @@ fun HistoryDeleteDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val title = when (state.target) {
-        is DeleteTarget.Single -> stringResource(R.string.history_delete_single_title)
-        DeleteTarget.All -> stringResource(R.string.history_delete_all_title)
-    }
-
-    val bodyText = when (state.target) {
-        is DeleteTarget.Single -> stringResource(R.string.history_delete_message_single)
-        DeleteTarget.All -> stringResource(R.string.history_delete_message_all, state.affectedCount)
-    }
+    val title = stringResource(R.string.history_delete_single_title)
+    val bodyText = stringResource(R.string.history_delete_message_single)
 
     Dialog(
         onDismissRequest = onDismiss,

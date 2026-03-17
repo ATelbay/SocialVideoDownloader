@@ -54,7 +54,7 @@ fun HistoryContent(
                     top = Spacing.ContentTopPadding,
                     start = Spacing.ScreenPadding,
                     end = Spacing.ScreenPadding,
-                    bottom = Spacing.ContentTopPadding,
+                    bottom = Spacing.ContentBottomPadding,
                 ),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {

@@ -5,6 +5,7 @@ import androidx.compose.ui.unit.dp
 object Spacing {
     val ScreenPadding = 24.dp
     val ContentTopPadding = 16.dp
+    val ContentBottomPadding = 16.dp
     val SectionGapIdle = 24.dp
     val SectionGap = 20.dp
 

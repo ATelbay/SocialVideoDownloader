@@ -41,7 +41,6 @@ import com.socialvideodownloader.core.ui.theme.SvdMutedForeground
 import com.socialvideodownloader.core.ui.theme.SvdPrimarySoft
 import com.socialvideodownloader.core.ui.theme.SvdPrimaryStrong
 import com.socialvideodownloader.core.ui.theme.SvdSurface
-import com.socialvideodownloader.core.ui.tokens.PlatformColors
 import com.socialvideodownloader.core.ui.tokens.Spacing
 
 @Composable
@@ -51,7 +50,6 @@ fun VideoInfoCard(
     uploaderName: String? = null,
     durationSeconds: Int? = null,
     platformName: String? = null,
-    platformColor: Color? = null,
     compact: Boolean = false,
     modifier: Modifier = Modifier,
 ) {

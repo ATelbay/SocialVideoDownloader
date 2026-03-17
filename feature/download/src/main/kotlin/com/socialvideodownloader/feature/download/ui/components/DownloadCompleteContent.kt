@@ -23,7 +23,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -31,6 +30,7 @@ import com.socialvideodownloader.core.domain.model.VideoMetadata
 import com.socialvideodownloader.core.ui.components.TextActionLink
 import com.socialvideodownloader.core.ui.components.VideoInfoCard
 import com.socialvideodownloader.core.ui.theme.AppShapesInstance
+import com.socialvideodownloader.core.ui.theme.SvdBg
 import com.socialvideodownloader.core.ui.theme.SvdForeground
 import com.socialvideodownloader.core.ui.theme.SvdMutedForeground
 import com.socialvideodownloader.core.ui.theme.SvdPrimary
@@ -145,13 +145,13 @@ fun DownloadCompleteContent(
                     Icon(
                         imageVector = Icons.Outlined.Share,
                         contentDescription = null,
-                        tint = Color.White,
+                        tint = SvdBg,
                         modifier = Modifier.size(18.dp),
                     )
                     Text(
                         text = stringResource(R.string.download_share),
                         style = MaterialTheme.typography.labelLarge,
-                        color = Color.White,
+                        color = SvdBg,
                     )
                 }
             }
