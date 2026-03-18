@@ -1,8 +1,8 @@
 package com.socialvideodownloader.feature.history.domain
 
 import com.socialvideodownloader.core.domain.file.FileAccessManager
+import com.socialvideodownloader.core.domain.model.HistoryItem
 import com.socialvideodownloader.core.domain.repository.DownloadRepository
-import com.socialvideodownloader.feature.history.ui.HistoryListItem
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -11,12 +11,12 @@ class ObserveHistoryItemsUseCase @Inject constructor(
     private val downloadRepository: DownloadRepository,
     private val fileManager: FileAccessManager,
 ) {
-    operator fun invoke(): Flow<List<HistoryListItem>> =
+    operator fun invoke(): Flow<List<HistoryItem>> =
         downloadRepository.getAll().map { records ->
             records.map { record ->
                 val contentUri = fileManager.resolveContentUri(record)
                 val isAccessible = contentUri?.let { fileManager.isFileAccessible(it) } ?: false
-                HistoryListItem(
+                HistoryItem(
                     id = record.id,
                     title = record.videoTitle,
                     formatLabel = record.formatLabel,

@@ -323,11 +323,12 @@ class DownloadViewModel @Inject constructor(
     private fun handleDismissExistingBanner() {
         val current = _uiState.value
         if (current is DownloadUiState.Idle) {
-            _uiState.value = DownloadUiState.Idle()
+            _uiState.value = DownloadUiState.Idle(prefillUrl = current.prefillUrl)
         }
     }
 
     private fun handlePrefillUrl(url: String) {
+        duplicateCheckJob?.cancel()
         currentUrl = url
         viewModelScope.launch {
             val existing = findExistingDownload(url)

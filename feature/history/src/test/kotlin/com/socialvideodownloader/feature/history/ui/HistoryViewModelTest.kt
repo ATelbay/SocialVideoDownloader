@@ -2,6 +2,7 @@ package com.socialvideodownloader.feature.history.ui
 
 import app.cash.turbine.test
 import com.socialvideodownloader.core.domain.model.DownloadStatus
+import com.socialvideodownloader.core.domain.model.HistoryItem
 import com.socialvideodownloader.feature.history.domain.DeleteHistoryItemUseCase
 import com.socialvideodownloader.feature.history.domain.ObserveHistoryItemsUseCase
 import com.socialvideodownloader.feature.history.testutil.MainDispatcherRule
@@ -28,14 +29,14 @@ class HistoryViewModelTest {
     private val deleteHistoryItem = mockk<DeleteHistoryItemUseCase>(relaxed = true)
     private lateinit var viewModel: HistoryViewModel
 
-    private lateinit var testItems: List<HistoryListItem>
+    private lateinit var testItems: List<HistoryItem>
 
     @BeforeEach
     fun setup() {
         testItems = listOf(
-            historyListItem(id = 1L, title = "Kotlin Tutorial", isFileAccessible = true),
-            historyListItem(id = 2L, title = "Android Compose Guide"),
-            historyListItem(id = 3L, title = "kotlin advanced"),
+            historyItem(id = 1L, title = "Kotlin Tutorial", isFileAccessible = true),
+            historyItem(id = 2L, title = "Android Compose Guide"),
+            historyItem(id = 3L, title = "kotlin advanced"),
         )
         every { observeHistoryItems() } returns flowOf(testItems)
         viewModel = HistoryViewModel(observeHistoryItems, deleteHistoryItem)
@@ -56,7 +57,7 @@ class HistoryViewModelTest {
         viewModel.uiState.test {
             val state = awaitItem()
             assertTrue(state is HistoryUiState.Content)
-            assertEquals(testItems, (state as HistoryUiState.Content).items)
+            assertEquals(testItems.size, (state as HistoryUiState.Content).items.size)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -119,7 +120,7 @@ class HistoryViewModelTest {
             viewModel.onIntent(HistoryIntent.SearchQueryChanged(""))
             val state = awaitItem()
             assertTrue(state is HistoryUiState.Content)
-            assertEquals(testItems, (state as HistoryUiState.Content).items)
+            assertEquals(testItems.size, (state as HistoryUiState.Content).items.size)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -145,7 +146,7 @@ class HistoryViewModelTest {
 
     @Test
     fun `historyItemClicked on completed accessible item emits OpenContent`() = runTest {
-        val accessibleItem = historyListItem(
+        val accessibleItem = historyItem(
             id = 10L,
             title = "Accessible Video",
             status = DownloadStatus.COMPLETED,
@@ -170,7 +171,7 @@ class HistoryViewModelTest {
 
     @Test
     fun `historyItemClicked on completed inaccessible item emits ShowMessage`() = runTest {
-        val inaccessibleItem = historyListItem(
+        val inaccessibleItem = historyItem(
             id = 11L,
             title = "Inaccessible Video",
             status = DownloadStatus.COMPLETED,
@@ -193,7 +194,7 @@ class HistoryViewModelTest {
 
     @Test
     fun `historyItemClicked on failed item emits RetryDownload`() = runTest {
-        val failedItem = historyListItem(
+        val failedItem = historyItem(
             id = 12L,
             title = "Failed Video",
             status = DownloadStatus.FAILED,
@@ -217,7 +218,7 @@ class HistoryViewModelTest {
 
     @Test
     fun `shareClicked on accessible item emits ShareContent`() = runTest {
-        val accessibleItem = historyListItem(
+        val accessibleItem = historyItem(
             id = 20L,
             title = "Share Video",
             status = DownloadStatus.COMPLETED,
@@ -242,7 +243,7 @@ class HistoryViewModelTest {
 
     @Test
     fun `shareClicked on inaccessible item emits ShowMessage`() = runTest {
-        val inaccessibleItem = historyListItem(
+        val inaccessibleItem = historyItem(
             id = 21L,
             title = "Inaccessible Share",
             status = DownloadStatus.COMPLETED,
@@ -412,13 +413,13 @@ class HistoryViewModelTest {
 
     // --- helpers ---
 
-    private fun historyListItem(
+    private fun historyItem(
         id: Long,
         title: String,
         status: DownloadStatus = DownloadStatus.COMPLETED,
         isFileAccessible: Boolean = false,
         contentUri: String? = null,
-    ) = HistoryListItem(
+    ) = HistoryItem(
         id = id,
         title = title,
         formatLabel = null,

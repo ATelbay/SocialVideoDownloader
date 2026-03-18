@@ -3,6 +3,7 @@ package com.socialvideodownloader.feature.history.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.socialvideodownloader.core.domain.model.DownloadStatus
+import com.socialvideodownloader.core.domain.model.HistoryItem
 import com.socialvideodownloader.feature.history.R
 import com.socialvideodownloader.feature.history.domain.DeleteHistoryItemUseCase
 import com.socialvideodownloader.feature.history.domain.ObserveHistoryItemsUseCase
@@ -34,7 +35,7 @@ class HistoryViewModel @Inject constructor(
     val effect: SharedFlow<HistoryEffect> = _effect.asSharedFlow()
 
     // Keep a reference to all items for delete operations that need access to the full list
-    private val _allItems = MutableStateFlow<List<HistoryListItem>>(emptyList())
+    private val _allItems = MutableStateFlow<List<HistoryItem>>(emptyList())
 
     init {
         observeHistoryItems()
@@ -59,7 +60,7 @@ class HistoryViewModel @Inject constructor(
             } else {
                 HistoryUiState.Content(
                     query = trimmedQuery,
-                    items = filtered,
+                    items = filtered.map { it.toListItem() },
                     openMenuItemId = openMenuItemId,
                     deleteConfirmation = deleteConfirmation,
                 )
@@ -137,4 +138,17 @@ class HistoryViewModel @Inject constructor(
             _deleteConfirmation.value = null
         }
     }
+
+    private fun HistoryItem.toListItem() = HistoryListItem(
+        id = id,
+        title = title,
+        formatLabel = formatLabel,
+        thumbnailUrl = thumbnailUrl,
+        sourceUrl = sourceUrl,
+        status = status,
+        createdAt = createdAt,
+        fileSizeBytes = fileSizeBytes,
+        contentUri = contentUri,
+        isFileAccessible = isFileAccessible,
+    )
 }

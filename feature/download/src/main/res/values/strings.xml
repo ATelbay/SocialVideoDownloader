@@ -5,7 +5,6 @@
 
     <!-- Download Progress -->
     <string name="download_cancel">Cancel</string>
-    <string name="download_progress_cancel">Cancel</string>
 
     <!-- Download Complete -->
     <string name="download_open">Open</string>
@@ -42,7 +41,6 @@
     <string name="download_already_downloaded">Already downloaded</string>
     <string name="download_existing_open">Open</string>
     <string name="download_existing_share">Share</string>
-    <string name="download_existing_download_again">Download again</string>
     <string name="download_existing_downloaded_on">Downloaded %s</string>
 
     <!-- Idle state -->

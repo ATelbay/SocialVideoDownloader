@@ -24,7 +24,22 @@ class LibraryViewModel @Inject constructor(
 
     val uiState: StateFlow<LibraryUiState> = observeLibraryItems()
         .map { items ->
-            if (items.isEmpty()) LibraryUiState.Empty else LibraryUiState.Content(items)
+            if (items.isEmpty()) {
+                LibraryUiState.Empty
+            } else {
+                LibraryUiState.Content(items.map { item ->
+                    LibraryListItem(
+                        id = item.id,
+                        title = item.title,
+                        formatLabel = item.formatLabel,
+                        thumbnailUrl = item.thumbnailUrl,
+                        platformName = item.platformName,
+                        completedAt = item.completedAt,
+                        fileSizeBytes = item.fileSizeBytes,
+                        contentUri = item.contentUri,
+                    )
+                })
+            }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LibraryUiState.Loading)
 
