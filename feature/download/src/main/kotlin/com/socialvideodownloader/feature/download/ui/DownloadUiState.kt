@@ -1,10 +1,11 @@
 package com.socialvideodownloader.feature.download.ui
 
 import com.socialvideodownloader.core.domain.model.DownloadProgress
+import com.socialvideodownloader.core.domain.model.ExistingDownload
 import com.socialvideodownloader.core.domain.model.VideoMetadata
 
 sealed interface DownloadUiState {
-    data object Idle : DownloadUiState
+    data class Idle(val existingDownload: ExistingDownload? = null) : DownloadUiState
     data class Extracting(val url: String) : DownloadUiState
     data class FormatSelection(
         val metadata: VideoMetadata,

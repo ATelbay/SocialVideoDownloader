@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.socialvideodownloader.core.domain.model.ExistingDownload
 import com.socialvideodownloader.core.ui.components.GradientButton
 import com.socialvideodownloader.core.ui.components.PlatformBadge
 import com.socialvideodownloader.core.ui.theme.SvdForeground
@@ -41,6 +42,10 @@ fun IdleContent(
     onUrlChanged: (String) -> Unit,
     onExtractClicked: () -> Unit,
     modifier: Modifier = Modifier,
+    existingDownload: ExistingDownload? = null,
+    onOpenExistingClicked: () -> Unit = {},
+    onShareExistingClicked: () -> Unit = {},
+    onDismissExistingBanner: () -> Unit = {},
 ) {
     Column(
         modifier = modifier
@@ -94,6 +99,15 @@ fun IdleContent(
             url = url,
             onUrlChanged = onUrlChanged,
         )
+
+        if (existingDownload != null) {
+            ExistingDownloadBanner(
+                existingDownload = existingDownload,
+                onOpenClicked = onOpenExistingClicked,
+                onShareClicked = onShareExistingClicked,
+                onDismissClicked = onDismissExistingBanner,
+            )
+        }
 
         // Platform chips
         FlowRow(

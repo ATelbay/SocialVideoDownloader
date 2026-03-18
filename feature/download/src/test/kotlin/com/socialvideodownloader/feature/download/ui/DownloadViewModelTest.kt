@@ -5,9 +5,11 @@ import app.cash.turbine.test
 import com.socialvideodownloader.core.domain.model.DownloadProgress
 import com.socialvideodownloader.core.domain.model.DownloadRecord
 import com.socialvideodownloader.core.domain.model.DownloadStatus
+import com.socialvideodownloader.core.domain.model.ExistingDownload
 import com.socialvideodownloader.core.domain.model.VideoFormatOption
 import com.socialvideodownloader.core.domain.model.VideoMetadata
 import com.socialvideodownloader.core.domain.usecase.ExtractVideoInfoUseCase
+import com.socialvideodownloader.core.domain.usecase.FindExistingDownloadUseCase
 import com.socialvideodownloader.feature.download.service.DownloadServiceState
 import com.socialvideodownloader.feature.download.service.DownloadServiceStateHolder
 import io.mockk.coEvery
@@ -33,6 +35,7 @@ class DownloadViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var extractVideoInfo: ExtractVideoInfoUseCase
+    private lateinit var findExistingDownload: FindExistingDownloadUseCase
     private lateinit var errorMessageMapper: ErrorMessageMapper
     private lateinit var serviceStateHolder: DownloadServiceStateHolder
     private lateinit var context: Context
@@ -70,12 +73,15 @@ class DownloadViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         extractVideoInfo = mockk()
+        findExistingDownload = mockk()
         errorMessageMapper = mockk()
         serviceStateHolder = DownloadServiceStateHolder()
         context = mockk(relaxed = true)
         every { errorMessageMapper.map(any()) } answers { firstArg<Throwable>().message ?: "Error" }
+        coEvery { findExistingDownload(any()) } returns null
         viewModel = DownloadViewModel(
             extractVideoInfo = extractVideoInfo,
+            findExistingDownload = findExistingDownload,
             errorMessageMapper = errorMessageMapper,
             serviceStateHolder = serviceStateHolder,
             context = context,
@@ -446,6 +452,7 @@ class DownloadViewModelTest {
         val savedStateHandle = androidx.lifecycle.SavedStateHandle()
         val vm = DownloadViewModel(
             extractVideoInfo = extractVideoInfo,
+            findExistingDownload = findExistingDownload,
             errorMessageMapper = errorMessageMapper,
             serviceStateHolder = serviceStateHolder,
             context = context,
@@ -455,6 +462,88 @@ class DownloadViewModelTest {
         vm.onIntent(DownloadIntent.UrlChanged("https://youtube.com/watch?v=saved"))
 
         assertEquals("https://youtube.com/watch?v=saved", savedStateHandle.get<String>("currentUrl"))
+    }
+
+    @Test
+    fun `URL with existing download shows banner after debounce`() = runTest {
+        val existing = ExistingDownload(
+            recordId = 1L,
+            videoTitle = "Test Video",
+            formatLabel = "1080p",
+            thumbnailUrl = "https://thumb.jpg",
+            contentUri = "content://media/1",
+            completedAt = 1_000_000L,
+            fileSizeBytes = 50_000_000L,
+        )
+        coEvery { findExistingDownload("https://youtube.com/watch?v=test") } returns existing
+
+        viewModel.uiState.test {
+            assertTrue(awaitItem() is DownloadUiState.Idle)
+
+            viewModel.onIntent(DownloadIntent.UrlChanged("https://youtube.com/watch?v=test"))
+            // Advance past 500ms debounce
+            testScheduler.advanceTimeBy(600)
+            runCurrent()
+
+            val idleWithBanner = awaitItem() as DownloadUiState.Idle
+            assertEquals(existing, idleWithBanner.existingDownload)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `OpenExistingClicked emits OpenFile event with contentUri`() = runTest {
+        val existing = ExistingDownload(
+            recordId = 1L,
+            videoTitle = "Test Video",
+            formatLabel = "1080p",
+            thumbnailUrl = null,
+            contentUri = "content://media/1",
+            completedAt = 1_000_000L,
+            fileSizeBytes = null,
+        )
+        coEvery { findExistingDownload(any()) } returns existing
+
+        viewModel.onIntent(DownloadIntent.UrlChanged("https://youtube.com/watch?v=test"))
+        testScheduler.advanceTimeBy(600)
+        advanceUntilIdle()
+
+        viewModel.events.test {
+            viewModel.onIntent(DownloadIntent.OpenExistingClicked)
+            val event = awaitItem()
+            assertTrue(event is DownloadEvent.OpenFile)
+            assertEquals("content://media/1", (event as DownloadEvent.OpenFile).filePath)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `DismissExistingBanner clears existingDownload from Idle state`() = runTest {
+        val existing = ExistingDownload(
+            recordId = 1L,
+            videoTitle = "Test Video",
+            formatLabel = "1080p",
+            thumbnailUrl = null,
+            contentUri = "content://media/1",
+            completedAt = 1_000_000L,
+            fileSizeBytes = null,
+        )
+        coEvery { findExistingDownload(any()) } returns existing
+
+        viewModel.onIntent(DownloadIntent.UrlChanged("https://youtube.com/watch?v=test"))
+        testScheduler.advanceTimeBy(600)
+        advanceUntilIdle()
+
+        viewModel.uiState.test {
+            val idleWithBanner = awaitItem() as DownloadUiState.Idle
+            assertEquals(existing, idleWithBanner.existingDownload)
+
+            viewModel.onIntent(DownloadIntent.DismissExistingBanner)
+
+            val idleCleared = awaitItem() as DownloadUiState.Idle
+            assertEquals(null, idleCleared.existingDownload)
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test

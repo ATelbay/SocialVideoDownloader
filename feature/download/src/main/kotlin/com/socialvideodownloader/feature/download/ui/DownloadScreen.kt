@@ -183,11 +183,15 @@ private fun DownloadScreenContent(
                 is DownloadUiState.Idle -> {
                     IdleContent(
                         url = urlText,
+                        existingDownload = targetState.existingDownload,
                         onUrlChanged = { url ->
                             urlText = url
                             onIntent(DownloadIntent.UrlChanged(url))
                         },
                         onExtractClicked = { onIntent(DownloadIntent.ExtractClicked) },
+                        onOpenExistingClicked = { onIntent(DownloadIntent.OpenExistingClicked) },
+                        onShareExistingClicked = { onIntent(DownloadIntent.ShareExistingClicked) },
+                        onDismissExistingBanner = { onIntent(DownloadIntent.DismissExistingBanner) },
                     )
                 }
 

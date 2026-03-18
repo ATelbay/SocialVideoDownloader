@@ -22,6 +22,7 @@ rootProject.name = "SocialVideoDownloader"
 include(":app")
 include(":feature:download")
 include(":feature:history")
+include(":feature:library")
 include(":core:domain")
 include(":core:data")
 include(":core:ui")
