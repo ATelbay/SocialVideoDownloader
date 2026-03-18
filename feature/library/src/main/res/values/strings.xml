@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_screen_title">Library</string>
+    <string name="library_empty_title">No videos yet</string>
+    <string name="library_empty_description">Download your first video to see it here</string>
+    <string name="library_start_downloading">Start Downloading</string>
+    <string name="library_open_error">Could not open file</string>
+    <string name="library_share_error">Could not share file</string>
+</resources>

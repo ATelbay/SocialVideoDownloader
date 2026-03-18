@@ -1,12 +1,12 @@
 package com.socialvideodownloader.feature.history.domain
 
+import com.socialvideodownloader.core.domain.file.FileAccessManager
 import com.socialvideodownloader.core.domain.repository.DownloadRepository
-import com.socialvideodownloader.feature.history.file.HistoryFileManager
 import javax.inject.Inject
 
 class DeleteHistoryItemUseCase @Inject constructor(
     private val repository: DownloadRepository,
-    private val fileManager: HistoryFileManager,
+    private val fileManager: FileAccessManager,
 ) {
     suspend operator fun invoke(itemId: Long, deleteFile: Boolean): DeleteResult {
         val record = repository.getById(itemId) ?: return DeleteResult(fileDeleteFailed = false)

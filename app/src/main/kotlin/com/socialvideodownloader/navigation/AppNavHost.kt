@@ -4,10 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import com.socialvideodownloader.feature.download.navigation.DownloadRoute
 import com.socialvideodownloader.feature.download.navigation.downloadScreen
 import com.socialvideodownloader.feature.history.navigation.historyScreen
+import com.socialvideodownloader.feature.library.navigation.libraryScreen
 
 @Composable
 fun AppNavHost(
@@ -21,9 +21,15 @@ fun AppNavHost(
         modifier = modifier,
     ) {
         downloadScreen()
-        composable<LibraryRoute> {
-            LibraryScreen()
-        }
+        libraryScreen(
+            onNavigateToDownload = {
+                navController.navigate(DownloadRoute()) {
+                    popUpTo(navController.graph.startDestinationId) { saveState = true }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            },
+        )
         historyScreen(
             onNavigateToDownload = { initialUrl ->
                 navController.navigate(DownloadRoute(initialUrl = initialUrl)) {

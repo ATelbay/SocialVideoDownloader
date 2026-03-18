@@ -12,13 +12,16 @@ import androidx.lifecycle.viewModelScope
 import com.socialvideodownloader.core.domain.model.DownloadProgress
 import com.socialvideodownloader.core.domain.model.DownloadRequest
 import com.socialvideodownloader.core.domain.usecase.ExtractVideoInfoUseCase
+import com.socialvideodownloader.core.domain.usecase.FindExistingDownloadUseCase
 import com.socialvideodownloader.feature.download.R
 import com.socialvideodownloader.feature.download.service.DownloadService
 import com.socialvideodownloader.feature.download.service.DownloadServiceState
 import com.socialvideodownloader.feature.download.service.DownloadServiceStateHolder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,19 +33,21 @@ import javax.inject.Inject
 @HiltViewModel
 class DownloadViewModel @Inject constructor(
     private val extractVideoInfo: ExtractVideoInfoUseCase,
+    private val findExistingDownload: FindExistingDownloadUseCase,
     private val errorMessageMapper: ErrorMessageMapper,
     private val serviceStateHolder: DownloadServiceStateHolder,
     @ApplicationContext private val context: Context,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<DownloadUiState>(DownloadUiState.Idle)
+    private val _uiState = MutableStateFlow<DownloadUiState>(DownloadUiState.Idle())
     val uiState: StateFlow<DownloadUiState> = _uiState.asStateFlow()
 
     private val _events = Channel<DownloadEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
 
     private var currentUrl: String = ""
+    private var duplicateCheckJob: Job? = null
 
     init {
         collectServiceState()
@@ -51,7 +56,7 @@ class DownloadViewModel @Inject constructor(
         val url = initialUrl ?: savedUrl
         if (url != null) {
             currentUrl = url
-            _uiState.value = DownloadUiState.Idle
+            _uiState.value = DownloadUiState.Idle()
         }
     }
 
@@ -120,16 +125,37 @@ class DownloadViewModel @Inject constructor(
             is DownloadIntent.ShareFileClicked -> handleShareFile()
             is DownloadIntent.NewDownloadClicked -> handleNewDownload()
             is DownloadIntent.PrefillUrl -> handlePrefillUrl(intent.url)
+            is DownloadIntent.OpenExistingClicked -> handleOpenExisting()
+            is DownloadIntent.ShareExistingClicked -> handleShareExisting()
+            is DownloadIntent.DismissExistingBanner -> handleDismissExistingBanner()
         }
     }
 
     private fun handleUrlChanged(url: String) {
         currentUrl = url
         savedStateHandle["currentUrl"] = url
+
+        duplicateCheckJob?.cancel()
+        if (url.isBlank()) {
+            val current = _uiState.value
+            if (current is DownloadUiState.Idle && current.existingDownload != null) {
+                _uiState.value = DownloadUiState.Idle()
+            }
+            return
+        }
+        duplicateCheckJob = viewModelScope.launch {
+            delay(500)
+            val existing = findExistingDownload(url)
+            val current = _uiState.value
+            if (current is DownloadUiState.Idle) {
+                _uiState.value = DownloadUiState.Idle(existingDownload = existing)
+            }
+        }
     }
 
     private fun handleExtract() {
         if (currentUrl.isBlank()) return
+        duplicateCheckJob?.cancel()
         _uiState.value = DownloadUiState.Extracting(currentUrl)
 
         viewModelScope.launch {
@@ -270,12 +296,50 @@ class DownloadViewModel @Inject constructor(
 
     private fun handleNewDownload() {
         currentUrl = ""
-        _uiState.value = DownloadUiState.Idle
+        duplicateCheckJob?.cancel()
+        _uiState.value = DownloadUiState.Idle()
+    }
+
+    private fun handleOpenExisting() {
+        val state = _uiState.value
+        if (state is DownloadUiState.Idle) {
+            val existing = state.existingDownload ?: return
+            viewModelScope.launch {
+                _events.send(DownloadEvent.OpenFile(existing.contentUri))
+            }
+        }
+    }
+
+    private fun handleShareExisting() {
+        val state = _uiState.value
+        if (state is DownloadUiState.Idle) {
+            val existing = state.existingDownload ?: return
+            viewModelScope.launch {
+                _events.send(DownloadEvent.ShareFile(existing.contentUri))
+            }
+        }
+    }
+
+    private fun handleDismissExistingBanner() {
+        val current = _uiState.value
+        if (current is DownloadUiState.Idle) {
+            _uiState.value = DownloadUiState.Idle()
+        }
     }
 
     private fun handlePrefillUrl(url: String) {
         currentUrl = url
-        handleExtract()
+        viewModelScope.launch {
+            val existing = findExistingDownload(url)
+            if (existing != null) {
+                _uiState.value = DownloadUiState.Idle(
+                    existingDownload = existing,
+                    prefillUrl = url,
+                )
+            } else {
+                handleExtract()
+            }
+        }
     }
 }
 

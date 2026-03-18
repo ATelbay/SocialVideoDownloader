@@ -33,6 +33,7 @@ android {
 dependencies {
     implementation(project(":feature:download"))
     implementation(project(":feature:history"))
+    implementation(project(":feature:library"))
     implementation(project(":core:domain"))
     implementation(project(":core:data"))
     implementation(project(":core:ui"))

@@ -1,9 +1,11 @@
 package com.socialvideodownloader.feature.history.testdouble
 
 import com.socialvideodownloader.core.domain.model.DownloadRecord
+import com.socialvideodownloader.core.domain.model.DownloadStatus
 import com.socialvideodownloader.core.domain.repository.DownloadRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.map
 
 class FakeDownloadRepository : DownloadRepository {
 
@@ -14,6 +16,12 @@ class FakeDownloadRepository : DownloadRepository {
     var onDeleteCallback: (() -> Unit)? = null
 
     override fun getAll(): Flow<List<DownloadRecord>> = recordsFlow
+
+    override fun getCompletedDownloads(): Flow<List<DownloadRecord>> =
+        recordsFlow.map { records -> records.filter { it.status == DownloadStatus.COMPLETED } }
+
+    override suspend fun getCompletedSnapshot(): List<DownloadRecord> =
+        recordsFlow.replayCache.firstOrNull()?.filter { it.status == DownloadStatus.COMPLETED } ?: emptyList()
 
     override suspend fun getById(id: Long): DownloadRecord? {
         return recordsFlow.replayCache.firstOrNull()?.find { it.id == id }

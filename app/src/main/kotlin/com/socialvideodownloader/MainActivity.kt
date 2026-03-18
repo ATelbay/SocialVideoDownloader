@@ -21,7 +21,7 @@ import com.socialvideodownloader.core.ui.theme.SvdBg
 import com.socialvideodownloader.feature.download.navigation.DownloadRoute
 import com.socialvideodownloader.feature.history.navigation.HistoryRoute
 import com.socialvideodownloader.navigation.AppNavHost
-import com.socialvideodownloader.navigation.LibraryRoute
+import com.socialvideodownloader.feature.library.navigation.LibraryRoute
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

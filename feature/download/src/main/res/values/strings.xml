@@ -38,6 +38,13 @@
     <string name="download_action_back">Back</string>
     <string name="download_action_hide">Hide</string>
 
+    <!-- Existing download banner -->
+    <string name="download_already_downloaded">Already downloaded</string>
+    <string name="download_existing_open">Open</string>
+    <string name="download_existing_share">Share</string>
+    <string name="download_existing_download_again">Download again</string>
+    <string name="download_existing_downloaded_on">Downloaded %s</string>
+
     <!-- Idle state -->
     <string name="download_hero_title">Download Videos\nFrom Anywhere</string>
     <string name="download_hero_subtitle">Paste any social media URL to get started</string>
