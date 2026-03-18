@@ -329,7 +329,17 @@ class DownloadViewModel @Inject constructor(
 
     private fun handlePrefillUrl(url: String) {
         currentUrl = url
-        handleExtract()
+        viewModelScope.launch {
+            val existing = findExistingDownload(url)
+            if (existing != null) {
+                _uiState.value = DownloadUiState.Idle(
+                    existingDownload = existing,
+                    prefillUrl = url,
+                )
+            } else {
+                handleExtract()
+            }
+        }
     }
 }
 

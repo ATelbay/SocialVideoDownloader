@@ -115,6 +115,13 @@ private fun DownloadScreenContent(
 ) {
     var urlText by rememberSaveable { mutableStateOf("") }
 
+    val prefillUrl = (uiState as? DownloadUiState.Idle)?.prefillUrl
+    LaunchedEffect(prefillUrl) {
+        if (prefillUrl != null) {
+            urlText = prefillUrl
+        }
+    }
+
     Scaffold(
         modifier = modifier,
         containerColor = SvdBg,

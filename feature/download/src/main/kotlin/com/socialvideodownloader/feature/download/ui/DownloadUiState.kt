@@ -5,7 +5,10 @@ import com.socialvideodownloader.core.domain.model.ExistingDownload
 import com.socialvideodownloader.core.domain.model.VideoMetadata
 
 sealed interface DownloadUiState {
-    data class Idle(val existingDownload: ExistingDownload? = null) : DownloadUiState
+    data class Idle(
+        val existingDownload: ExistingDownload? = null,
+        val prefillUrl: String? = null,
+    ) : DownloadUiState
     data class Extracting(val url: String) : DownloadUiState
     data class FormatSelection(
         val metadata: VideoMetadata,

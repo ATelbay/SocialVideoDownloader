@@ -547,6 +547,31 @@ class DownloadViewModelTest {
     }
 
     @Test
+    fun `PrefillUrl with existing download shows Idle state with banner instead of extracting`() = runTest {
+        val existing = ExistingDownload(
+            recordId = 1L,
+            videoTitle = "Test Video",
+            formatLabel = "1080p",
+            thumbnailUrl = "https://thumb.jpg",
+            contentUri = "content://media/1",
+            completedAt = 1_000_000L,
+            fileSizeBytes = 50_000_000L,
+        )
+        coEvery { findExistingDownload("https://youtube.com/watch?v=dup") } returns existing
+
+        viewModel.uiState.test {
+            assertTrue(awaitItem() is DownloadUiState.Idle)
+
+            viewModel.onIntent(DownloadIntent.PrefillUrl("https://youtube.com/watch?v=dup"))
+
+            val idleWithBanner = awaitItem() as DownloadUiState.Idle
+            assertEquals(existing, idleWithBanner.existingDownload)
+            assertEquals("https://youtube.com/watch?v=dup", idleWithBanner.prefillUrl)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun `handleRetry uses exhaustive when and does not throw ClassCastException`() = runTest {
         coEvery { extractVideoInfo(any()) } returnsMany listOf(
             Result.failure(RuntimeException("Error")),
