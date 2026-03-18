@@ -243,4 +243,6 @@ class DownloadViewModel @Inject constructor(
 sealed interface DownloadEvent {
     data class OpenFile(val filePath: String) : DownloadEvent
     data class ShareFile(val filePath: String) : DownloadEvent
+    data class ShowSnackbar(val message: String) : DownloadEvent
+    data object RequestNotificationPermission : DownloadEvent
 }
