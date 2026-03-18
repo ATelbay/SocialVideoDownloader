@@ -96,6 +96,8 @@ io.github.junkfood02.youtubedl-android:aria2c:0.18.+
 ## Active Technologies
 - Kotlin 2.2.10 + Jetpack Compose (BOM 2026.03.00), Material 3, Hilt (KSP), Navigation Compose 2.9.7, Coil (005-ui-redesign-dark-theme)
 - No changes (Room + MediaStore unchanged) (005-ui-redesign-dark-theme)
+- N/A (no storage changes) (006-warm-editorial-redesign)
+- Room (download history), MediaStore (saved files), cacheDir (yt-dlp temp files) (007-download-flow-hardening)
 
 ## Recent Changes
 - 005-ui-redesign-dark-theme: Added Kotlin 2.2.10 + Jetpack Compose (BOM 2026.03.00), Material 3, Hilt (KSP), Navigation Compose 2.9.7, Coil
