@@ -57,7 +57,7 @@ class DownloadNotificationManager @Inject constructor(
             .setContentIntent(contentIntent)
             .addAction(
                 android.R.drawable.ic_menu_close_clear_cancel,
-                context.getString(R.string.download_progress_cancel),
+                context.getString(R.string.download_cancel),
                 cancelPendingIntent,
             )
             .build()

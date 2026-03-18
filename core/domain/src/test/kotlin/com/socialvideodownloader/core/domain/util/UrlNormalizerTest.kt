@@ -42,6 +42,12 @@ class UrlNormalizerTest {
     }
 
     @Test
+    fun `youtu_be preserves timestamp param and strips tracking param`() {
+        val url = "https://youtu.be/abc123?t=120&si=trackingvalue"
+        assertEquals("https://youtube.com/watch?v=abc123&t=120", UrlNormalizer.normalize(url))
+    }
+
+    @Test
     fun `normalizes m_youtube_com to youtube_com`() {
         val url = "https://m.youtube.com/watch?v=abc123"
         assertEquals("https://youtube.com/watch?v=abc123", UrlNormalizer.normalize(url))

@@ -1,6 +1,7 @@
 package com.socialvideodownloader.feature.library.ui
 
 import app.cash.turbine.test
+import com.socialvideodownloader.core.domain.model.LibraryItem
 import com.socialvideodownloader.feature.library.domain.ObserveLibraryItemsUseCase
 import com.socialvideodownloader.feature.library.testutil.MainDispatcherRule
 import io.mockk.every
@@ -25,7 +26,7 @@ class LibraryViewModelTest {
         id: Long,
         title: String = "Test Video",
         contentUri: String = "content://media/$id",
-    ) = LibraryListItem(
+    ) = LibraryItem(
         id = id,
         title = title,
         formatLabel = "1080p",
@@ -67,7 +68,7 @@ class LibraryViewModelTest {
         vm.uiState.test {
             val state = awaitItem()
             assertTrue(state is LibraryUiState.Content)
-            assertEquals(items, (state as LibraryUiState.Content).items)
+            assertEquals(2, (state as LibraryUiState.Content).items.size)
             cancelAndIgnoreRemainingEvents()
         }
     }

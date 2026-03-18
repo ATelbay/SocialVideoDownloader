@@ -20,10 +20,15 @@ object UrlNormalizer {
         return try {
             var uri = URI(trimmed)
 
-            // Normalize youtu.be short links
+            // Normalize youtu.be short links — preserve non-tracking params (e.g. t=120)
             if (uri.host?.equals("youtu.be", ignoreCase = true) == true) {
                 val videoId = uri.path.trimStart('/')
-                uri = URI("https://www.youtube.com/watch?v=$videoId")
+                val keptParams = uri.query?.split("&")?.filter { param ->
+                    val key = param.substringBefore("=")
+                    key !in youtubeTrackingParams && !key.startsWith("utm_")
+                }?.takeIf { it.isNotEmpty() }
+                val queryStr = if (keptParams != null) "&${keptParams.joinToString("&")}" else ""
+                uri = URI("https://www.youtube.com/watch?v=$videoId$queryStr")
             }
 
             // Normalize host: lowercase, remove m. prefix for youtube

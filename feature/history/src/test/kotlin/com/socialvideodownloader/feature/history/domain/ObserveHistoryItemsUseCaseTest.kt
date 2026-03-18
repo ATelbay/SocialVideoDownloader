@@ -6,7 +6,7 @@ import com.socialvideodownloader.core.domain.model.DownloadStatus
 import com.socialvideodownloader.feature.history.testdouble.FakeDownloadRepository
 import com.socialvideodownloader.feature.history.testdouble.FakeHistoryFileManager
 import com.socialvideodownloader.feature.history.testutil.MainDispatcherRule
-import com.socialvideodownloader.feature.history.ui.HistoryListItem
+import com.socialvideodownloader.core.domain.model.HistoryItem
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse

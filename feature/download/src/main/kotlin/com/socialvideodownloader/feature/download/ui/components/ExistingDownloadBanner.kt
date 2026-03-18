@@ -74,7 +74,6 @@ fun ExistingDownloadBanner(
                 )
                 IconButton(
                     onClick = onDismissClicked,
-                    modifier = Modifier.size(24.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Close,
