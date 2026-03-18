@@ -1,7 +1,7 @@
 package com.socialvideodownloader.feature.history.domain
 
+import com.socialvideodownloader.core.domain.file.FileAccessManager
 import com.socialvideodownloader.core.domain.repository.DownloadRepository
-import com.socialvideodownloader.feature.history.file.HistoryFileManager
 import com.socialvideodownloader.feature.history.ui.HistoryListItem
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.map
 
 class ObserveHistoryItemsUseCase @Inject constructor(
     private val downloadRepository: DownloadRepository,
-    private val fileManager: HistoryFileManager,
+    private val fileManager: FileAccessManager,
 ) {
     operator fun invoke(): Flow<List<HistoryListItem>> =
         downloadRepository.getAll().map { records ->

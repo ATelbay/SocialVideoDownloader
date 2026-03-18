@@ -26,4 +26,10 @@ interface DownloadDao {
 
     @Query("DELETE FROM downloads")
     suspend fun deleteAll()
+
+    @Query("SELECT * FROM downloads WHERE status = 'COMPLETED' ORDER BY completedAt DESC")
+    fun getCompleted(): Flow<List<DownloadEntity>>
+
+    @Query("SELECT * FROM downloads WHERE status = 'COMPLETED' ORDER BY completedAt DESC")
+    suspend fun getCompletedSnapshot(): List<DownloadEntity>
 }

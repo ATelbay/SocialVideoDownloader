@@ -6,7 +6,11 @@ import kotlinx.coroutines.flow.Flow
 interface DownloadRepository {
     fun getAll(): Flow<List<DownloadRecord>>
 
+    fun getCompletedDownloads(): Flow<List<DownloadRecord>>
+
     suspend fun getById(id: Long): DownloadRecord?
+
+    suspend fun getCompletedSnapshot(): List<DownloadRecord>
 
     suspend fun insert(record: DownloadRecord): Long
 

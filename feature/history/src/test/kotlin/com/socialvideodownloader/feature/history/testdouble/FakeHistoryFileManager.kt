@@ -1,9 +1,9 @@
 package com.socialvideodownloader.feature.history.testdouble
 
+import com.socialvideodownloader.core.domain.file.FileAccessManager
 import com.socialvideodownloader.core.domain.model.DownloadRecord
-import com.socialvideodownloader.feature.history.file.HistoryFileManager
 
-class FakeHistoryFileManager : HistoryFileManager {
+class FakeHistoryFileManager : FileAccessManager {
 
     var resolveContentUriResult: (DownloadRecord) -> String? = { null }
     var isFileAccessibleResult: (String) -> Boolean = { false }

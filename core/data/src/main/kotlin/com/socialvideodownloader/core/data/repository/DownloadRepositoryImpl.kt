@@ -16,8 +16,14 @@ class DownloadRepositoryImpl @Inject constructor(
     override fun getAll(): Flow<List<DownloadRecord>> =
         downloadDao.getAll().map { entities -> entities.map { it.toDomain() } }
 
+    override fun getCompletedDownloads(): Flow<List<DownloadRecord>> =
+        downloadDao.getCompleted().map { entities -> entities.map { it.toDomain() } }
+
     override suspend fun getById(id: Long): DownloadRecord? =
         downloadDao.getById(id)?.toDomain()
+
+    override suspend fun getCompletedSnapshot(): List<DownloadRecord> =
+        downloadDao.getCompletedSnapshot().map { it.toDomain() }
 
     override suspend fun insert(record: DownloadRecord): Long =
         downloadDao.insert(record.toEntity())

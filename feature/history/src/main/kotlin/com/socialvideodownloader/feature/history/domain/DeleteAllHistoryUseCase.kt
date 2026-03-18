@@ -1,7 +1,7 @@
 package com.socialvideodownloader.feature.history.domain
 
+import com.socialvideodownloader.core.domain.file.FileAccessManager
 import com.socialvideodownloader.core.domain.repository.DownloadRepository
-import com.socialvideodownloader.feature.history.file.HistoryFileManager
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 
@@ -11,7 +11,7 @@ data class DeleteAllHistoryResult(
 
 class DeleteAllHistoryUseCase @Inject constructor(
     private val repository: DownloadRepository,
-    private val fileManager: HistoryFileManager,
+    private val fileManager: FileAccessManager,
 ) {
     suspend operator fun invoke(deleteFiles: Boolean = true): DeleteAllHistoryResult {
         var failedFileDeletions = 0
