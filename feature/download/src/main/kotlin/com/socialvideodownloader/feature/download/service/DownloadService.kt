@@ -106,11 +106,12 @@ class DownloadService : Service() {
                     val speedBytes = parseSpeedToBytes(speedText)
                     val safeProgress = progressPercent.coerceAtLeast(0f)
                     val safeEta = etaSeconds.coerceAtLeast(0L)
+                    val totalBytes = request.totalBytes
                     val progress = DownloadProgress(
                         requestId = request.id,
                         progressPercent = safeProgress,
-                        downloadedBytes = if (request.totalBytes != null && request.totalBytes > 0) {
-                            ((safeProgress / 100f) * request.totalBytes).toLong()
+                        downloadedBytes = if (totalBytes != null && totalBytes > 0) {
+                            ((safeProgress / 100f) * totalBytes).toLong()
                         } else {
                             0L
                         },
