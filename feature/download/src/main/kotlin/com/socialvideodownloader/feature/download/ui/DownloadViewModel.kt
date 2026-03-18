@@ -1,13 +1,18 @@
 package com.socialvideodownloader.feature.download.ui
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.socialvideodownloader.core.domain.model.DownloadProgress
 import com.socialvideodownloader.core.domain.model.DownloadRequest
 import com.socialvideodownloader.core.domain.usecase.ExtractVideoInfoUseCase
+import com.socialvideodownloader.feature.download.R
 import com.socialvideodownloader.feature.download.service.DownloadService
 import com.socialvideodownloader.feature.download.service.DownloadServiceState
 import com.socialvideodownloader.feature.download.service.DownloadServiceStateHolder
@@ -28,7 +33,7 @@ class DownloadViewModel @Inject constructor(
     private val errorMessageMapper: ErrorMessageMapper,
     private val serviceStateHolder: DownloadServiceStateHolder,
     @ApplicationContext private val context: Context,
-    savedStateHandle: SavedStateHandle,
+    private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<DownloadUiState>(DownloadUiState.Idle)
@@ -42,8 +47,10 @@ class DownloadViewModel @Inject constructor(
     init {
         collectServiceState()
         val initialUrl: String? = savedStateHandle["initialUrl"]
-        if (initialUrl != null) {
-            currentUrl = initialUrl
+        val savedUrl: String? = savedStateHandle["currentUrl"]
+        val url = initialUrl ?: savedUrl
+        if (url != null) {
+            currentUrl = url
             _uiState.value = DownloadUiState.Idle
         }
     }
@@ -90,9 +97,12 @@ class DownloadViewModel @Inject constructor(
                             )
                         }
                     }
-                    is DownloadServiceState.Idle,
-                    is DownloadServiceState.Queued,
-                    -> Unit
+                    is DownloadServiceState.Idle -> Unit
+                    is DownloadServiceState.Queued -> {
+                        viewModelScope.launch {
+                            _events.send(DownloadEvent.ShowSnackbar(context.getString(R.string.download_queued)))
+                        }
+                    }
                 }
             }
         }
@@ -115,6 +125,7 @@ class DownloadViewModel @Inject constructor(
 
     private fun handleUrlChanged(url: String) {
         currentUrl = url
+        savedStateHandle["currentUrl"] = url
     }
 
     private fun handleExtract() {
@@ -150,6 +161,30 @@ class DownloadViewModel @Inject constructor(
     }
 
     private fun handleDownload() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val hasPermission = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS,
+            ) == PackageManager.PERMISSION_GRANTED
+            if (!hasPermission) {
+                viewModelScope.launch { _events.send(DownloadEvent.RequestNotificationPermission) }
+                return
+            }
+        }
+        startDownload()
+    }
+
+    fun onNotificationPermissionResult(granted: Boolean) {
+        if (!granted) {
+            viewModelScope.launch {
+                _events.send(DownloadEvent.ShowSnackbar(context.getString(R.string.notification_permission_rationale)))
+            }
+        }
+        // Proceed with download regardless of permission result
+        startDownload()
+    }
+
+    private fun startDownload() {
         val state = _uiState.value
         if (state !is DownloadUiState.FormatSelection) return
 
@@ -165,6 +200,7 @@ class DownloadViewModel @Inject constructor(
             formatId = selectedFormat.formatId,
             formatLabel = selectedFormat.label,
             isVideoOnly = selectedFormat.isVideoOnly,
+            totalBytes = selectedFormat.fileSizeBytes,
         )
 
         _uiState.value = DownloadUiState.Downloading(
@@ -206,9 +242,12 @@ class DownloadViewModel @Inject constructor(
     private fun handleRetry() {
         val state = _uiState.value
         if (state !is DownloadUiState.Error) return
-        val action = state.retryAction as RetryAction.RetryExtraction
-        currentUrl = action.url
-        handleExtract()
+        when (val action = state.retryAction) {
+            is RetryAction.RetryExtraction -> {
+                currentUrl = action.url
+                handleExtract()
+            }
+        }
     }
 
     private fun handleOpenFile() {

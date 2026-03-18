@@ -53,6 +53,7 @@ class DownloadService : Service() {
             ACTION_CANCEL_DOWNLOAD -> {
                 val requestId = intent.getStringExtra(EXTRA_REQUEST_ID) ?: return START_NOT_STICKY
                 cancelDownload(requestId)
+                java.io.File(cacheDir, "ytdl_downloads").listFiles()?.forEach { it.deleteRecursively() }
                 stateHolder.update(DownloadServiceState.Cancelled(requestId))
                 stopIfQueueEmpty()
             }
@@ -108,7 +109,12 @@ class DownloadService : Service() {
                     val progress = DownloadProgress(
                         requestId = request.id,
                         progressPercent = safeProgress,
-                        downloadedBytes = 0L,
+                        downloadedBytes = if (request.totalBytes != null && request.totalBytes > 0) {
+                            ((safeProgress / 100f) * request.totalBytes).toLong()
+                        } else {
+                            0L
+                        },
+                        totalBytes = request.totalBytes,
                         speedBytesPerSec = speedBytes,
                         etaSeconds = safeEta,
                     )
@@ -137,6 +143,22 @@ class DownloadService : Service() {
                     mimeType,
                 )
 
+                val fileSizeBytes: Long? = try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        contentResolver.query(
+                            android.net.Uri.parse(savedUri),
+                            arrayOf(android.provider.OpenableColumns.SIZE),
+                            null, null, null,
+                        )?.use { cursor ->
+                            if (cursor.moveToFirst()) cursor.getLong(0).takeIf { it > 0 } else null
+                        }
+                    } else {
+                        java.io.File(savedUri).length().takeIf { it > 0 }
+                    }
+                } catch (_: Exception) {
+                    null
+                }
+
                 saveDownloadRecord(
                     DownloadRecord(
                         sourceUrl = request.sourceUrl,
@@ -145,6 +167,7 @@ class DownloadService : Service() {
                         formatLabel = request.formatLabel,
                         filePath = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) savedUri else null,
                         mediaStoreUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) savedUri else null,
+                        fileSizeBytes = fileSizeBytes,
                         status = DownloadStatus.COMPLETED,
                         createdAt = System.currentTimeMillis(),
                         completedAt = System.currentTimeMillis(),
@@ -156,6 +179,8 @@ class DownloadService : Service() {
                 notificationManager.showCompletionNotification(
                     notificationId xor COMPLETION_ID_XOR,
                     request.videoTitle,
+                    mediaStoreUri = savedUri,
+                    mimeType = mimeType,
                 )
             } catch (e: CancellationException) {
                 throw e
