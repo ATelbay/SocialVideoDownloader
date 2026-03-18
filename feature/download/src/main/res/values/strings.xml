@@ -68,4 +68,9 @@
 
     <!-- Error state -->
     <string name="download_error_title">Failed to extract</string>
+
+    <!-- Snackbar / Permission messages -->
+    <string name="download_queued">Download queued</string>
+    <string name="notification_permission_rationale">Notifications are disabled — you won\'t see download progress in the notification shade</string>
+    <string name="notification_permission_denied">Notification permission denied</string>
 </resources>

@@ -1,7 +1,10 @@
 package com.socialvideodownloader.feature.download.ui
 
+import android.Manifest
 import android.content.Intent
 import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.tween
@@ -17,10 +20,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -50,6 +56,13 @@ fun DownloadScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        viewModel.onNotificationPermissionResult(granted)
+    }
 
     LaunchedEffect(initialUrl) {
         if (initialUrl != null) {
@@ -75,6 +88,12 @@ fun DownloadScreen(
                     }
                     context.startActivity(Intent.createChooser(intent, null))
                 }
+                is DownloadEvent.ShowSnackbar -> {
+                    snackbarHostState.showSnackbar(event.message)
+                }
+                is DownloadEvent.RequestNotificationPermission -> {
+                    permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
             }
         }
     }
@@ -82,6 +101,7 @@ fun DownloadScreen(
     DownloadScreenContent(
         uiState = uiState,
         onIntent = viewModel::onIntent,
+        snackbarHostState = snackbarHostState,
         modifier = modifier,
     )
 }
@@ -91,12 +111,14 @@ private fun DownloadScreenContent(
     uiState: DownloadUiState,
     onIntent: (DownloadIntent) -> Unit,
     modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     var urlText by rememberSaveable { mutableStateOf("") }
 
     Scaffold(
         modifier = modifier,
         containerColor = SvdBg,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             when (uiState) {
                 is DownloadUiState.Idle -> {

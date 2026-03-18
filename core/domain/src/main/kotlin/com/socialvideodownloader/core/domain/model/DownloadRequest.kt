@@ -8,4 +8,5 @@ data class DownloadRequest(
     val formatId: String,
     val formatLabel: String,
     val isVideoOnly: Boolean,
+    val totalBytes: Long? = null,
 )
