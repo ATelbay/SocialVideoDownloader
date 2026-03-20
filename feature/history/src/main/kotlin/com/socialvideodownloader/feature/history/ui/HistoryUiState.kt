@@ -1,6 +1,8 @@
 package com.socialvideodownloader.feature.history.ui
 
 import com.socialvideodownloader.core.domain.model.DownloadStatus
+import com.socialvideodownloader.core.domain.model.SyncStatus
+import com.socialvideodownloader.core.domain.sync.CloudCapacity
 
 data class HistoryListItem(
     val id: Long,
@@ -26,6 +28,11 @@ data class DeleteConfirmationState(
     val affectedCount: Int,
 )
 
+data class CloudBackupState(
+    val isCloudBackupEnabled: Boolean = false,
+    val syncStatus: SyncStatus = SyncStatus.Idle,
+)
+
 sealed interface HistoryUiState {
     data object Loading : HistoryUiState
     data class Empty(val query: String, val isFiltering: Boolean) : HistoryUiState
@@ -35,5 +42,7 @@ sealed interface HistoryUiState {
         val openMenuItemId: Long? = null,
         val deleteConfirmation: DeleteConfirmationState? = null,
         val isDeleting: Boolean = false,
+        // US3: Billing — capacity info for banner
+        val cloudCapacity: CloudCapacity? = null,
     ) : HistoryUiState
 }

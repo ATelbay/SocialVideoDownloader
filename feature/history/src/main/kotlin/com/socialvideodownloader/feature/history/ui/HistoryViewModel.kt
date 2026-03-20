@@ -4,6 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.socialvideodownloader.core.domain.model.DownloadStatus
 import com.socialvideodownloader.core.domain.model.HistoryItem
+import com.socialvideodownloader.core.domain.model.SyncStatus
+import com.socialvideodownloader.core.domain.repository.BillingRepository
+import com.socialvideodownloader.core.domain.sync.BackupPreferences
+import com.socialvideodownloader.core.domain.sync.CloudCapacity
+import com.socialvideodownloader.core.domain.sync.DisableCloudBackupUseCase
+import com.socialvideodownloader.core.domain.sync.EnableCloudBackupUseCase
+import com.socialvideodownloader.core.domain.sync.ObserveCloudCapacityUseCase
+import com.socialvideodownloader.core.domain.sync.SyncManager
 import com.socialvideodownloader.feature.history.R
 import com.socialvideodownloader.feature.history.domain.DeleteHistoryItemUseCase
 import com.socialvideodownloader.feature.history.domain.ObserveHistoryItemsUseCase
@@ -25,6 +33,14 @@ import javax.inject.Inject
 class HistoryViewModel @Inject constructor(
     private val observeHistoryItems: ObserveHistoryItemsUseCase,
     private val deleteHistoryItem: DeleteHistoryItemUseCase,
+    // US3: Billing — capacity observation and purchase flow
+    private val observeCloudCapacity: ObserveCloudCapacityUseCase,
+    private val billingRepository: BillingRepository,
+    // US1: Cloud backup toggle
+    private val enableCloudBackupUseCase: EnableCloudBackupUseCase,
+    private val disableCloudBackupUseCase: DisableCloudBackupUseCase,
+    private val syncManager: SyncManager,
+    private val backupPreferences: BackupPreferences,
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -37,9 +53,37 @@ class HistoryViewModel @Inject constructor(
     // Keep a reference to all items for delete operations that need access to the full list
     private val _allItems = MutableStateFlow<List<HistoryItem>>(emptyList())
 
+    // US3: Billing — cloud capacity state
+    private val _cloudCapacity = MutableStateFlow<CloudCapacity?>(null)
+
+    // US1: Cloud backup state
+    private val _isCloudBackupEnabled = MutableStateFlow(false)
+    private val _syncStatus = MutableStateFlow<SyncStatus>(SyncStatus.Idle)
+
+    val cloudBackupState: StateFlow<CloudBackupState> = combine(
+        _isCloudBackupEnabled,
+        _syncStatus,
+    ) { isEnabled, syncStatus ->
+        CloudBackupState(isCloudBackupEnabled = isEnabled, syncStatus = syncStatus)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CloudBackupState())
+
     init {
         observeHistoryItems()
             .onEach { _allItems.value = it }
+            .launchIn(viewModelScope)
+
+        // US3: Billing — observe cloud capacity for banner
+        observeCloudCapacity()
+            .onEach { _cloudCapacity.value = it }
+            .launchIn(viewModelScope)
+
+        // US1: Observe cloud backup preferences and sync status
+        backupPreferences.observeIsBackupEnabled()
+            .onEach { _isCloudBackupEnabled.value = it }
+            .launchIn(viewModelScope)
+
+        syncManager.observeSyncStatus()
+            .onEach { _syncStatus.value = it }
             .launchIn(viewModelScope)
     }
 
@@ -48,7 +92,8 @@ class HistoryViewModel @Inject constructor(
         _searchQuery,
         _openMenuItemId,
         _deleteConfirmation,
-    ) { allItems, query, openMenuItemId, deleteConfirmation ->
+        _cloudCapacity,
+    ) { allItems, query, openMenuItemId, deleteConfirmation, cloudCapacity ->
         val trimmedQuery = query.trim()
         if (allItems.isEmpty()) {
             HistoryUiState.Empty(query = trimmedQuery, isFiltering = false)
@@ -63,6 +108,7 @@ class HistoryViewModel @Inject constructor(
                     items = filtered.map { it.toListItem() },
                     openMenuItemId = openMenuItemId,
                     deleteConfirmation = deleteConfirmation,
+                    cloudCapacity = cloudCapacity,
                 )
             }
         }
@@ -79,7 +125,32 @@ class HistoryViewModel @Inject constructor(
             is HistoryIntent.DeleteFilesSelectionChanged -> handleDeleteFilesSelectionChanged(intent.selected)
             is HistoryIntent.ConfirmDeletion -> handleConfirmDeletion()
             is HistoryIntent.DismissDeletionDialog -> _deleteConfirmation.value = null
+            // US3: Billing — launch upgrade purchase flow
+            is HistoryIntent.TapUpgrade -> handleTapUpgrade()
+            // US1: Cloud backup toggle
+            is HistoryIntent.ToggleCloudBackup -> handleToggleCloudBackup()
         }
+    }
+
+    private fun handleToggleCloudBackup() {
+        viewModelScope.launch {
+            if (_isCloudBackupEnabled.value) {
+                disableCloudBackupUseCase()
+            } else {
+                enableCloudBackupUseCase()
+            }
+        }
+    }
+
+    private fun handleTapUpgrade() {
+        viewModelScope.launch {
+            _effect.emit(HistoryEffect.LaunchUpgradeFlow)
+        }
+    }
+
+    /** Called by the screen with the Activity reference required by Google Play Billing. */
+    suspend fun launchPurchaseFlow(activity: Any) {
+        billingRepository.launchPurchaseFlow(activity)
     }
 
     private fun handleItemClicked(itemId: Long) {

@@ -26,13 +26,16 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import android.app.Activity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -67,8 +70,11 @@ fun HistoryScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var isSearchActive by rememberSaveable { mutableStateOf(false) }
+    // US3: Billing — controls visibility of upgrade dialog
+    var showUpgradeDialog by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
@@ -107,6 +113,10 @@ fun HistoryScreen(
                 }
                 is HistoryEffect.RetryDownload -> {
                     onNavigateToDownload(effect.sourceUrl)
+                }
+                // US3: Billing — show upgrade dialog
+                is HistoryEffect.LaunchUpgradeFlow -> {
+                    showUpgradeDialog = true
                 }
             }
         }
@@ -189,16 +199,35 @@ fun HistoryScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { innerPadding ->
-        HistoryContent(
-            uiState = uiState,
-            onIntent = viewModel::onIntent,
-            onStartDownloading = { onNavigateToDownload("") },
+        // US3: Billing — show capacity banner when near limit
+        val contentState = uiState as? HistoryUiState.Content
+        // US1: Cloud backup state
+        val cloudBackupState by viewModel.cloudBackupState.collectAsStateWithLifecycle()
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-        )
+        ) {
+            CloudBackupToggle(
+                isEnabled = cloudBackupState.isCloudBackupEnabled,
+                syncStatus = cloudBackupState.syncStatus,
+                onToggle = { viewModel.onIntent(HistoryIntent.ToggleCloudBackup) },
+            )
+            if (contentState?.cloudCapacity?.isNearLimit == true) {
+                CapacityBanner(
+                    capacity = contentState.cloudCapacity,
+                    onUpgradeClick = { viewModel.onIntent(HistoryIntent.TapUpgrade) },
+                )
+            }
+            HistoryContent(
+                uiState = uiState,
+                onIntent = viewModel::onIntent,
+                onStartDownloading = { onNavigateToDownload("") },
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
 
-        val contentState = uiState as? HistoryUiState.Content
+        // Re-declare for bottom sheet / dialog use below
         val openItemId = contentState?.openMenuItemId
         if (openItemId != null) {
             val selectedItem = contentState.items.find { it.id == openItemId }
@@ -225,6 +254,22 @@ fun HistoryScreen(
                 onDismiss = {
                     viewModel.onIntent(HistoryIntent.DismissDeletionDialog)
                 },
+            )
+        }
+
+        // US3: Billing — upgrade dialog triggered by CapacityBanner or effect
+        if (showUpgradeDialog) {
+            UpgradeScreen(
+                onBuyClick = {
+                    showUpgradeDialog = false
+                    val activity = context as? Activity
+                    if (activity != null) {
+                        coroutineScope.launch {
+                            viewModel.launchPurchaseFlow(activity)
+                        }
+                    }
+                },
+                onDismiss = { showUpgradeDialog = false },
             )
         }
     }

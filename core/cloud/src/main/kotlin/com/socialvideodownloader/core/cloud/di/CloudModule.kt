@@ -4,10 +4,12 @@ import com.socialvideodownloader.core.cloud.auth.FirebaseCloudAuthService
 import com.socialvideodownloader.core.cloud.encryption.KeystoreEncryptionService
 import com.socialvideodownloader.core.cloud.preferences.CloudBackupPreferences
 import com.socialvideodownloader.core.cloud.repository.FirestoreCloudBackupRepository
+import com.socialvideodownloader.core.cloud.sync.FirestoreSyncManager
 import com.socialvideodownloader.core.domain.repository.CloudBackupRepository
 import com.socialvideodownloader.core.domain.sync.BackupPreferences
 import com.socialvideodownloader.core.domain.sync.CloudAuthService
 import com.socialvideodownloader.core.domain.sync.EncryptionService
+import com.socialvideodownloader.core.domain.sync.SyncManager
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -32,5 +34,8 @@ abstract class CloudModule {
     @Binds
     @Singleton
     abstract fun bindBackupPreferences(impl: CloudBackupPreferences): BackupPreferences
-    // Note: SyncManager binding will be added in Phase 3 when FirestoreSyncManager is implemented
+
+    @Binds
+    @Singleton
+    abstract fun bindSyncManager(impl: FirestoreSyncManager): SyncManager
 }

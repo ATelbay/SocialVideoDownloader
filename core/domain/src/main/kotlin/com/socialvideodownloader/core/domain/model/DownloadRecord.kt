@@ -12,4 +12,5 @@ data class DownloadRecord(
     val createdAt: Long,
     val completedAt: Long? = null,
     val fileSizeBytes: Long? = null,
+    val syncStatus: String = "NOT_SYNCED",
 )

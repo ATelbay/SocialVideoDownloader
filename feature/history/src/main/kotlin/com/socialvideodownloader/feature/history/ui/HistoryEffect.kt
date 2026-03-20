@@ -7,4 +7,6 @@ sealed interface HistoryEffect {
     data class ShareContent(val contentUri: String) : HistoryEffect
     data class ShowMessage(@StringRes val messageResId: Int) : HistoryEffect
     data class RetryDownload(val sourceUrl: String) : HistoryEffect
+    // US3: Billing — signal screen to show upgrade dialog (activity context needed for billing flow)
+    data object LaunchUpgradeFlow : HistoryEffect
 }

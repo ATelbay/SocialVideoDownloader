@@ -49,4 +49,11 @@
     <string name="cloud_restore_key_lost">Records cannot be decrypted — encryption key no longer available</string>
     <!-- Errors -->
     <string name="cloud_error_key_invalidated">Encryption key changed. Previous cloud records cannot be decrypted.</string>
+    <!-- Upgrade / Billing -->
+    <string name="upgrade_title">Unlock More Cloud Storage</string>
+    <string name="upgrade_description">Upgrade to store up to 10,000 cloud records — 10x more than the free tier.</string>
+    <string name="upgrade_price">500 ₸ (~$1) — one-time purchase</string>
+    <string name="upgrade_buy_button">Buy</string>
+    <string name="purchase_success">Purchase successful! Cloud capacity upgraded.</string>
+    <string name="purchase_error">Purchase failed. Please try again.</string>
 </resources>

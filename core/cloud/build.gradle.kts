@@ -5,6 +5,12 @@ plugins {
 
 android {
     namespace = "com.socialvideodownloader.core.cloud"
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+        unitTests.all {
+            it.useJUnitPlatform()
+        }
+    }
 }
 
 dependencies {
@@ -15,4 +21,10 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.androidx.datastore.preferences)
+
+    testImplementation(libs.junit5)
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation(libs.mockk)
+    testImplementation(libs.turbine)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

@@ -10,4 +10,8 @@ sealed interface HistoryIntent {
     data class DeleteFilesSelectionChanged(val selected: Boolean) : HistoryIntent
     data object ConfirmDeletion : HistoryIntent
     data object DismissDeletionDialog : HistoryIntent
+    // US3: Billing — upgrade tap intent
+    data object TapUpgrade : HistoryIntent
+    // US1: Cloud backup toggle
+    data object ToggleCloudBackup : HistoryIntent
 }
