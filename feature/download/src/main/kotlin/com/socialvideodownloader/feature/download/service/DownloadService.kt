@@ -135,11 +135,14 @@ class DownloadService : Service() {
 
                 if (request.shareOnly) {
                     // Share mode: move to share temp dir, create FileProvider URI, skip MediaStore/Room
-                    val shareDir = java.io.File(cacheDir, "ytdl_share")
+                    val shareDir = java.io.File(cacheDir, SHARE_TEMP_DIR)
                     shareDir.mkdirs()
                     val sourceFile = java.io.File(outputPath)
-                    val destFile = java.io.File(shareDir, sourceFile.name)
-                    sourceFile.renameTo(destFile)
+                    val destFile = java.io.File(shareDir, "${request.id}.${sourceFile.extension}")
+                    if (!sourceFile.renameTo(destFile)) {
+                        sourceFile.copyTo(destFile, overwrite = true)
+                        sourceFile.delete()
+                    }
 
                     val shareUri = FileProvider.getUriForFile(
                         this@DownloadService,
@@ -211,13 +214,12 @@ class DownloadService : Service() {
                 val userFacingError = errorMessageMapper.map(e)
                 stateHolder.update(DownloadServiceState.Failed(request.id, errorMsg))
                 notificationManager.cancelNotification(notificationId)
-                notificationManager.showErrorNotification(
-                    notificationId xor COMPLETION_ID_XOR,
-                    request.videoTitle,
-                    userFacingError,
-                )
-
                 if (!request.shareOnly) {
+                    notificationManager.showErrorNotification(
+                        notificationId xor COMPLETION_ID_XOR,
+                        request.videoTitle,
+                        userFacingError,
+                    )
                     saveDownloadRecord(
                         DownloadRecord(
                             sourceUrl = request.sourceUrl,
@@ -291,6 +293,7 @@ class DownloadService : Service() {
 
     companion object {
         private const val TAG = "DownloadService"
+        const val SHARE_TEMP_DIR = "ytdl_share"
         // XOR mask to derive completion/error notification IDs from progress IDs without collision.
         // hashCode() returns values in [-2^31, 2^31-1]; XOR with this bit pattern flips the sign bit,
         // guaranteeing the result is always in a different half of the Int space.

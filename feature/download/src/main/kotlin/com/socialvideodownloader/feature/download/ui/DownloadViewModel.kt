@@ -19,6 +19,8 @@ import com.socialvideodownloader.feature.download.service.DownloadServiceState
 import com.socialvideodownloader.feature.download.service.DownloadServiceStateHolder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -48,6 +50,7 @@ class DownloadViewModel @Inject constructor(
 
     private var currentUrl: String = ""
     private var duplicateCheckJob: Job? = null
+    private var pendingShareOnly: Boolean = false
 
     init {
         collectServiceState()
@@ -80,9 +83,7 @@ class DownloadViewModel @Inject constructor(
                         val downloading = current as? DownloadUiState.Downloading ?: return@collect
                         if (downloading.progress.requestId != serviceState.requestId) return@collect
                         if (downloading.isShareMode) {
-                            viewModelScope.launch {
-                                _events.send(DownloadEvent.ShareFile(serviceState.filePath))
-                            }
+                            _events.send(DownloadEvent.ShareFile(serviceState.filePath))
                             _uiState.value = DownloadUiState.FormatSelection(
                                 metadata = downloading.metadata,
                                 selectedFormatId = downloading.selectedFormatId,
@@ -98,6 +99,7 @@ class DownloadViewModel @Inject constructor(
                         val downloading = current as? DownloadUiState.Downloading ?: return@collect
                         if (downloading.progress.requestId != serviceState.requestId) return@collect
                         if (downloading.isShareMode) {
+                            _events.send(DownloadEvent.ShowSnackbar(errorMessageMapper.map(Exception(serviceState.error))))
                             _uiState.value = DownloadUiState.FormatSelection(
                                 metadata = downloading.metadata,
                                 selectedFormatId = downloading.selectedFormatId,
@@ -121,9 +123,7 @@ class DownloadViewModel @Inject constructor(
                     }
                     is DownloadServiceState.Idle -> Unit
                     is DownloadServiceState.Queued -> {
-                        viewModelScope.launch {
-                            _events.send(DownloadEvent.ShowSnackbar(context.getString(R.string.download_queued)))
-                        }
+                        _events.send(DownloadEvent.ShowSnackbar(context.getString(R.string.download_queued)))
                     }
                 }
             }
@@ -205,17 +205,7 @@ class DownloadViewModel @Inject constructor(
     }
 
     private fun handleDownload() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val hasPermission = ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.POST_NOTIFICATIONS,
-            ) == PackageManager.PERMISSION_GRANTED
-            if (!hasPermission) {
-                viewModelScope.launch { _events.send(DownloadEvent.RequestNotificationPermission) }
-                return
-            }
-        }
-        startDownload()
+        startDownloadWithPermissionCheck(shareOnly = false)
     }
 
     fun onNotificationPermissionResult(granted: Boolean) {
@@ -225,11 +215,26 @@ class DownloadViewModel @Inject constructor(
             }
         }
         // Proceed with download regardless of permission result
-        startDownload()
+        startDownload(pendingShareOnly)
     }
 
     private fun handleShareFormat() {
-        startDownload(shareOnly = true)
+        startDownloadWithPermissionCheck(shareOnly = true)
+    }
+
+    private fun startDownloadWithPermissionCheck(shareOnly: Boolean) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val hasPermission = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS,
+            ) == PackageManager.PERMISSION_GRANTED
+            if (!hasPermission) {
+                pendingShareOnly = shareOnly
+                viewModelScope.launch { _events.send(DownloadEvent.RequestNotificationPermission) }
+                return
+            }
+        }
+        startDownload(shareOnly)
     }
 
     private fun startDownload(shareOnly: Boolean = false) {
@@ -354,7 +359,16 @@ class DownloadViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        java.io.File(context.cacheDir, "ytdl_share").deleteRecursively()
+        // Only sweep leftover share temp files when the service is not active.
+        // Per-file cleanup runs eagerly after each share chooser launches;
+        // this is a backstop for process kills or edge cases.
+        // Note: viewModelScope is cancelled by the time onCleared runs, so use a
+        // standalone scope for fire-and-forget IO work.
+        if (serviceStateHolder.state.value is DownloadServiceState.Idle) {
+            CoroutineScope(Dispatchers.IO).launch {
+                java.io.File(context.cacheDir, DownloadService.SHARE_TEMP_DIR).deleteRecursively()
+            }
+        }
     }
 
     private fun handlePrefillUrl(url: String) {

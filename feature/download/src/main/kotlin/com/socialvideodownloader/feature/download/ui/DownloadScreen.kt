@@ -1,6 +1,7 @@
 package com.socialvideodownloader.feature.download.ui
 
 import android.Manifest
+import android.content.ClipData
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -86,9 +87,11 @@ fun DownloadScreen(
                     context.startActivity(Intent.createChooser(intent, null))
                 }
                 is DownloadEvent.ShareFile -> {
+                    val shareUri = Uri.parse(event.filePath)
                     val intent = Intent(Intent.ACTION_SEND).apply {
                         type = "video/*"
-                        putExtra(Intent.EXTRA_STREAM, Uri.parse(event.filePath))
+                        putExtra(Intent.EXTRA_STREAM, shareUri)
+                        clipData = ClipData.newRawUri(null, shareUri)
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
                     context.startActivity(Intent.createChooser(intent, null))

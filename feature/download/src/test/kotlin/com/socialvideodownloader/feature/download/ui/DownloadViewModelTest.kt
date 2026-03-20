@@ -77,6 +77,7 @@ class DownloadViewModelTest {
         errorMessageMapper = mockk()
         serviceStateHolder = DownloadServiceStateHolder()
         context = mockk(relaxed = true)
+        every { context.cacheDir } returns java.io.File(System.getProperty("java.io.tmpdir"), "test_cache")
         every { errorMessageMapper.map(any()) } answers { firstArg<Throwable>().message ?: "Error" }
         coEvery { findExistingDownload(any()) } returns null
         viewModel = DownloadViewModel(
