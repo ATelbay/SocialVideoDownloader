@@ -142,7 +142,7 @@ class DownloadService : Service() {
                     sourceFile.renameTo(destFile)
 
                     val shareUri = FileProvider.getUriForFile(
-                        this,
+                        this@DownloadService,
                         "$packageName.fileprovider",
                         destFile,
                     )
