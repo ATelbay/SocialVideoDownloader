@@ -77,6 +77,7 @@ fun DownloadErrorContent(
             text = stringResource(R.string.download_retry),
             onClick = onRetryClicked,
             icon = Icons.Outlined.Refresh,
+            modifier = Modifier.fillMaxWidth(),
         )
 
         TextActionLink(

@@ -80,6 +80,7 @@ fun HistoryEmptyState(
                 text = stringResource(R.string.history_start_downloading),
                 onClick = onStartDownloading,
                 icon = Icons.Outlined.Download,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
