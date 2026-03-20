@@ -12,7 +12,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,6 +38,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.socialvideodownloader.core.ui.components.GradientButton
+import com.socialvideodownloader.core.ui.components.SecondaryButton
 import com.socialvideodownloader.core.ui.components.SvdTopBar
 import com.socialvideodownloader.core.ui.components.VideoInfoCard
 import com.socialvideodownloader.core.ui.theme.SvdBg
@@ -223,11 +227,25 @@ private fun DownloadScreenContent(
                             compact = false,
                         )
                         Spacer(modifier = Modifier.height(Spacing.SectionGap))
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            GradientButton(
+                                text = stringResource(R.string.download_button),
+                                onClick = { onIntent(DownloadIntent.DownloadClicked) },
+                                modifier = Modifier.weight(1f),
+                            )
+                            SecondaryButton(
+                                text = stringResource(R.string.download_share),
+                                onClick = { onIntent(DownloadIntent.ShareFormatClicked) },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(Spacing.SectionGap))
                         FormatChipsContent(
                             formats = targetState.metadata.formats,
                             selectedFormatId = targetState.selectedFormatId,
                             onFormatSelected = { onIntent(DownloadIntent.FormatSelected(it)) },
-                            onDownloadClicked = { onIntent(DownloadIntent.DownloadClicked) },
                         )
                     }
                 }
