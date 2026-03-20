@@ -14,6 +14,8 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:cloud"))
+    implementation(project(":core:billing"))
     implementation(libs.androidx.navigation.compose)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.kotlinx.serialization.json)

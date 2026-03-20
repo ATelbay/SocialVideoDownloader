@@ -3,6 +3,7 @@ plugins {
     id("svd.android.compose")
     id("svd.android.hilt")
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -37,6 +38,8 @@ dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:data"))
     implementation(project(":core:ui"))
+    implementation(project(":core:cloud"))
+    implementation(project(":core:billing"))
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
