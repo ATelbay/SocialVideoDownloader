@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -89,12 +90,18 @@ private fun FullVideoInfoCard(
         modifier = modifier,
     ) {
         Column {
-            // Thumbnail area — edge-to-edge within card
+            // Thumbnail area — edge-to-edge within card, top-only rounding
+            val thumbnailShape = RoundedCornerShape(
+                topStart = 24.dp,
+                topEnd = 24.dp,
+                bottomStart = 0.dp,
+                bottomEnd = 0.dp,
+            )
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(Spacing.ThumbnailFullHeight)
-                    .clip(AppShapesInstance.control),
+                    .clip(thumbnailShape),
             ) {
                 AsyncImage(
                     model = thumbnailUrl,
@@ -102,7 +109,7 @@ private fun FullVideoInfoCard(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .matchParentSize()
-                        .clip(AppShapesInstance.control)
+                        .clip(thumbnailShape)
                         .background(SvdPrimarySoft),
                 )
 
