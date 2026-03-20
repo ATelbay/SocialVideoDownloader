@@ -88,8 +88,8 @@ private fun FullVideoInfoCard(
         border = BorderStroke(1.dp, SvdBorder),
         modifier = modifier,
     ) {
-        Column(modifier = Modifier.padding(Spacing.CardInnerPaddingFull)) {
-            // Thumbnail area
+        Column {
+            // Thumbnail area — edge-to-edge within card
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -123,39 +123,40 @@ private fun FullVideoInfoCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
-
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold,
-                ),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                color = SvdForeground,
-            )
-
-            if (uploaderName != null) {
-                Spacer(modifier = Modifier.height(4.dp))
+            // Text content with padding
+            Column(modifier = Modifier.padding(Spacing.CardInnerPaddingFull)) {
                 Text(
-                    text = uploaderName,
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        fontSize = 13.sp,
-                        lineHeight = (13 * 1.45).sp,
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold,
                     ),
-                    color = SvdMutedForeground,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    color = SvdForeground,
                 )
-            }
 
-            // Chip row
-            Spacer(modifier = Modifier.height(10.dp))
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(Spacing.ChipRowGap),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                if (platformName != null) {
-                    PlatformBadge(platformName = platformName)
+                if (uploaderName != null) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = uploaderName,
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontSize = 13.sp,
+                            lineHeight = (13 * 1.45).sp,
+                        ),
+                        color = SvdMutedForeground,
+                    )
+                }
+
+                // Chip row
+                Spacer(modifier = Modifier.height(10.dp))
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.ChipRowGap),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    if (platformName != null) {
+                        PlatformBadge(platformName = platformName)
+                    }
                 }
             }
         }
