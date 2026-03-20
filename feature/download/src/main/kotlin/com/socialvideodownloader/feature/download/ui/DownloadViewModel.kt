@@ -352,6 +352,11 @@ class DownloadViewModel @Inject constructor(
         }
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        java.io.File(context.cacheDir, "ytdl_share").deleteRecursively()
+    }
+
     private fun handlePrefillUrl(url: String) {
         duplicateCheckJob?.cancel()
         currentUrl = url
