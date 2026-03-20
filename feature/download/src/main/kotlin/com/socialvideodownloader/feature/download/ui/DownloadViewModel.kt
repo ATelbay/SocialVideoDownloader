@@ -79,18 +79,35 @@ class DownloadViewModel @Inject constructor(
                     is DownloadServiceState.Completed -> {
                         val downloading = current as? DownloadUiState.Downloading ?: return@collect
                         if (downloading.progress.requestId != serviceState.requestId) return@collect
-                        _uiState.value = DownloadUiState.Done(
-                            metadata = downloading.metadata,
-                            filePath = serviceState.filePath,
-                        )
+                        if (downloading.isShareMode) {
+                            viewModelScope.launch {
+                                _events.send(DownloadEvent.ShareFile(serviceState.filePath))
+                            }
+                            _uiState.value = DownloadUiState.FormatSelection(
+                                metadata = downloading.metadata,
+                                selectedFormatId = downloading.selectedFormatId,
+                            )
+                        } else {
+                            _uiState.value = DownloadUiState.Done(
+                                metadata = downloading.metadata,
+                                filePath = serviceState.filePath,
+                            )
+                        }
                     }
                     is DownloadServiceState.Failed -> {
                         val downloading = current as? DownloadUiState.Downloading ?: return@collect
                         if (downloading.progress.requestId != serviceState.requestId) return@collect
-                        _uiState.value = DownloadUiState.Error(
-                            message = errorMessageMapper.map(Exception(serviceState.error)),
-                            retryAction = RetryAction.RetryExtraction(currentUrl),
-                        )
+                        if (downloading.isShareMode) {
+                            _uiState.value = DownloadUiState.FormatSelection(
+                                metadata = downloading.metadata,
+                                selectedFormatId = downloading.selectedFormatId,
+                            )
+                        } else {
+                            _uiState.value = DownloadUiState.Error(
+                                message = errorMessageMapper.map(Exception(serviceState.error)),
+                                retryAction = RetryAction.RetryExtraction(currentUrl),
+                            )
+                        }
                     }
                     is DownloadServiceState.Cancelled -> {
                         if (current is DownloadUiState.Downloading &&
@@ -127,6 +144,7 @@ class DownloadViewModel @Inject constructor(
             is DownloadIntent.PrefillUrl -> handlePrefillUrl(intent.url)
             is DownloadIntent.OpenExistingClicked -> handleOpenExisting()
             is DownloadIntent.ShareExistingClicked -> handleShareExisting()
+            is DownloadIntent.ShareFormatClicked -> handleShareFormat()
             is DownloadIntent.DismissExistingBanner -> handleDismissExistingBanner()
         }
     }
@@ -210,7 +228,11 @@ class DownloadViewModel @Inject constructor(
         startDownload()
     }
 
-    private fun startDownload() {
+    private fun handleShareFormat() {
+        startDownload(shareOnly = true)
+    }
+
+    private fun startDownload(shareOnly: Boolean = false) {
         val state = _uiState.value
         if (state !is DownloadUiState.FormatSelection) return
 
@@ -227,6 +249,7 @@ class DownloadViewModel @Inject constructor(
             formatLabel = selectedFormat.label,
             isVideoOnly = selectedFormat.isVideoOnly,
             totalBytes = selectedFormat.fileSizeBytes,
+            shareOnly = shareOnly,
         )
 
         _uiState.value = DownloadUiState.Downloading(
@@ -240,6 +263,7 @@ class DownloadViewModel @Inject constructor(
                 etaSeconds = 0L,
             ),
             selectedFormatId = selectedFormat.formatId,
+            isShareMode = shareOnly,
         )
 
         val serviceIntent = Intent(context, DownloadService::class.java).apply {
@@ -251,6 +275,7 @@ class DownloadViewModel @Inject constructor(
             putExtra(DownloadService.EXTRA_FORMAT_ID, request.formatId)
             putExtra(DownloadService.EXTRA_FORMAT_LABEL, request.formatLabel)
             putExtra(DownloadService.EXTRA_IS_VIDEO_ONLY, request.isVideoOnly)
+            putExtra(DownloadService.EXTRA_SHARE_ONLY, request.shareOnly)
         }
         context.startForegroundService(serviceIntent)
     }
