@@ -29,4 +29,5 @@ fun DownloadRecord.toEntity(): DownloadEntity = DownloadEntity(
     createdAt = createdAt,
     completedAt = completedAt,
     fileSizeBytes = fileSizeBytes,
+    syncStatus = "NOT_SYNCED",
 )

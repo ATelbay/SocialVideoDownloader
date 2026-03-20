@@ -30,4 +30,23 @@
     <!-- Start prompt -->
     <string name="history_start_downloading">Start Downloading</string>
     <string name="history_start_new_download">Start new download</string>
+
+    <!-- Cloud Backup -->
+    <string name="cloud_backup_toggle_label">Cloud Backup</string>
+    <string name="cloud_backup_syncing">Syncing…</string>
+    <string name="cloud_backup_synced">Last backed up %1$s</string>
+    <string name="cloud_backup_paused">Backup paused</string>
+    <string name="cloud_backup_error">Backup error</string>
+    <string name="cloud_backup_never">Not backed up</string>
+    <string name="cloud_backup_disabled">Cloud backup is off</string>
+    <!-- Capacity -->
+    <string name="cloud_capacity_banner">%1$d of %2$d cloud records used</string>
+    <string name="cloud_capacity_upgrade">Upgrade</string>
+    <!-- Restore -->
+    <string name="cloud_restore_button">Restore from Cloud</string>
+    <string name="cloud_restore_progress">Restoring %1$d of %2$d records…</string>
+    <string name="cloud_restore_complete">Restored %1$d records, %2$d duplicates skipped</string>
+    <string name="cloud_restore_key_lost">Records cannot be decrypted — encryption key no longer available</string>
+    <!-- Errors -->
+    <string name="cloud_error_key_invalidated">Encryption key changed. Previous cloud records cannot be decrypted.</string>
 </resources>
