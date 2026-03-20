@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Spacer
@@ -128,6 +127,16 @@ private fun FullVideoInfoCard(
                         modifier = Modifier.size(26.dp),
                     )
                 }
+
+                // Platform badge overlay
+                if (platformName != null) {
+                    PlatformBadge(
+                        platformName = platformName,
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(10.dp),
+                    )
+                }
             }
 
             // Text content with padding
@@ -153,17 +162,6 @@ private fun FullVideoInfoCard(
                         ),
                         color = SvdMutedForeground,
                     )
-                }
-
-                // Chip row
-                Spacer(modifier = Modifier.height(10.dp))
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.ChipRowGap),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    if (platformName != null) {
-                        PlatformBadge(platformName = platformName)
-                    }
                 }
             }
         }
