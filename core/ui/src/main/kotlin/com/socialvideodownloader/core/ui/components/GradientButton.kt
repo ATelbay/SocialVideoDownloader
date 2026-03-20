@@ -39,7 +39,6 @@ fun GradientButton(
 ) {
     Box(
         modifier = modifier
-            .fillMaxWidth()
             .height(Spacing.PrimaryButtonHeight)
             .clip(AppShapesInstance.control)
             .alpha(if (enabled) 1f else 0.5f)
@@ -69,7 +68,7 @@ private fun GradientButtonPreview() {
         GradientButton(
             text = "EXTRACT VIDEO",
             onClick = {},
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(16.dp).fillMaxWidth(),
         )
     }
 }
