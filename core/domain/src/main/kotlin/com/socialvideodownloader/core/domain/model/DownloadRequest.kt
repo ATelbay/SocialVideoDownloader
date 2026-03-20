@@ -9,4 +9,5 @@ data class DownloadRequest(
     val formatLabel: String,
     val isVideoOnly: Boolean,
     val totalBytes: Long? = null,
+    val shareOnly: Boolean = false,
 )

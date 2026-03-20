@@ -5,6 +5,7 @@ sealed interface DownloadIntent {
     data object ExtractClicked : DownloadIntent
     data class FormatSelected(val formatId: String) : DownloadIntent
     data object DownloadClicked : DownloadIntent
+    data object ShareFormatClicked : DownloadIntent
     data object CancelDownloadClicked : DownloadIntent
     data object RetryClicked : DownloadIntent
     data object OpenFileClicked : DownloadIntent

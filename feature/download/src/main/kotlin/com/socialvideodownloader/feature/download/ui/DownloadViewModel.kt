@@ -19,6 +19,8 @@ import com.socialvideodownloader.feature.download.service.DownloadServiceState
 import com.socialvideodownloader.feature.download.service.DownloadServiceStateHolder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -48,6 +50,7 @@ class DownloadViewModel @Inject constructor(
 
     private var currentUrl: String = ""
     private var duplicateCheckJob: Job? = null
+    private var pendingShareOnly: Boolean = false
 
     init {
         collectServiceState()
@@ -79,18 +82,34 @@ class DownloadViewModel @Inject constructor(
                     is DownloadServiceState.Completed -> {
                         val downloading = current as? DownloadUiState.Downloading ?: return@collect
                         if (downloading.progress.requestId != serviceState.requestId) return@collect
-                        _uiState.value = DownloadUiState.Done(
-                            metadata = downloading.metadata,
-                            filePath = serviceState.filePath,
-                        )
+                        if (downloading.isShareMode) {
+                            _events.send(DownloadEvent.ShareFile(serviceState.filePath))
+                            _uiState.value = DownloadUiState.FormatSelection(
+                                metadata = downloading.metadata,
+                                selectedFormatId = downloading.selectedFormatId,
+                            )
+                        } else {
+                            _uiState.value = DownloadUiState.Done(
+                                metadata = downloading.metadata,
+                                filePath = serviceState.filePath,
+                            )
+                        }
                     }
                     is DownloadServiceState.Failed -> {
                         val downloading = current as? DownloadUiState.Downloading ?: return@collect
                         if (downloading.progress.requestId != serviceState.requestId) return@collect
-                        _uiState.value = DownloadUiState.Error(
-                            message = errorMessageMapper.map(Exception(serviceState.error)),
-                            retryAction = RetryAction.RetryExtraction(currentUrl),
-                        )
+                        if (downloading.isShareMode) {
+                            _events.send(DownloadEvent.ShowSnackbar(errorMessageMapper.map(Exception(serviceState.error))))
+                            _uiState.value = DownloadUiState.FormatSelection(
+                                metadata = downloading.metadata,
+                                selectedFormatId = downloading.selectedFormatId,
+                            )
+                        } else {
+                            _uiState.value = DownloadUiState.Error(
+                                message = errorMessageMapper.map(Exception(serviceState.error)),
+                                retryAction = RetryAction.RetryExtraction(currentUrl),
+                            )
+                        }
                     }
                     is DownloadServiceState.Cancelled -> {
                         if (current is DownloadUiState.Downloading &&
@@ -104,9 +123,7 @@ class DownloadViewModel @Inject constructor(
                     }
                     is DownloadServiceState.Idle -> Unit
                     is DownloadServiceState.Queued -> {
-                        viewModelScope.launch {
-                            _events.send(DownloadEvent.ShowSnackbar(context.getString(R.string.download_queued)))
-                        }
+                        _events.send(DownloadEvent.ShowSnackbar(context.getString(R.string.download_queued)))
                     }
                 }
             }
@@ -127,6 +144,7 @@ class DownloadViewModel @Inject constructor(
             is DownloadIntent.PrefillUrl -> handlePrefillUrl(intent.url)
             is DownloadIntent.OpenExistingClicked -> handleOpenExisting()
             is DownloadIntent.ShareExistingClicked -> handleShareExisting()
+            is DownloadIntent.ShareFormatClicked -> handleShareFormat()
             is DownloadIntent.DismissExistingBanner -> handleDismissExistingBanner()
         }
     }
@@ -187,17 +205,7 @@ class DownloadViewModel @Inject constructor(
     }
 
     private fun handleDownload() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val hasPermission = ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.POST_NOTIFICATIONS,
-            ) == PackageManager.PERMISSION_GRANTED
-            if (!hasPermission) {
-                viewModelScope.launch { _events.send(DownloadEvent.RequestNotificationPermission) }
-                return
-            }
-        }
-        startDownload()
+        startDownloadWithPermissionCheck(shareOnly = false)
     }
 
     fun onNotificationPermissionResult(granted: Boolean) {
@@ -207,10 +215,29 @@ class DownloadViewModel @Inject constructor(
             }
         }
         // Proceed with download regardless of permission result
-        startDownload()
+        startDownload(pendingShareOnly)
     }
 
-    private fun startDownload() {
+    private fun handleShareFormat() {
+        startDownloadWithPermissionCheck(shareOnly = true)
+    }
+
+    private fun startDownloadWithPermissionCheck(shareOnly: Boolean) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val hasPermission = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS,
+            ) == PackageManager.PERMISSION_GRANTED
+            if (!hasPermission) {
+                pendingShareOnly = shareOnly
+                viewModelScope.launch { _events.send(DownloadEvent.RequestNotificationPermission) }
+                return
+            }
+        }
+        startDownload(shareOnly)
+    }
+
+    private fun startDownload(shareOnly: Boolean = false) {
         val state = _uiState.value
         if (state !is DownloadUiState.FormatSelection) return
 
@@ -227,6 +254,7 @@ class DownloadViewModel @Inject constructor(
             formatLabel = selectedFormat.label,
             isVideoOnly = selectedFormat.isVideoOnly,
             totalBytes = selectedFormat.fileSizeBytes,
+            shareOnly = shareOnly,
         )
 
         _uiState.value = DownloadUiState.Downloading(
@@ -240,6 +268,7 @@ class DownloadViewModel @Inject constructor(
                 etaSeconds = 0L,
             ),
             selectedFormatId = selectedFormat.formatId,
+            isShareMode = shareOnly,
         )
 
         val serviceIntent = Intent(context, DownloadService::class.java).apply {
@@ -251,6 +280,7 @@ class DownloadViewModel @Inject constructor(
             putExtra(DownloadService.EXTRA_FORMAT_ID, request.formatId)
             putExtra(DownloadService.EXTRA_FORMAT_LABEL, request.formatLabel)
             putExtra(DownloadService.EXTRA_IS_VIDEO_ONLY, request.isVideoOnly)
+            putExtra(DownloadService.EXTRA_SHARE_ONLY, request.shareOnly)
         }
         context.startForegroundService(serviceIntent)
     }
@@ -324,6 +354,20 @@ class DownloadViewModel @Inject constructor(
         val current = _uiState.value
         if (current is DownloadUiState.Idle) {
             _uiState.value = DownloadUiState.Idle(prefillUrl = current.prefillUrl)
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        // Only sweep leftover share temp files when the service is not active.
+        // Per-file cleanup runs eagerly after each share chooser launches;
+        // this is a backstop for process kills or edge cases.
+        // Note: viewModelScope is cancelled by the time onCleared runs, so use a
+        // standalone scope for fire-and-forget IO work.
+        if (serviceStateHolder.state.value is DownloadServiceState.Idle) {
+            CoroutineScope(Dispatchers.IO).launch {
+                java.io.File(context.cacheDir, DownloadService.SHARE_TEMP_DIR).deleteRecursively()
+            }
         }
     }
 

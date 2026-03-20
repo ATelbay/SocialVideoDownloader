@@ -20,6 +20,16 @@ firebase-debug.log
 /components*/
 theme.css
 
+# IDE config (not already covered above)
+/.idea/gradle.xml
+/.idea/vcs.xml
+
+# Misc project files
+/output/
+/design/
+/tmp/
+app_icon_candidate.png
+
 # Local Codex runtime state
 /.codex/*
 !/.codex/prompts/

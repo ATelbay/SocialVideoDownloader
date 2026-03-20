@@ -77,6 +77,7 @@ class DownloadViewModelTest {
         errorMessageMapper = mockk()
         serviceStateHolder = DownloadServiceStateHolder()
         context = mockk(relaxed = true)
+        every { context.cacheDir } returns java.io.File(System.getProperty("java.io.tmpdir"), "test_cache")
         every { errorMessageMapper.map(any()) } answers { firstArg<Throwable>().message ?: "Error" }
         coEvery { findExistingDownload(any()) } returns null
         viewModel = DownloadViewModel(
@@ -591,6 +592,69 @@ class DownloadViewModelTest {
             viewModel.onIntent(DownloadIntent.RetryClicked)
             val extracting = awaitItem()
             assertTrue(extracting is DownloadUiState.Extracting)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `ShareFormatClicked transitions to Downloading with isShareMode then on Completed emits ShareFile and restores FormatSelection`() = runTest {
+        coEvery { extractVideoInfo(any()) } returns Result.success(testMetadata)
+
+        viewModel.onIntent(DownloadIntent.UrlChanged("https://youtube.com/watch?v=test"))
+        viewModel.onIntent(DownloadIntent.ExtractClicked)
+        advanceUntilIdle()
+
+        viewModel.uiState.test {
+            val formatSelection = awaitItem() as DownloadUiState.FormatSelection
+            assertEquals("248", formatSelection.selectedFormatId)
+
+            viewModel.onIntent(DownloadIntent.ShareFormatClicked)
+
+            val downloading = awaitItem() as DownloadUiState.Downloading
+            assertTrue(downloading.isShareMode)
+            assertEquals("248", downloading.selectedFormatId)
+            val requestId = downloading.progress.requestId
+
+            // Simulate service completion
+            serviceStateHolder.update(DownloadServiceState.Completed(requestId, "content://share/file.mp4"))
+
+            val restored = awaitItem() as DownloadUiState.FormatSelection
+            assertEquals("248", restored.selectedFormatId)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        // Verify ShareFile event was emitted
+        viewModel.events.test {
+            val event = awaitItem()
+            assertTrue(event is DownloadEvent.ShareFile)
+            assertEquals("content://share/file.mp4", (event as DownloadEvent.ShareFile).filePath)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `share-mode download failure returns to FormatSelection instead of Error`() = runTest {
+        coEvery { extractVideoInfo(any()) } returns Result.success(testMetadata)
+        every { errorMessageMapper.map(any()) } returns "Download error"
+
+        viewModel.onIntent(DownloadIntent.UrlChanged("https://youtube.com/watch?v=test"))
+        viewModel.onIntent(DownloadIntent.ExtractClicked)
+        advanceUntilIdle()
+
+        viewModel.uiState.test {
+            val formatSelection = awaitItem() as DownloadUiState.FormatSelection
+
+            viewModel.onIntent(DownloadIntent.ShareFormatClicked)
+
+            val downloading = awaitItem() as DownloadUiState.Downloading
+            assertTrue(downloading.isShareMode)
+            val requestId = downloading.progress.requestId
+
+            // Simulate service failure
+            serviceStateHolder.update(DownloadServiceState.Failed(requestId, "Download error"))
+
+            val restored = awaitItem() as DownloadUiState.FormatSelection
+            assertEquals("248", restored.selectedFormatId)
             cancelAndIgnoreRemainingEvents()
         }
     }

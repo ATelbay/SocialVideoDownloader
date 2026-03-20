@@ -1,6 +1,7 @@
 package com.socialvideodownloader.feature.download.ui
 
 import android.Manifest
+import android.content.ClipData
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -12,8 +13,11 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -35,6 +39,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.socialvideodownloader.core.ui.components.GradientButton
+import com.socialvideodownloader.core.ui.components.SecondaryButton
 import com.socialvideodownloader.core.ui.components.SvdTopBar
 import com.socialvideodownloader.core.ui.components.VideoInfoCard
 import com.socialvideodownloader.core.ui.theme.SvdBg
@@ -81,9 +87,11 @@ fun DownloadScreen(
                     context.startActivity(Intent.createChooser(intent, null))
                 }
                 is DownloadEvent.ShareFile -> {
+                    val shareUri = Uri.parse(event.filePath)
                     val intent = Intent(Intent.ACTION_SEND).apply {
                         type = "video/*"
-                        putExtra(Intent.EXTRA_STREAM, Uri.parse(event.filePath))
+                        putExtra(Intent.EXTRA_STREAM, shareUri)
+                        clipData = ClipData.newRawUri(null, shareUri)
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
                     context.startActivity(Intent.createChooser(intent, null))
@@ -125,6 +133,7 @@ private fun DownloadScreenContent(
     Scaffold(
         modifier = modifier,
         containerColor = SvdBg,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             when (uiState) {
@@ -221,11 +230,25 @@ private fun DownloadScreenContent(
                             compact = false,
                         )
                         Spacer(modifier = Modifier.height(Spacing.SectionGap))
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            GradientButton(
+                                text = stringResource(R.string.download_button),
+                                onClick = { onIntent(DownloadIntent.DownloadClicked) },
+                                modifier = Modifier.weight(1f),
+                            )
+                            SecondaryButton(
+                                text = stringResource(R.string.download_share),
+                                onClick = { onIntent(DownloadIntent.ShareFormatClicked) },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(Spacing.SectionGap))
                         FormatChipsContent(
                             formats = targetState.metadata.formats,
                             selectedFormatId = targetState.selectedFormatId,
                             onFormatSelected = { onIntent(DownloadIntent.FormatSelected(it)) },
-                            onDownloadClicked = { onIntent(DownloadIntent.DownloadClicked) },
                         )
                     }
                 }

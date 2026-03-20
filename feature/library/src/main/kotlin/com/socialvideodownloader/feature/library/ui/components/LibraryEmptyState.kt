@@ -72,6 +72,7 @@ fun LibraryEmptyState(
         GradientButton(
             text = stringResource(R.string.library_start_downloading),
             onClick = onNavigateToDownload,
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }

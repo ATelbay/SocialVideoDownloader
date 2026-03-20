@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class UrlNormalizerTest {
-
     @Test
     fun `strips YouTube tracking params`() {
         val url = "https://www.youtube.com/watch?v=abc123&si=trackme&feature=share"

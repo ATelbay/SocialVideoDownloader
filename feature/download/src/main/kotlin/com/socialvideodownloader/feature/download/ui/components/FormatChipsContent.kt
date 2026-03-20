@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import com.socialvideodownloader.core.ui.theme.SectionLabel
 import com.socialvideodownloader.core.domain.model.VideoFormatOption
 import com.socialvideodownloader.core.ui.components.FormatChip
-import com.socialvideodownloader.core.ui.components.GradientButton
 import com.socialvideodownloader.core.ui.theme.AppShapesInstance
 import com.socialvideodownloader.core.ui.theme.SvdBorder
 import com.socialvideodownloader.core.ui.theme.SvdForeground
@@ -41,7 +38,6 @@ fun FormatChipsContent(
     formats: List<VideoFormatOption>,
     selectedFormatId: String,
     onFormatSelected: (String) -> Unit,
-    onDownloadClicked: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -135,12 +131,6 @@ fun FormatChipsContent(
             }
         }
 
-        // Download button
-        GradientButton(
-            text = stringResource(R.string.download_button),
-            onClick = onDownloadClicked,
-            icon = Icons.Outlined.Download,
-        )
     }
 }
 

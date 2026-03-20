@@ -5,8 +5,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -88,13 +88,19 @@ private fun FullVideoInfoCard(
         border = BorderStroke(1.dp, SvdBorder),
         modifier = modifier,
     ) {
-        Column(modifier = Modifier.padding(Spacing.CardInnerPaddingFull)) {
-            // Thumbnail area
+        Column {
+            // Thumbnail area — edge-to-edge within card, top-only rounding
+            val thumbnailShape = RoundedCornerShape(
+                topStart = 24.dp,
+                topEnd = 24.dp,
+                bottomStart = 0.dp,
+                bottomEnd = 0.dp,
+            )
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(Spacing.ThumbnailFullHeight)
-                    .clip(AppShapesInstance.control),
+                    .clip(thumbnailShape),
             ) {
                 AsyncImage(
                     model = thumbnailUrl,
@@ -102,7 +108,7 @@ private fun FullVideoInfoCard(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .matchParentSize()
-                        .clip(AppShapesInstance.control)
+                        .clip(thumbnailShape)
                         .background(SvdPrimarySoft),
                 )
 
@@ -121,41 +127,41 @@ private fun FullVideoInfoCard(
                         modifier = Modifier.size(26.dp),
                     )
                 }
-            }
 
-            Spacer(modifier = Modifier.height(14.dp))
-
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold,
-                ),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                color = SvdForeground,
-            )
-
-            if (uploaderName != null) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = uploaderName,
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        fontSize = 13.sp,
-                        lineHeight = (13 * 1.45).sp,
-                    ),
-                    color = SvdMutedForeground,
-                )
-            }
-
-            // Chip row
-            Spacer(modifier = Modifier.height(10.dp))
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(Spacing.ChipRowGap),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
+                // Platform badge overlay
                 if (platformName != null) {
-                    PlatformBadge(platformName = platformName)
+                    PlatformBadge(
+                        platformName = platformName,
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(10.dp),
+                    )
+                }
+            }
+
+            // Text content with padding
+            Column(modifier = Modifier.padding(Spacing.CardInnerPaddingFull)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold,
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    color = SvdForeground,
+                )
+
+                if (uploaderName != null) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = uploaderName,
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontSize = 13.sp,
+                            lineHeight = (13 * 1.45).sp,
+                        ),
+                        color = SvdMutedForeground,
+                    )
                 }
             }
         }

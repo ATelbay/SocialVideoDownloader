@@ -4,6 +4,7 @@ import android.app.Service
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import androidx.core.content.FileProvider
 import com.socialvideodownloader.core.domain.di.IoDispatcher
 import com.socialvideodownloader.core.domain.model.DownloadProgress
 import com.socialvideodownloader.core.domain.model.DownloadRecord
@@ -132,57 +133,79 @@ class DownloadService : Service() {
                     notificationManager.updateNotification(notificationId, updatedNotification)
                 }
 
-                val ext = java.io.File(outputPath).extension.ifEmpty { "mp4" }
-                val mimeType = if (request.isVideoOnly || ext == "mp4" || ext == "mkv" || ext == "webm") {
-                    "video/$ext"
-                } else {
-                    "audio/$ext"
-                }
-                val savedUri = saveFileToMediaStore(
-                    outputPath,
-                    "${request.videoTitle}.$ext",
-                    mimeType,
-                )
-
-                val fileSizeBytes: Long? = try {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        contentResolver.query(
-                            android.net.Uri.parse(savedUri),
-                            arrayOf(android.provider.OpenableColumns.SIZE),
-                            null, null, null,
-                        )?.use { cursor ->
-                            if (cursor.moveToFirst()) cursor.getLong(0).takeIf { it > 0 } else null
-                        }
-                    } else {
-                        java.io.File(savedUri).length().takeIf { it > 0 }
+                if (request.shareOnly) {
+                    // Share mode: move to share temp dir, create FileProvider URI, skip MediaStore/Room
+                    val shareDir = java.io.File(cacheDir, SHARE_TEMP_DIR)
+                    shareDir.mkdirs()
+                    val sourceFile = java.io.File(outputPath)
+                    val destFile = java.io.File(shareDir, "${request.id}.${sourceFile.extension}")
+                    if (!sourceFile.renameTo(destFile)) {
+                        sourceFile.copyTo(destFile, overwrite = true)
+                        sourceFile.delete()
                     }
-                } catch (_: Exception) {
-                    null
+
+                    val shareUri = FileProvider.getUriForFile(
+                        this@DownloadService,
+                        "$packageName.fileprovider",
+                        destFile,
+                    )
+
+                    stateHolder.update(DownloadServiceState.Completed(request.id, shareUri.toString()))
+                    notificationManager.cancelNotification(notificationId)
+                } else {
+                    // Normal mode: save to MediaStore and Room
+                    val ext = java.io.File(outputPath).extension.ifEmpty { "mp4" }
+                    val mimeType = if (request.isVideoOnly || ext == "mp4" || ext == "mkv" || ext == "webm") {
+                        "video/$ext"
+                    } else {
+                        "audio/$ext"
+                    }
+                    val savedUri = saveFileToMediaStore(
+                        outputPath,
+                        "${request.videoTitle}.$ext",
+                        mimeType,
+                    )
+
+                    val fileSizeBytes: Long? = try {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            contentResolver.query(
+                                android.net.Uri.parse(savedUri),
+                                arrayOf(android.provider.OpenableColumns.SIZE),
+                                null, null, null,
+                            )?.use { cursor ->
+                                if (cursor.moveToFirst()) cursor.getLong(0).takeIf { it > 0 } else null
+                            }
+                        } else {
+                            java.io.File(savedUri).length().takeIf { it > 0 }
+                        }
+                    } catch (_: Exception) {
+                        null
+                    }
+
+                    saveDownloadRecord(
+                        DownloadRecord(
+                            sourceUrl = request.sourceUrl,
+                            videoTitle = request.videoTitle,
+                            thumbnailUrl = request.thumbnailUrl,
+                            formatLabel = request.formatLabel,
+                            filePath = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) savedUri else null,
+                            mediaStoreUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) savedUri else null,
+                            fileSizeBytes = fileSizeBytes,
+                            status = DownloadStatus.COMPLETED,
+                            createdAt = System.currentTimeMillis(),
+                            completedAt = System.currentTimeMillis(),
+                        ),
+                    )
+
+                    stateHolder.update(DownloadServiceState.Completed(request.id, savedUri))
+                    notificationManager.cancelNotification(notificationId)
+                    notificationManager.showCompletionNotification(
+                        notificationId xor COMPLETION_ID_XOR,
+                        request.videoTitle,
+                        mediaStoreUri = savedUri,
+                        mimeType = mimeType,
+                    )
                 }
-
-                saveDownloadRecord(
-                    DownloadRecord(
-                        sourceUrl = request.sourceUrl,
-                        videoTitle = request.videoTitle,
-                        thumbnailUrl = request.thumbnailUrl,
-                        formatLabel = request.formatLabel,
-                        filePath = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) savedUri else null,
-                        mediaStoreUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) savedUri else null,
-                        fileSizeBytes = fileSizeBytes,
-                        status = DownloadStatus.COMPLETED,
-                        createdAt = System.currentTimeMillis(),
-                        completedAt = System.currentTimeMillis(),
-                    ),
-                )
-
-                stateHolder.update(DownloadServiceState.Completed(request.id, savedUri))
-                notificationManager.cancelNotification(notificationId)
-                notificationManager.showCompletionNotification(
-                    notificationId xor COMPLETION_ID_XOR,
-                    request.videoTitle,
-                    mediaStoreUri = savedUri,
-                    mimeType = mimeType,
-                )
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -191,23 +214,24 @@ class DownloadService : Service() {
                 val userFacingError = errorMessageMapper.map(e)
                 stateHolder.update(DownloadServiceState.Failed(request.id, errorMsg))
                 notificationManager.cancelNotification(notificationId)
-                notificationManager.showErrorNotification(
-                    notificationId xor COMPLETION_ID_XOR,
-                    request.videoTitle,
-                    userFacingError,
-                )
-
-                saveDownloadRecord(
-                    DownloadRecord(
-                        sourceUrl = request.sourceUrl,
-                        videoTitle = request.videoTitle,
-                        thumbnailUrl = request.thumbnailUrl,
-                        formatLabel = request.formatLabel,
-                        filePath = null,
-                        status = DownloadStatus.FAILED,
-                        createdAt = System.currentTimeMillis(),
-                    ),
-                )
+                if (!request.shareOnly) {
+                    notificationManager.showErrorNotification(
+                        notificationId xor COMPLETION_ID_XOR,
+                        request.videoTitle,
+                        userFacingError,
+                    )
+                    saveDownloadRecord(
+                        DownloadRecord(
+                            sourceUrl = request.sourceUrl,
+                            videoTitle = request.videoTitle,
+                            thumbnailUrl = request.thumbnailUrl,
+                            formatLabel = request.formatLabel,
+                            filePath = null,
+                            status = DownloadStatus.FAILED,
+                            createdAt = System.currentTimeMillis(),
+                        ),
+                    )
+                }
             } finally {
                 if (queue.peek() == null) {
                     stopForeground(STOP_FOREGROUND_REMOVE)
@@ -263,11 +287,13 @@ class DownloadService : Service() {
             formatId = formatId,
             formatLabel = formatLabel,
             isVideoOnly = intent.getBooleanExtra(EXTRA_IS_VIDEO_ONLY, false),
+            shareOnly = intent.getBooleanExtra(EXTRA_SHARE_ONLY, false),
         )
     }
 
     companion object {
         private const val TAG = "DownloadService"
+        const val SHARE_TEMP_DIR = "ytdl_share"
         // XOR mask to derive completion/error notification IDs from progress IDs without collision.
         // hashCode() returns values in [-2^31, 2^31-1]; XOR with this bit pattern flips the sign bit,
         // guaranteeing the result is always in a different half of the Int space.
@@ -282,5 +308,6 @@ class DownloadService : Service() {
         const val EXTRA_FORMAT_ID = "extra_format_id"
         const val EXTRA_FORMAT_LABEL = "extra_format_label"
         const val EXTRA_IS_VIDEO_ONLY = "extra_is_video_only"
+        const val EXTRA_SHARE_ONLY = "extra_share_only"
     }
 }

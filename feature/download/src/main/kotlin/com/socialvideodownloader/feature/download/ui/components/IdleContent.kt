@@ -124,6 +124,7 @@ fun IdleContent(
             text = stringResource(R.string.download_extract_video),
             onClick = onExtractClicked,
             icon = Icons.Outlined.Download,
+            modifier = Modifier.fillMaxWidth(),
         )
 
         // Footer text

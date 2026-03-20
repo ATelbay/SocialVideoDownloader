@@ -18,6 +18,7 @@ sealed interface DownloadUiState {
         val metadata: VideoMetadata,
         val progress: DownloadProgress,
         val selectedFormatId: String,
+        val isShareMode: Boolean = false,
     ) : DownloadUiState
     data class Done(
         val metadata: VideoMetadata,
