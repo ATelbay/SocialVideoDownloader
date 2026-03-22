@@ -1,6 +1,8 @@
 package com.socialvideodownloader.core.cloud.repository
 
+import com.google.firebase.firestore.Blob
 import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.socialvideodownloader.core.domain.model.DownloadRecord
@@ -29,12 +31,12 @@ class FirestoreCloudBackupRepository @Inject constructor(
         val encrypted = encryptionService.encrypt(record)
         val hash = sourceUrlHash(record.sourceUrl, record.createdAt)
         val data = mapOf(
-            "encryptedPayload" to encrypted,
+            "encryptedPayload" to Blob.fromBytes(encrypted),
             "createdAt" to record.createdAt,
             "sourceUrlHash" to hash,
         )
         historyCollection(uid).document(hash).set(data).await()
-        countersDocument(uid).update("recordCount", FieldValue.increment(1)).await()
+        countersDocument(uid).set(mapOf("recordCount" to FieldValue.increment(1)), SetOptions.merge()).await()
         return true
     }
 
@@ -47,7 +49,7 @@ class FirestoreCloudBackupRepository @Inject constructor(
         for (doc in query.documents) {
             doc.reference.delete().await()
         }
-        countersDocument(uid).update("recordCount", FieldValue.increment(-1)).await()
+        countersDocument(uid).set(mapOf("recordCount" to FieldValue.increment(-1)), SetOptions.merge()).await()
         return true
     }
 
@@ -56,7 +58,6 @@ class FirestoreCloudBackupRepository @Inject constructor(
         val snapshot = historyCollection(uid).get().await()
         return snapshot.documents.mapNotNull { doc ->
             val payload = doc.getBlob("encryptedPayload")?.toBytes()
-                ?: (doc.get("encryptedPayload") as? ByteArray)
                 ?: return@mapNotNull null
             runCatching { encryptionService.decrypt(payload) }.getOrNull()
         }
@@ -76,7 +77,7 @@ class FirestoreCloudBackupRepository @Inject constructor(
 
     override suspend fun updateTierLimit(limit: Int) {
         val uid = authService.getCurrentUid() ?: return
-        countersDocument(uid).update("tierLimit", limit).await()
+        countersDocument(uid).set(mapOf("tierLimit" to limit), SetOptions.merge()).await()
     }
 
     override suspend fun evictOldestRecords(count: Int) {
@@ -91,12 +92,12 @@ class FirestoreCloudBackupRepository @Inject constructor(
             batch.delete(doc.reference)
         }
         batch.commit().await()
-        countersDocument(uid).update("recordCount", FieldValue.increment(-oldest.size().toLong())).await()
+        countersDocument(uid).set(mapOf("recordCount" to FieldValue.increment(-oldest.size().toLong())), SetOptions.merge()).await()
     }
 
     override suspend fun setRecordCount(count: Int) {
         val uid = authService.getCurrentUid() ?: return
-        countersDocument(uid).update("recordCount", count.toLong()).await()
+        countersDocument(uid).set(mapOf("recordCount" to count.toLong()), SetOptions.merge()).await()
     }
 
     private fun sourceUrlHash(sourceUrl: String, createdAt: Long): String {

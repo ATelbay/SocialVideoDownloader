@@ -1,127 +1,81 @@
 package com.socialvideodownloader.core.cloud.encryption
 
-import android.security.keystore.KeyGenParameterSpec
-import android.security.keystore.KeyPermanentlyInvalidatedException
-import android.security.keystore.KeyProperties
 import android.util.Log
 import com.socialvideodownloader.core.domain.model.DownloadRecord
 import com.socialvideodownloader.core.domain.model.DownloadStatus
+import com.socialvideodownloader.core.domain.sync.CloudAuthService
 import com.socialvideodownloader.core.domain.sync.EncryptionService
 import org.json.JSONObject
 import java.security.KeyStore
-import java.security.KeyStoreException
-import javax.crypto.AEADBadTagException
 import javax.crypto.Cipher
-import javax.crypto.KeyGenerator
-import javax.crypto.SecretKey
+import javax.crypto.Mac
 import javax.crypto.spec.GCMParameterSpec
+import javax.crypto.spec.SecretKeySpec
 import javax.inject.Inject
 
 private const val TAG = "KeystoreEncryptionSvc"
+private const val KEY_DERIVATION_SALT = "SocialVideoDownloader-backup-v1"
+private const val OLD_KEYSTORE_ALIAS = "cloud_backup_key"
 
 class KeyInvalidatedException(message: String) : Exception(message)
 
-class KeystoreEncryptionService @Inject constructor() : EncryptionService {
+class KeystoreEncryptionService @Inject constructor(
+    private val authService: CloudAuthService,
+) : EncryptionService {
 
-    private val keyAlias = "cloud_backup_key"
-    private val keyStore = KeyStore.getInstance("AndroidKeyStore").also { it.load(null) }
+    init {
+        // Clean up old Android Keystore entry if it exists (no longer used)
+        try {
+            val ks = KeyStore.getInstance("AndroidKeyStore").also { it.load(null) }
+            if (ks.containsAlias(OLD_KEYSTORE_ALIAS)) {
+                ks.deleteEntry(OLD_KEYSTORE_ALIAS)
+                Log.d(TAG, "Deleted legacy Android Keystore entry")
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to clean up legacy Keystore entry", e)
+        }
+    }
+
+    /**
+     * Derive a deterministic AES-256 key from the user's Firebase UID.
+     * HMAC-SHA256(key=salt, data=uid) → 32 bytes → AES key.
+     * Same user always gets the same key regardless of device or data clear.
+     */
+    private fun deriveKey(): SecretKeySpec {
+        val uid = authService.getCurrentUid()
+            ?: error("Not authenticated — sign in before encrypting")
+        val mac = Mac.getInstance("HmacSHA256")
+        mac.init(SecretKeySpec(KEY_DERIVATION_SALT.toByteArray(Charsets.UTF_8), "HmacSHA256"))
+        val keyBytes = mac.doFinal(uid.toByteArray(Charsets.UTF_8))
+        return SecretKeySpec(keyBytes, "AES")
+    }
 
     override fun encrypt(record: DownloadRecord): ByteArray {
-        return try {
-            val key = getOrCreateKey()
-            val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-            cipher.init(Cipher.ENCRYPT_MODE, key)
-            val iv = cipher.iv
-            val plaintext = recordToJson(record).toByteArray(Charsets.UTF_8)
-            val ciphertext = cipher.doFinal(plaintext)
-            // Prepend IV (12 bytes) to ciphertext
-            iv + ciphertext
-        } catch (e: KeyPermanentlyInvalidatedException) {
-            Log.w(TAG, "Key permanently invalidated during encrypt — regenerating key", e)
-            handleKeyInvalidation()
-        } catch (e: KeyStoreException) {
-            Log.w(TAG, "KeyStore exception during encrypt — regenerating key", e)
-            handleKeyInvalidation()
-        } catch (e: AEADBadTagException) {
-            Log.e(TAG, "AEADBadTag during encrypt", e)
-            throw KeyInvalidatedException("Encryption failed: data integrity check failed")
-        }
+        val key = deriveKey()
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(Cipher.ENCRYPT_MODE, key)
+        val iv = cipher.iv
+        val plaintext = recordToJson(record).toByteArray(Charsets.UTF_8)
+        val ciphertext = cipher.doFinal(plaintext)
+        // Prepend IV (12 bytes) to ciphertext
+        return iv + ciphertext
     }
 
     override fun decrypt(data: ByteArray): DownloadRecord {
-        return try {
-            val key = getOrCreateKey()
-            val iv = data.copyOfRange(0, 12)
-            val ciphertext = data.copyOfRange(12, data.size)
-            val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-            cipher.init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(128, iv))
-            val plaintext = cipher.doFinal(ciphertext)
-            jsonToRecord(String(plaintext, Charsets.UTF_8))
-        } catch (e: KeyPermanentlyInvalidatedException) {
-            Log.w(TAG, "Key permanently invalidated during decrypt — old records are unrecoverable", e)
-            regenerateKey()
-            throw KeyInvalidatedException(
-                "Decryption key was invalidated. Old cloud records are unrecoverable. " +
-                    "A new key has been generated for future backups.",
-            )
-        } catch (e: KeyStoreException) {
-            Log.w(TAG, "KeyStore exception during decrypt — key may be invalidated", e)
-            regenerateKey()
-            throw KeyInvalidatedException(
-                "Decryption key error. Old cloud records are unrecoverable. " +
-                    "A new key has been generated for future backups.",
-            )
-        } catch (e: AEADBadTagException) {
-            Log.e(TAG, "AEADBadTag during decrypt — data corrupted or wrong key", e)
-            throw KeyInvalidatedException("Decryption failed: data integrity check failed")
-        }
+        val key = deriveKey()
+        val iv = data.copyOfRange(0, 12)
+        val ciphertext = data.copyOfRange(12, data.size)
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(128, iv))
+        val plaintext = cipher.doFinal(ciphertext)
+        return jsonToRecord(String(plaintext, Charsets.UTF_8))
     }
 
-    override fun isKeyValid(): Boolean {
-        return try {
-            val key = keyStore.getKey(keyAlias, null) as? SecretKey ?: return false
-            val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-            cipher.init(Cipher.ENCRYPT_MODE, key)
-            true
-        } catch (_: KeyPermanentlyInvalidatedException) {
-            false
-        } catch (_: Exception) {
-            false
-        }
-    }
+    override fun isKeyValid(): Boolean = authService.isAuthenticated()
 
     override fun regenerateKey() {
-        if (keyStore.containsAlias(keyAlias)) {
-            keyStore.deleteEntry(keyAlias)
-        }
-        createKey()
-    }
-
-    private fun handleKeyInvalidation(): Nothing {
-        regenerateKey()
-        throw KeyInvalidatedException(
-            "Encryption key was permanently invalidated. Old cloud records are unrecoverable. " +
-                "A new key has been generated for future backups.",
-        )
-    }
-
-    private fun getOrCreateKey(): SecretKey {
-        val existing = keyStore.getKey(keyAlias, null) as? SecretKey
-        return existing ?: createKey()
-    }
-
-    private fun createKey(): SecretKey {
-        val keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore")
-        val spec = KeyGenParameterSpec.Builder(
-            keyAlias,
-            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT,
-        )
-            .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-            .setKeySize(256)
-            .build()
-        keyGenerator.init(spec)
-        return keyGenerator.generateKey()
+        // Key is derived from UID — nothing to regenerate.
+        // Old Keystore-based keys are cleaned up in init{}.
     }
 
     private fun recordToJson(record: DownloadRecord): String {
