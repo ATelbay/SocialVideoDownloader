@@ -17,4 +17,5 @@ data class DownloadEntity(
     val createdAt: Long,
     val completedAt: Long?,
     val fileSizeBytes: Long?,
+    val syncStatus: String = "NOT_SYNCED",
 )

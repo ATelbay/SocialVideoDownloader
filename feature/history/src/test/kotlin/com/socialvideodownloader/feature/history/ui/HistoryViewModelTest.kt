@@ -3,6 +3,15 @@ package com.socialvideodownloader.feature.history.ui
 import app.cash.turbine.test
 import com.socialvideodownloader.core.domain.model.DownloadStatus
 import com.socialvideodownloader.core.domain.model.HistoryItem
+import com.socialvideodownloader.core.domain.model.SyncStatus
+import com.socialvideodownloader.core.domain.repository.BillingRepository
+import com.socialvideodownloader.core.domain.sync.BackupPreferences
+import com.socialvideodownloader.core.domain.sync.DisableCloudBackupUseCase
+import com.socialvideodownloader.core.domain.sync.EnableCloudBackupUseCase
+import com.socialvideodownloader.core.domain.sync.ObserveCloudCapacityUseCase
+import com.socialvideodownloader.core.domain.sync.CloudAuthService
+import com.socialvideodownloader.core.domain.sync.RestoreFromCloudUseCase
+import com.socialvideodownloader.core.domain.sync.SyncManager
 import com.socialvideodownloader.feature.history.domain.DeleteHistoryItemUseCase
 import com.socialvideodownloader.feature.history.domain.ObserveHistoryItemsUseCase
 import com.socialvideodownloader.feature.history.testutil.MainDispatcherRule
@@ -27,6 +36,14 @@ class HistoryViewModelTest {
 
     private val observeHistoryItems = mockk<ObserveHistoryItemsUseCase>()
     private val deleteHistoryItem = mockk<DeleteHistoryItemUseCase>(relaxed = true)
+    private val observeCloudCapacity = mockk<ObserveCloudCapacityUseCase>()
+    private val billingRepository = mockk<BillingRepository>(relaxed = true)
+    private val enableCloudBackupUseCase = mockk<EnableCloudBackupUseCase>(relaxed = true)
+    private val disableCloudBackupUseCase = mockk<DisableCloudBackupUseCase>(relaxed = true)
+    private val syncManager = mockk<SyncManager>(relaxed = true)
+    private val backupPreferences = mockk<BackupPreferences>(relaxed = true)
+    private val restoreFromCloudUseCase = mockk<RestoreFromCloudUseCase>(relaxed = true)
+    private val cloudAuthService = mockk<CloudAuthService>(relaxed = true)
     private lateinit var viewModel: HistoryViewModel
 
     private lateinit var testItems: List<HistoryItem>
@@ -39,7 +56,21 @@ class HistoryViewModelTest {
             historyItem(id = 3L, title = "kotlin advanced"),
         )
         every { observeHistoryItems() } returns flowOf(testItems)
-        viewModel = HistoryViewModel(observeHistoryItems, deleteHistoryItem)
+        every { observeCloudCapacity() } returns flowOf()
+        every { backupPreferences.observeIsBackupEnabled() } returns flowOf(false)
+        every { syncManager.observeSyncStatus() } returns flowOf(SyncStatus.Idle)
+        viewModel = HistoryViewModel(
+            observeHistoryItems = observeHistoryItems,
+            deleteHistoryItem = deleteHistoryItem,
+            observeCloudCapacity = observeCloudCapacity,
+            billingRepository = billingRepository,
+            enableCloudBackupUseCase = enableCloudBackupUseCase,
+            disableCloudBackupUseCase = disableCloudBackupUseCase,
+            syncManager = syncManager,
+            backupPreferences = backupPreferences,
+            restoreFromCloudUseCase = restoreFromCloudUseCase,
+            cloudAuthService = cloudAuthService,
+        )
     }
 
     @Test
@@ -48,7 +79,18 @@ class HistoryViewModelTest {
         // With UnconfinedTestDispatcher the flow starts immediately, so we verify the sealed type
         // by recreating with a never-emitting flow
         every { observeHistoryItems() } returns kotlinx.coroutines.flow.flow { /* never emits */ }
-        val vm = HistoryViewModel(observeHistoryItems, deleteHistoryItem)
+        val vm = HistoryViewModel(
+                observeHistoryItems = observeHistoryItems,
+                deleteHistoryItem = deleteHistoryItem,
+                observeCloudCapacity = observeCloudCapacity,
+                billingRepository = billingRepository,
+                enableCloudBackupUseCase = enableCloudBackupUseCase,
+                disableCloudBackupUseCase = disableCloudBackupUseCase,
+                syncManager = syncManager,
+                backupPreferences = backupPreferences,
+                restoreFromCloudUseCase = restoreFromCloudUseCase,
+                cloudAuthService = cloudAuthService,
+            )
         assertEquals(HistoryUiState.Loading, vm.uiState.value)
     }
 
@@ -65,7 +107,18 @@ class HistoryViewModelTest {
     @Test
     fun `when use case emits empty list state becomes Empty with isFiltering false`() = runTest {
         every { observeHistoryItems() } returns flowOf(emptyList())
-        val vm = HistoryViewModel(observeHistoryItems, deleteHistoryItem)
+        val vm = HistoryViewModel(
+                observeHistoryItems = observeHistoryItems,
+                deleteHistoryItem = deleteHistoryItem,
+                observeCloudCapacity = observeCloudCapacity,
+                billingRepository = billingRepository,
+                enableCloudBackupUseCase = enableCloudBackupUseCase,
+                disableCloudBackupUseCase = disableCloudBackupUseCase,
+                syncManager = syncManager,
+                backupPreferences = backupPreferences,
+                restoreFromCloudUseCase = restoreFromCloudUseCase,
+                cloudAuthService = cloudAuthService,
+            )
         vm.uiState.test {
             val state = awaitItem()
             assertTrue(state is HistoryUiState.Empty)
@@ -154,7 +207,18 @@ class HistoryViewModelTest {
             contentUri = "content://media/external/video/10",
         )
         every { observeHistoryItems() } returns flowOf(listOf(accessibleItem))
-        val vm = HistoryViewModel(observeHistoryItems, deleteHistoryItem)
+        val vm = HistoryViewModel(
+                observeHistoryItems = observeHistoryItems,
+                deleteHistoryItem = deleteHistoryItem,
+                observeCloudCapacity = observeCloudCapacity,
+                billingRepository = billingRepository,
+                enableCloudBackupUseCase = enableCloudBackupUseCase,
+                disableCloudBackupUseCase = disableCloudBackupUseCase,
+                syncManager = syncManager,
+                backupPreferences = backupPreferences,
+                restoreFromCloudUseCase = restoreFromCloudUseCase,
+                cloudAuthService = cloudAuthService,
+            )
 
         vm.uiState.test {
             awaitItem() // subscribe so _allItems is populated
@@ -178,7 +242,18 @@ class HistoryViewModelTest {
             isFileAccessible = false,
         )
         every { observeHistoryItems() } returns flowOf(listOf(inaccessibleItem))
-        val vm = HistoryViewModel(observeHistoryItems, deleteHistoryItem)
+        val vm = HistoryViewModel(
+                observeHistoryItems = observeHistoryItems,
+                deleteHistoryItem = deleteHistoryItem,
+                observeCloudCapacity = observeCloudCapacity,
+                billingRepository = billingRepository,
+                enableCloudBackupUseCase = enableCloudBackupUseCase,
+                disableCloudBackupUseCase = disableCloudBackupUseCase,
+                syncManager = syncManager,
+                backupPreferences = backupPreferences,
+                restoreFromCloudUseCase = restoreFromCloudUseCase,
+                cloudAuthService = cloudAuthService,
+            )
 
         vm.uiState.test {
             awaitItem()
@@ -201,7 +276,18 @@ class HistoryViewModelTest {
             isFileAccessible = false,
         )
         every { observeHistoryItems() } returns flowOf(listOf(failedItem))
-        val vm = HistoryViewModel(observeHistoryItems, deleteHistoryItem)
+        val vm = HistoryViewModel(
+                observeHistoryItems = observeHistoryItems,
+                deleteHistoryItem = deleteHistoryItem,
+                observeCloudCapacity = observeCloudCapacity,
+                billingRepository = billingRepository,
+                enableCloudBackupUseCase = enableCloudBackupUseCase,
+                disableCloudBackupUseCase = disableCloudBackupUseCase,
+                syncManager = syncManager,
+                backupPreferences = backupPreferences,
+                restoreFromCloudUseCase = restoreFromCloudUseCase,
+                cloudAuthService = cloudAuthService,
+            )
 
         vm.uiState.test {
             awaitItem()
@@ -226,7 +312,18 @@ class HistoryViewModelTest {
             contentUri = "content://media/external/video/20",
         )
         every { observeHistoryItems() } returns flowOf(listOf(accessibleItem))
-        val vm = HistoryViewModel(observeHistoryItems, deleteHistoryItem)
+        val vm = HistoryViewModel(
+                observeHistoryItems = observeHistoryItems,
+                deleteHistoryItem = deleteHistoryItem,
+                observeCloudCapacity = observeCloudCapacity,
+                billingRepository = billingRepository,
+                enableCloudBackupUseCase = enableCloudBackupUseCase,
+                disableCloudBackupUseCase = disableCloudBackupUseCase,
+                syncManager = syncManager,
+                backupPreferences = backupPreferences,
+                restoreFromCloudUseCase = restoreFromCloudUseCase,
+                cloudAuthService = cloudAuthService,
+            )
 
         vm.uiState.test {
             awaitItem()
@@ -250,7 +347,18 @@ class HistoryViewModelTest {
             isFileAccessible = false,
         )
         every { observeHistoryItems() } returns flowOf(listOf(inaccessibleItem))
-        val vm = HistoryViewModel(observeHistoryItems, deleteHistoryItem)
+        val vm = HistoryViewModel(
+                observeHistoryItems = observeHistoryItems,
+                deleteHistoryItem = deleteHistoryItem,
+                observeCloudCapacity = observeCloudCapacity,
+                billingRepository = billingRepository,
+                enableCloudBackupUseCase = enableCloudBackupUseCase,
+                disableCloudBackupUseCase = disableCloudBackupUseCase,
+                syncManager = syncManager,
+                backupPreferences = backupPreferences,
+                restoreFromCloudUseCase = restoreFromCloudUseCase,
+                cloudAuthService = cloudAuthService,
+            )
 
         vm.uiState.test {
             awaitItem()

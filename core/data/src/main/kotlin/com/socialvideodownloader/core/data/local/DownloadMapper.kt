@@ -15,6 +15,7 @@ fun DownloadEntity.toDomain(): DownloadRecord = DownloadRecord(
     createdAt = createdAt,
     completedAt = completedAt,
     fileSizeBytes = fileSizeBytes,
+    syncStatus = syncStatus,
 )
 
 fun DownloadRecord.toEntity(): DownloadEntity = DownloadEntity(
@@ -29,4 +30,5 @@ fun DownloadRecord.toEntity(): DownloadEntity = DownloadEntity(
     createdAt = createdAt,
     completedAt = completedAt,
     fileSizeBytes = fileSizeBytes,
+    syncStatus = syncStatus,
 )

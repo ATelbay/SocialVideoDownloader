@@ -30,4 +30,36 @@
     <!-- Start prompt -->
     <string name="history_start_downloading">Start Downloading</string>
     <string name="history_start_new_download">Start new download</string>
+
+    <!-- Cloud Backup -->
+    <string name="cloud_backup_toggle_label">Cloud Backup</string>
+    <string name="cloud_backup_syncing">Syncing…</string>
+    <string name="cloud_backup_synced">Last backed up %1$s</string>
+    <string name="cloud_backup_paused">Backup paused</string>
+    <string name="cloud_backup_error">Backup error</string>
+    <string name="cloud_backup_never">Not backed up</string>
+    <string name="cloud_backup_disabled">Cloud backup is off</string>
+    <!-- Google Sign-In -->
+    <string name="google_web_client_id" translatable="false">966880978020-1onfl9tbf8aq1175j2hmflrq89hpj3ou.apps.googleusercontent.com</string>
+    <string name="cloud_sign_in_google">Sign in with Google</string>
+    <string name="cloud_sign_out">Sign out</string>
+    <string name="cloud_sign_in_failed">Sign-in failed. Please try again.</string>
+    <string name="cloud_signed_in_as">Signed in as %1$s</string>
+    <!-- Capacity -->
+    <string name="cloud_capacity_banner">%1$d of %2$d cloud records used</string>
+    <string name="cloud_capacity_upgrade">Upgrade</string>
+    <!-- Restore -->
+    <string name="cloud_restore_button">Restore from Cloud</string>
+    <string name="cloud_restore_progress">Restoring %1$d of %2$d records…</string>
+    <string name="cloud_restore_complete">Restored %1$d records, %2$d duplicates skipped</string>
+    <string name="cloud_restore_key_lost">Records cannot be decrypted — encryption key no longer available</string>
+    <!-- Errors -->
+    <string name="cloud_error_key_invalidated">Encryption key changed. Previous cloud records cannot be decrypted.</string>
+    <!-- Upgrade / Billing -->
+    <string name="upgrade_title">Unlock More Cloud Storage</string>
+    <string name="upgrade_description">Upgrade to store up to 10,000 cloud records — 10x more than the free tier.</string>
+    <string name="upgrade_price">500 ₸ (~$1) — one-time purchase</string>
+    <string name="upgrade_buy_button">Buy</string>
+    <string name="purchase_success">Purchase successful! Cloud capacity upgraded.</string>
+    <string name="purchase_error">Purchase failed. Please try again.</string>
 </resources>

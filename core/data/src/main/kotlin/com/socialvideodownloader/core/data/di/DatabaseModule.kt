@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.socialvideodownloader.core.data.local.AppDatabase
 import com.socialvideodownloader.core.data.local.DownloadDao
+import com.socialvideodownloader.core.data.local.SyncQueueDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,9 +23,13 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             "social-video-downloader-database",
-        ).addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4).build()
+        ).addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4, AppDatabase.MIGRATION_4_5).build()
 
     @Provides
     fun provideDownloadDao(database: AppDatabase): DownloadDao =
         database.downloadDao()
+
+    @Provides
+    fun provideSyncQueueDao(database: AppDatabase): SyncQueueDao =
+        database.syncQueueDao()
 }

@@ -35,3 +35,7 @@ app_icon_candidate.png
 !/.codex/prompts/
 /.codex/prompts/*
 !/.codex/prompts/*.md
+
+svd.jks
+keystore.properties
+app/google-services.json

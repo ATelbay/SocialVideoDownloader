@@ -1,20 +1,28 @@
 <!--
   SYNC IMPACT REPORT
   ==================
-  Version change: 1.0.0 → 1.1.0
+  Version change: 2.0.0 → 3.0.0
   Modified principles:
-    - III. Modern Android Stack: Removed Dynamic Color mandate. Dynamic Color
-      is now optional; a fixed branded palette is acceptable when design
-      consistency across devices is required.
-  Added sections: N/A
+    - I. Privacy & Zero Bloat: Added exception clause for opt-in cloud
+      features governed by Principle VIII. Core prohibitions unchanged.
+    - VII. Simplicity & Focus: "cloud sync" and "monetization" moved from
+      permanently out of scope to conditionally allowed. Cloud sync is
+      allowed as opt-in without affecting offline-first behavior.
+      Monetization is allowed only as non-intrusive freemium (no ads,
+      no subscriptions, no paywalls on core functionality).
+  Added sections:
+    - VIII. Optional Cloud Features (new principle)
   Removed sections: N/A
   Templates requiring updates:
     ✅ plan-template.md — "Constitution Check" is dynamic, no changes needed
-    ✅ spec-template.md — generic, compatible with updated principle
-    ✅ tasks-template.md — generic, compatible with updated principle
+    ✅ spec-template.md — generic, compatible with new principles
+    ✅ tasks-template.md — generic, compatible with new principles
     ✅ No command files exist in .specify/templates/commands/
-  Follow-up TODOs: Update plan.md Constitution Check table status from
-    VIOLATION to PASS (Dynamic Color no longer mandated).
+  Follow-up TODOs:
+    - Future specs involving cloud features MUST include a Principle VIII
+      compliance section in their Constitution Check.
+    - CLAUDE.md "What NOT to do" list should be reviewed when cloud sync
+      work begins (currently says "Do NOT add authentication of any kind").
 -->
 
 # Social Video Downloader Constitution
@@ -24,16 +32,23 @@
 ### I. Privacy & Zero Bloat (NON-NEGOTIABLE)
 
 - The app MUST NOT include advertising, analytics, tracking, or telemetry of any kind.
-- The app MUST NOT require or offer user authentication, accounts, or profiles.
+- The app MUST NOT require or offer user-facing authentication, accounts, or profiles
+  for its core functionality.
+  Exception: Google Sign-In via Credential Manager is permitted solely for opt-in
+  cloud features governed by Principle VIII.
 - The app MUST NOT transmit user data off-device beyond the video download itself.
+  Exception: opt-in cloud features governed by Principle VIII MAY transmit
+  on-device-encrypted data. Unencrypted user data MUST NOT leave the device.
 - No network interceptors, crash reporters, or third-party SDKs that phone home.
 - Rationale: this is a personal utility built to replace sketchy ad-filled download
-  sites. Any data collection or monetization defeats the entire purpose.
+  sites. Any data collection or monetization defeats the entire purpose. The
+  Principle VIII exceptions are narrowly scoped to preserve this guarantee.
 
 ### II. On-Device Architecture
 
 - All video extraction, parsing, and downloading MUST happen on the device.
-- The app MUST NOT depend on any backend service, API proxy, or cloud function.
+- The app MUST NOT depend on any backend service, API proxy, or cloud function
+  for its core download functionality.
 - yt-dlp (via youtubedl-android) is the sole extraction engine and runs locally.
 - FFmpeg and aria2c run as local binaries bundled with the app.
 - Rationale: no backend means zero hosting costs, zero downtime, and full
@@ -88,11 +103,44 @@
 - This is a focused utility, not a framework or platform.
 - Do NOT over-engineer: no abstractions without immediate concrete need.
 - Features that are permanently out of scope:
-  built-in video player, social features, cloud sync/backup,
-  monetization, web/desktop versions, user accounts.
+  built-in video player, social features, web/desktop versions, user accounts.
+- Features that are conditionally allowed:
+  - **Cloud sync/backup**: Allowed only as an opt-in feature that does not
+    affect offline-first behavior. MUST comply with Principle VIII.
+  - **Monetization**: Allowed only as non-intrusive freemium. No ads, no
+    subscriptions, no paywalls on core functionality (URL → video download).
+    Core features MUST remain fully functional without payment.
 - YAGNI applies: build only what is needed now.
 - Rationale: scope creep turns utilities into bloatware.
-  Every feature added is a feature to maintain.
+  Every feature added is a feature to maintain. Conditional allowances
+  are narrowly scoped to prevent erosion of the app's core identity.
+
+### VIII. Optional Cloud Features
+
+- Cloud features (sync, backup, cross-device history) are opt-in only.
+  The app MUST function fully without them. Disabling or never enabling
+  cloud features MUST NOT degrade any local functionality.
+- All user data MUST be encrypted on-device before upload to any cloud
+  service. The cloud provider MUST NOT have access to plaintext user data
+  (zero-knowledge principle).
+- Authentication MUST use Google Sign-In via Credential Manager as the sole
+  permitted mechanism. This provides a stable identity that persists across
+  reinstalls and devices, making cloud backup actually recoverable. No email/
+  password auth, no custom OAuth flows.
+- Cloud features MUST degrade gracefully:
+  - When the device is offline: silent no-op, no error UI.
+  - When the user has disabled cloud features: no background network
+    activity, no prompts to re-enable.
+  - When the cloud service is unavailable: local-first behavior continues
+    uninterrupted.
+- Cloud features MUST NOT introduce mandatory backend dependencies.
+  The app's core download flow (Principle II) MUST remain fully on-device.
+- Rationale: cloud features add value (cross-device history, backup) but
+  MUST NOT compromise the app's privacy-first, offline-first identity.
+  Zero-knowledge encryption ensures that even if a cloud provider is
+  compromised, user data remains protected. Google Sign-In provides a
+  stable identity that survives app reinstalls and device changes, making
+  cloud backup genuinely recoverable.
 
 ## Tech Stack & Constraints
 
@@ -143,4 +191,4 @@
   these principles. Violations MUST be flagged before merge.
 - Runtime development guidance lives in `AGENTS.md` for Codex and `.claude/CLAUDE.md` for Claude Code.
 
-**Version**: 1.1.0 | **Ratified**: 2026-03-14 | **Last Amended**: 2026-03-16
+**Version**: 3.0.0 | **Ratified**: 2026-03-14 | **Last Amended**: 2026-03-22
