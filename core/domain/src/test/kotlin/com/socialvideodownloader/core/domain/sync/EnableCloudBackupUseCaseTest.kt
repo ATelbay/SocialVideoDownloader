@@ -10,7 +10,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class EnableCloudBackupUseCaseTest {
-
     private val authService = mockk<CloudAuthService>(relaxed = true)
     private val preferences = mockk<BackupPreferences>(relaxed = true)
     private val syncManager = mockk<SyncManager>(relaxed = true)
@@ -22,47 +21,51 @@ class EnableCloudBackupUseCaseTest {
     }
 
     @Test
-    fun `invoke calls signInAnonymously`() = runTest {
-        coEvery { preferences.hasEverEnabled() } returns false
-        coEvery { preferences.observeIsBackupEnabled() } returns flowOf(false)
+    fun `invoke calls signInAnonymously`() =
+        runTest {
+            coEvery { preferences.hasEverEnabled() } returns false
+            coEvery { preferences.observeIsBackupEnabled() } returns flowOf(false)
 
-        useCase()
+            useCase()
 
-        coVerify { authService.signInAnonymously() }
-    }
-
-    @Test
-    fun `invoke sets backup enabled true and hasEverEnabled true`() = runTest {
-        coEvery { preferences.hasEverEnabled() } returns false
-        coEvery { preferences.observeIsBackupEnabled() } returns flowOf(false)
-
-        useCase()
-
-        coVerify { preferences.setBackupEnabled(true) }
-        coVerify { preferences.setHasEverEnabled(true) }
-    }
-
-    @Test
-    fun `invoke calls processPendingOperations after auth`() = runTest {
-        coEvery { preferences.hasEverEnabled() } returns false
-        coEvery { preferences.observeIsBackupEnabled() } returns flowOf(false)
-
-        useCase()
-
-        coVerifyOrder {
-            authService.signInAnonymously()
-            syncManager.processPendingOperations()
+            coVerify { authService.signInAnonymously() }
         }
-    }
 
     @Test
-    fun `invoke is no-op when already enabled`() = runTest {
-        coEvery { preferences.hasEverEnabled() } returns true
-        coEvery { preferences.observeIsBackupEnabled() } returns flowOf(true)
+    fun `invoke sets backup enabled true and hasEverEnabled true`() =
+        runTest {
+            coEvery { preferences.hasEverEnabled() } returns false
+            coEvery { preferences.observeIsBackupEnabled() } returns flowOf(false)
 
-        useCase()
+            useCase()
 
-        coVerify(exactly = 0) { authService.signInAnonymously() }
-        coVerify(exactly = 0) { syncManager.processPendingOperations() }
-    }
+            coVerify { preferences.setBackupEnabled(true) }
+            coVerify { preferences.setHasEverEnabled(true) }
+        }
+
+    @Test
+    fun `invoke calls processPendingOperations after auth`() =
+        runTest {
+            coEvery { preferences.hasEverEnabled() } returns false
+            coEvery { preferences.observeIsBackupEnabled() } returns flowOf(false)
+
+            useCase()
+
+            coVerifyOrder {
+                authService.signInAnonymously()
+                syncManager.processPendingOperations()
+            }
+        }
+
+    @Test
+    fun `invoke is no-op when already enabled`() =
+        runTest {
+            coEvery { preferences.hasEverEnabled() } returns true
+            coEvery { preferences.observeIsBackupEnabled() } returns flowOf(true)
+
+            useCase()
+
+            coVerify(exactly = 0) { authService.signInAnonymously() }
+            coVerify(exactly = 0) { syncManager.processPendingOperations() }
+        }
 }

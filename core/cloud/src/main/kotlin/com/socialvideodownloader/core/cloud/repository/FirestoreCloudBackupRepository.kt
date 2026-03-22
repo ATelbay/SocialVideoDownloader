@@ -94,6 +94,11 @@ class FirestoreCloudBackupRepository @Inject constructor(
         countersDocument(uid).update("recordCount", FieldValue.increment(-oldest.size().toLong())).await()
     }
 
+    override suspend fun setRecordCount(count: Int) {
+        val uid = authService.getCurrentUid() ?: return
+        countersDocument(uid).update("recordCount", count.toLong()).await()
+    }
+
     private fun sourceUrlHash(sourceUrl: String, createdAt: Long): String {
         val input = "$sourceUrl$createdAt"
         val digest = MessageDigest.getInstance("SHA-256")

@@ -23,4 +23,7 @@ interface CloudBackupRepository {
 
     /** Evict oldest N records from cloud. */
     suspend fun evictOldestRecords(count: Int)
+
+    /** Set the recorded count in the counters document to [count]. Used for reconciliation. */
+    suspend fun setRecordCount(count: Int)
 }

@@ -20,6 +20,8 @@ interface BillingRepository {
 
 sealed interface BillingResult {
     data object Success : BillingResult
+
     data object Cancelled : BillingResult
+
     data class Error(val message: String) : BillingResult
 }
