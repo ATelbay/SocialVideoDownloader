@@ -9,6 +9,7 @@ import com.socialvideodownloader.core.domain.model.DownloadRecord
 import com.socialvideodownloader.core.domain.model.DownloadStatus
 import com.socialvideodownloader.core.domain.repository.DownloadRepository
 import com.socialvideodownloader.core.domain.sync.BackupPreferences
+import com.socialvideodownloader.core.domain.sync.SyncManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -18,6 +19,7 @@ class DownloadRepositoryImpl @Inject constructor(
     private val downloadDao: DownloadDao,
     private val syncQueueDao: SyncQueueDao,
     private val backupPreferences: BackupPreferences,
+    private val syncManager: dagger.Lazy<SyncManager>,
 ) : DownloadRepository {
 
     override fun getAll(): Flow<List<DownloadRecord>> =
@@ -42,6 +44,7 @@ class DownloadRepositoryImpl @Inject constructor(
                     createdAt = System.currentTimeMillis(),
                 ),
             )
+            syncManager.get().processPendingOperations()
         }
         return id
     }
@@ -56,6 +59,7 @@ class DownloadRepositoryImpl @Inject constructor(
                     createdAt = System.currentTimeMillis(),
                 ),
             )
+            syncManager.get().processPendingOperations()
         }
     }
 
@@ -68,6 +72,7 @@ class DownloadRepositoryImpl @Inject constructor(
                     createdAt = System.currentTimeMillis(),
                 ),
             )
+            syncManager.get().processPendingOperations()
         }
         downloadDao.delete(record.toEntity())
     }
