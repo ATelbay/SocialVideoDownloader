@@ -9,6 +9,7 @@ import com.socialvideodownloader.core.domain.sync.BackupPreferences
 import com.socialvideodownloader.core.domain.sync.DisableCloudBackupUseCase
 import com.socialvideodownloader.core.domain.sync.EnableCloudBackupUseCase
 import com.socialvideodownloader.core.domain.sync.ObserveCloudCapacityUseCase
+import com.socialvideodownloader.core.domain.sync.RestoreFromCloudUseCase
 import com.socialvideodownloader.core.domain.sync.SyncManager
 import com.socialvideodownloader.feature.history.domain.DeleteHistoryItemUseCase
 import com.socialvideodownloader.feature.history.domain.ObserveHistoryItemsUseCase
@@ -40,6 +41,7 @@ class HistoryViewModelTest {
     private val disableCloudBackupUseCase = mockk<DisableCloudBackupUseCase>(relaxed = true)
     private val syncManager = mockk<SyncManager>(relaxed = true)
     private val backupPreferences = mockk<BackupPreferences>(relaxed = true)
+    private val restoreFromCloudUseCase = mockk<RestoreFromCloudUseCase>(relaxed = true)
     private lateinit var viewModel: HistoryViewModel
 
     private lateinit var testItems: List<HistoryItem>
@@ -64,6 +66,7 @@ class HistoryViewModelTest {
             disableCloudBackupUseCase = disableCloudBackupUseCase,
             syncManager = syncManager,
             backupPreferences = backupPreferences,
+            restoreFromCloudUseCase = restoreFromCloudUseCase,
         )
     }
 
@@ -82,6 +85,7 @@ class HistoryViewModelTest {
                 disableCloudBackupUseCase = disableCloudBackupUseCase,
                 syncManager = syncManager,
                 backupPreferences = backupPreferences,
+                restoreFromCloudUseCase = restoreFromCloudUseCase,
             )
         assertEquals(HistoryUiState.Loading, vm.uiState.value)
     }
@@ -108,6 +112,7 @@ class HistoryViewModelTest {
                 disableCloudBackupUseCase = disableCloudBackupUseCase,
                 syncManager = syncManager,
                 backupPreferences = backupPreferences,
+                restoreFromCloudUseCase = restoreFromCloudUseCase,
             )
         vm.uiState.test {
             val state = awaitItem()
@@ -206,6 +211,7 @@ class HistoryViewModelTest {
                 disableCloudBackupUseCase = disableCloudBackupUseCase,
                 syncManager = syncManager,
                 backupPreferences = backupPreferences,
+                restoreFromCloudUseCase = restoreFromCloudUseCase,
             )
 
         vm.uiState.test {
@@ -239,6 +245,7 @@ class HistoryViewModelTest {
                 disableCloudBackupUseCase = disableCloudBackupUseCase,
                 syncManager = syncManager,
                 backupPreferences = backupPreferences,
+                restoreFromCloudUseCase = restoreFromCloudUseCase,
             )
 
         vm.uiState.test {
@@ -271,6 +278,7 @@ class HistoryViewModelTest {
                 disableCloudBackupUseCase = disableCloudBackupUseCase,
                 syncManager = syncManager,
                 backupPreferences = backupPreferences,
+                restoreFromCloudUseCase = restoreFromCloudUseCase,
             )
 
         vm.uiState.test {
@@ -305,6 +313,7 @@ class HistoryViewModelTest {
                 disableCloudBackupUseCase = disableCloudBackupUseCase,
                 syncManager = syncManager,
                 backupPreferences = backupPreferences,
+                restoreFromCloudUseCase = restoreFromCloudUseCase,
             )
 
         vm.uiState.test {
@@ -338,6 +347,7 @@ class HistoryViewModelTest {
                 disableCloudBackupUseCase = disableCloudBackupUseCase,
                 syncManager = syncManager,
                 backupPreferences = backupPreferences,
+                restoreFromCloudUseCase = restoreFromCloudUseCase,
             )
 
         vm.uiState.test {

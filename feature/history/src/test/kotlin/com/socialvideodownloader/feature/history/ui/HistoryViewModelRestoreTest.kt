@@ -13,20 +13,22 @@ import com.socialvideodownloader.core.domain.sync.SyncManager
 import com.socialvideodownloader.feature.history.domain.DeleteHistoryItemUseCase
 import com.socialvideodownloader.feature.history.domain.ObserveHistoryItemsUseCase
 import com.socialvideodownloader.feature.history.testutil.MainDispatcherRule
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
-class HistoryViewModelCloudTest {
+@OptIn(ExperimentalCoroutinesApi::class)
+class HistoryViewModelRestoreTest {
 
     @RegisterExtension
     val mainDispatcherRule = MainDispatcherRule()
@@ -39,7 +41,7 @@ class HistoryViewModelCloudTest {
     private val disableCloudBackupUseCase = mockk<DisableCloudBackupUseCase>(relaxed = true)
     private val syncManager = mockk<SyncManager>(relaxed = true)
     private val backupPreferences = mockk<BackupPreferences>(relaxed = true)
-    private val restoreFromCloudUseCase = mockk<RestoreFromCloudUseCase>(relaxed = true)
+    private val restoreFromCloudUseCase = mockk<RestoreFromCloudUseCase>()
 
     private val isBackupEnabledFlow = MutableStateFlow(false)
     private val syncStatusFlow = MutableStateFlow<SyncStatus>(SyncStatus.Idle)
@@ -65,68 +67,81 @@ class HistoryViewModelCloudTest {
     )
 
     @Test
-    fun `initial state has isCloudBackupEnabled false`() = runTest {
+    fun `RestoreFromCloud intent triggers the use case`() = runTest {
+        coEvery { restoreFromCloudUseCase(any()) } returns RestoreResult(restored = 3, skipped = 1, failed = 0)
         val vm = createViewModel()
-        val state = vm.cloudBackupState.value
-        assertFalse(state.isCloudBackupEnabled)
+
+        vm.onIntent(HistoryIntent.RestoreFromCloud)
+
+        coVerify { restoreFromCloudUseCase(any()) }
     }
 
     @Test
-    fun `initial state has syncStatus Idle`() = runTest {
-        val vm = createViewModel()
-        val state = vm.cloudBackupState.value
-        assertEquals(SyncStatus.Idle, state.syncStatus)
-    }
-
-    @Test
-    fun `ToggleCloudBackup when off calls EnableCloudBackupUseCase`() = runTest {
-        isBackupEnabledFlow.value = false
-        val vm = createViewModel()
-
-        vm.onIntent(HistoryIntent.ToggleCloudBackup)
-
-        coVerify { enableCloudBackupUseCase() }
-    }
-
-    @Test
-    fun `ToggleCloudBackup when on calls DisableCloudBackupUseCase`() = runTest {
-        isBackupEnabledFlow.value = true
-        val vm = createViewModel()
-
-        vm.onIntent(HistoryIntent.ToggleCloudBackup)
-
-        coVerify { disableCloudBackupUseCase() }
-    }
-
-    @Test
-    fun `cloudBackupState updates isCloudBackupEnabled from BackupPreferences`() = runTest {
+    fun `restore completion state shows correct counts`() = runTest {
+        coEvery { restoreFromCloudUseCase(any()) } returns RestoreResult(restored = 5, skipped = 2, failed = 0)
         val vm = createViewModel()
 
         vm.cloudBackupState.test {
-            assertFalse(awaitItem().isCloudBackupEnabled)
+            awaitItem() // initial state
 
-            isBackupEnabledFlow.value = true
-            assertTrue(awaitItem().isCloudBackupEnabled)
+            vm.onIntent(HistoryIntent.RestoreFromCloud)
+
+            val states = mutableListOf<RestoreState>()
+            // Collect until Completed
+            for (i in 0..10) {
+                val state = awaitItem().restoreState
+                states.add(state)
+                if (state is RestoreState.Completed) break
+            }
+
+            val completed = states.filterIsInstance<RestoreState.Completed>().firstOrNull()
+            assertTrue(completed != null, "Expected a Completed state")
+            assertEquals(5, completed!!.restored)
+            assertEquals(2, completed.skipped)
 
             cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
-    fun `cloudBackupState updates syncStatus from SyncManager observation`() = runTest {
+    fun `error state when key is lost`() = runTest {
+        coEvery { restoreFromCloudUseCase(any()) } returns RestoreResult(
+            restored = 0,
+            skipped = 0,
+            failed = 0,
+            error = "Encryption key no longer available",
+        )
         val vm = createViewModel()
 
         vm.cloudBackupState.test {
-            assertEquals(SyncStatus.Idle, awaitItem().syncStatus)
+            awaitItem() // initial state
 
-            syncStatusFlow.value = SyncStatus.Syncing
-            assertEquals(SyncStatus.Syncing, awaitItem().syncStatus)
+            vm.onIntent(HistoryIntent.RestoreFromCloud)
 
-            val syncedStatus = SyncStatus.Synced(lastSyncTimestamp = 12345L)
-            syncStatusFlow.value = syncedStatus
-            assertEquals(syncedStatus, awaitItem().syncStatus)
+            val states = mutableListOf<RestoreState>()
+            for (i in 0..10) {
+                val state = awaitItem().restoreState
+                states.add(state)
+                if (state is RestoreState.Error) break
+            }
+
+            val error = states.filterIsInstance<RestoreState.Error>().firstOrNull()
+            assertTrue(error != null, "Expected an Error state")
+            assertTrue(error!!.message.contains("key", ignoreCase = true))
 
             cancelAndIgnoreRemainingEvents()
         }
+    }
+
+    @Test
+    fun `DismissRestoreDialog resets restoreState to Idle`() = runTest {
+        coEvery { restoreFromCloudUseCase(any()) } returns RestoreResult(restored = 1, skipped = 0, failed = 0)
+        val vm = createViewModel()
+
+        vm.onIntent(HistoryIntent.RestoreFromCloud)
+        vm.onIntent(HistoryIntent.DismissRestoreDialog)
+
+        val state = vm.cloudBackupState.value.restoreState
+        assertEquals(RestoreState.Idle, state)
     }
 }

@@ -11,6 +11,7 @@ import com.socialvideodownloader.core.domain.sync.CloudCapacity
 import com.socialvideodownloader.core.domain.sync.DisableCloudBackupUseCase
 import com.socialvideodownloader.core.domain.sync.EnableCloudBackupUseCase
 import com.socialvideodownloader.core.domain.sync.ObserveCloudCapacityUseCase
+import com.socialvideodownloader.core.domain.sync.RestoreFromCloudUseCase
 import com.socialvideodownloader.core.domain.sync.SyncManager
 import com.socialvideodownloader.feature.history.R
 import com.socialvideodownloader.feature.history.domain.DeleteHistoryItemUseCase
@@ -41,6 +42,8 @@ class HistoryViewModel @Inject constructor(
     private val disableCloudBackupUseCase: DisableCloudBackupUseCase,
     private val syncManager: SyncManager,
     private val backupPreferences: BackupPreferences,
+    // US2: Restore from cloud
+    private val restoreFromCloudUseCase: RestoreFromCloudUseCase,
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -60,11 +63,19 @@ class HistoryViewModel @Inject constructor(
     private val _isCloudBackupEnabled = MutableStateFlow(false)
     private val _syncStatus = MutableStateFlow<SyncStatus>(SyncStatus.Idle)
 
+    // US2: Restore state
+    private val _restoreState = MutableStateFlow<RestoreState>(RestoreState.Idle)
+
     val cloudBackupState: StateFlow<CloudBackupState> = combine(
         _isCloudBackupEnabled,
         _syncStatus,
-    ) { isEnabled, syncStatus ->
-        CloudBackupState(isCloudBackupEnabled = isEnabled, syncStatus = syncStatus)
+        _restoreState,
+    ) { isEnabled, syncStatus, restoreState ->
+        CloudBackupState(
+            isCloudBackupEnabled = isEnabled,
+            syncStatus = syncStatus,
+            restoreState = restoreState,
+        )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CloudBackupState())
 
     init {
@@ -129,6 +140,24 @@ class HistoryViewModel @Inject constructor(
             is HistoryIntent.TapUpgrade -> handleTapUpgrade()
             // US1: Cloud backup toggle
             is HistoryIntent.ToggleCloudBackup -> handleToggleCloudBackup()
+            // US2: Restore from cloud
+            is HistoryIntent.RestoreFromCloud -> handleRestoreFromCloud()
+            is HistoryIntent.DismissRestoreDialog -> _restoreState.value = RestoreState.Idle
+        }
+    }
+
+    private fun handleRestoreFromCloud() {
+        viewModelScope.launch {
+            _restoreState.value = RestoreState.InProgress(current = 0, total = 0)
+            val result = restoreFromCloudUseCase { current, total ->
+                _restoreState.value = RestoreState.InProgress(current = current, total = total)
+            }
+            val restoreError = result.error
+            _restoreState.value = if (restoreError != null) {
+                RestoreState.Error(restoreError)
+            } else {
+                RestoreState.Completed(restored = result.restored, skipped = result.skipped)
+            }
         }
     }
 

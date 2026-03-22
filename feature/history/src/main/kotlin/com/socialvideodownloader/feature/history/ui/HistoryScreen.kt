@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -213,6 +214,21 @@ fun HistoryScreen(
                 syncStatus = cloudBackupState.syncStatus,
                 onToggle = { viewModel.onIntent(HistoryIntent.ToggleCloudBackup) },
             )
+            if (cloudBackupState.isCloudBackupEnabled) {
+                TextButton(
+                    onClick = { viewModel.onIntent(HistoryIntent.RestoreFromCloud) },
+                    modifier = Modifier.padding(horizontal = 8.dp),
+                ) {
+                    Text(text = stringResource(R.string.cloud_restore_button))
+                }
+            }
+            // US2: Restore dialog
+            if (cloudBackupState.restoreState != RestoreState.Idle) {
+                RestoreDialog(
+                    restoreState = cloudBackupState.restoreState,
+                    onDismiss = { viewModel.onIntent(HistoryIntent.DismissRestoreDialog) },
+                )
+            }
             if (contentState?.cloudCapacity?.isNearLimit == true) {
                 CapacityBanner(
                     capacity = contentState.cloudCapacity,

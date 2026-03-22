@@ -14,4 +14,7 @@ sealed interface HistoryIntent {
     data object TapUpgrade : HistoryIntent
     // US1: Cloud backup toggle
     data object ToggleCloudBackup : HistoryIntent
+    // US2: Restore from cloud
+    data object RestoreFromCloud : HistoryIntent
+    data object DismissRestoreDialog : HistoryIntent
 }
