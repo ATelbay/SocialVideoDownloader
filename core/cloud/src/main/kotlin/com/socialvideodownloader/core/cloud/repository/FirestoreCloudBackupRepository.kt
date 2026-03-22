@@ -25,7 +25,7 @@ class FirestoreCloudBackupRepository @Inject constructor(
         firestore.collection("users").document(uid).collection("meta").document("counters")
 
     override suspend fun uploadRecord(record: DownloadRecord): Boolean {
-        val uid = authService.getCurrentUid() ?: authService.signInAnonymously()
+        val uid = authService.getCurrentUid() ?: error("Not authenticated — sign in first")
         val encrypted = encryptionService.encrypt(record)
         val hash = sourceUrlHash(record.sourceUrl, record.createdAt)
         val data = mapOf(

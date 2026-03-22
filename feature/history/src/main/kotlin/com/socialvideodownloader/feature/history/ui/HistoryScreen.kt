@@ -1,7 +1,9 @@
 package com.socialvideodownloader.feature.history.ui
 
+import android.app.Activity
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -17,7 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -25,9 +26,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import android.app.Activity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,18 +37,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.socialvideodownloader.core.domain.model.DownloadStatus
 import com.socialvideodownloader.core.ui.components.SvdTopBar
 import com.socialvideodownloader.core.ui.theme.AppShapesInstance
@@ -60,6 +63,7 @@ import com.socialvideodownloader.core.ui.tokens.Spacing
 import com.socialvideodownloader.feature.history.R
 import com.socialvideodownloader.feature.history.components.HistoryBottomSheet
 import com.socialvideodownloader.feature.history.components.HistoryDeleteDialog
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,6 +81,9 @@ fun HistoryScreen(
     // US3: Billing — controls visibility of upgrade dialog
     var showUpgradeDialog by rememberSaveable { mutableStateOf(false) }
 
+    // Credential Manager for Google Sign-In
+    val credentialManager = remember { CredentialManager.create(context) }
+
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             snackbarHostState.currentSnackbarData?.dismiss()
@@ -93,7 +100,9 @@ fun HistoryScreen(
                         }
                         context.startActivity(intent)
                     } catch (e: Exception) {
-                        snackbarHostState.showSnackbar(context.getString(R.string.history_open_error))
+                        snackbarHostState.showSnackbar(
+                            context.getString(R.string.history_open_error),
+                        )
                     }
                 }
                 is HistoryEffect.ShareContent -> {
@@ -109,7 +118,9 @@ fun HistoryScreen(
                             },
                         )
                     } catch (e: Exception) {
-                        snackbarHostState.showSnackbar(context.getString(R.string.history_share_error))
+                        snackbarHostState.showSnackbar(
+                            context.getString(R.string.history_share_error),
+                        )
                     }
                 }
                 is HistoryEffect.RetryDownload -> {
@@ -118,6 +129,43 @@ fun HistoryScreen(
                 // US3: Billing — show upgrade dialog
                 is HistoryEffect.LaunchUpgradeFlow -> {
                     showUpgradeDialog = true
+                }
+                // Google Sign-In — launch Credential Manager
+                is HistoryEffect.LaunchGoogleSignIn -> {
+                    val activity = context as? Activity
+                    if (activity == null) {
+                        Log.e("HistoryScreen", "No Activity context for Credential Manager")
+                        return@collect
+                    }
+                    coroutineScope.launch {
+                        try {
+                            val googleIdOption = GetGoogleIdOption.Builder()
+                                .setFilterByAuthorizedAccounts(false)
+                                .setServerClientId(
+                                    context.getString(R.string.google_web_client_id),
+                                )
+                                .build()
+                            val request = GetCredentialRequest.Builder()
+                                .addCredentialOption(googleIdOption)
+                                .build()
+                            val result = credentialManager.getCredential(
+                                context = activity,
+                                request = request,
+                            )
+                            val googleIdTokenCredential =
+                                GoogleIdTokenCredential.createFrom(result.credential.data)
+                            viewModel.onIntent(
+                                HistoryIntent.SignInWithGoogle(googleIdTokenCredential.idToken),
+                            )
+                        } catch (e: GetCredentialCancellationException) {
+                            // User cancelled — no-op
+                        } catch (e: Exception) {
+                            Log.e("HistoryScreen", "Google sign-in failed", e)
+                            snackbarHostState.showSnackbar(
+                                context.getString(R.string.cloud_sign_in_failed),
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -209,10 +257,10 @@ fun HistoryScreen(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            CloudBackupToggle(
-                isEnabled = cloudBackupState.isCloudBackupEnabled,
-                syncStatus = cloudBackupState.syncStatus,
-                onToggle = { viewModel.onIntent(HistoryIntent.ToggleCloudBackup) },
+            CloudBackupSection(
+                state = cloudBackupState,
+                onToggleBackup = { viewModel.onIntent(HistoryIntent.ToggleCloudBackup) },
+                onSignOut = { viewModel.onIntent(HistoryIntent.SignOutCloud) },
             )
             if (cloudBackupState.isCloudBackupEnabled) {
                 TextButton(

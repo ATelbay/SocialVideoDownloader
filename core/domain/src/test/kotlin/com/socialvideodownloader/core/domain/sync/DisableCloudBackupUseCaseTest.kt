@@ -1,6 +1,7 @@
 package com.socialvideodownloader.core.domain.sync
 
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -8,11 +9,12 @@ import org.junit.jupiter.api.Test
 
 class DisableCloudBackupUseCaseTest {
     private val preferences = mockk<BackupPreferences>(relaxed = true)
+    private val authService = mockk<CloudAuthService>(relaxed = true)
     private lateinit var useCase: DisableCloudBackupUseCase
 
     @BeforeEach
     fun setup() {
-        useCase = DisableCloudBackupUseCase(preferences)
+        useCase = DisableCloudBackupUseCase(preferences, authService)
     }
 
     @Test
@@ -24,16 +26,13 @@ class DisableCloudBackupUseCaseTest {
         }
 
     @Test
-    fun `invoke does not trigger any cloud deletion`() =
+    fun `invoke calls signOut after disabling backup`() =
         runTest {
-            val cloudAuthService = mockk<CloudAuthService>(relaxed = true)
-            val syncManager = mockk<SyncManager>(relaxed = true)
-
             useCase()
 
-            // Confirm only preferences is touched — no cloud service interaction
-            coVerify(exactly = 0) { cloudAuthService.signInAnonymously() }
-            coVerify(exactly = 0) { syncManager.processPendingOperations() }
-            coVerify(exactly = 0) { syncManager.queueDeletion(any()) }
+            coVerifyOrder {
+                preferences.setBackupEnabled(false)
+                authService.signOut()
+            }
         }
 }

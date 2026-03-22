@@ -130,15 +130,8 @@ class FirestoreSyncManager @Inject constructor(
         try {
             processUpload(op)
         } catch (e: FirebaseAuthException) {
-            Log.w(TAG, "Auth expired for op ${op.id}, attempting re-auth", e)
-            try {
-                cloudAuthService.signInAnonymously()
-                // Retry once after re-auth
-                processUpload(op)
-            } catch (reAuthError: Exception) {
-                Log.w(TAG, "Re-auth retry also failed for op ${op.id}: ${reAuthError.message}")
-                throw reAuthError
-            }
+            Log.w(TAG, "Auth expired for op ${op.id} — user must re-authenticate", e)
+            throw e
         }
     }
 

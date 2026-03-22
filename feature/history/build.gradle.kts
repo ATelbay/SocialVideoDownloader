@@ -22,6 +22,9 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
 
     testImplementation(libs.junit5)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

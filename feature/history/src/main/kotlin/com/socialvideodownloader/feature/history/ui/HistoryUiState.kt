@@ -32,6 +32,11 @@ data class CloudBackupState(
     val isCloudBackupEnabled: Boolean = false,
     val syncStatus: SyncStatus = SyncStatus.Idle,
     val restoreState: RestoreState = RestoreState.Idle,
+    val isSignedIn: Boolean = false,
+    val isSigningIn: Boolean = false,
+    val userName: String? = null,
+    val userPhotoUrl: String? = null,
+    val signInError: String? = null,
 )
 
 sealed interface RestoreState {

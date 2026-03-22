@@ -4,6 +4,7 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.util.Log
+import com.google.firebase.FirebaseApp
 import com.yausername.aria2c.Aria2c
 import com.yausername.ffmpeg.FFmpeg
 import com.yausername.youtubedl_android.YoutubeDL
@@ -42,6 +43,7 @@ class SocialVideoDownloaderApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        FirebaseApp.initializeApp(this)
         createNotificationChannels()
         initializeLibraries()
         runStartupCloudTasks()

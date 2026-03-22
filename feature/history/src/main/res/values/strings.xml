@@ -39,6 +39,12 @@
     <string name="cloud_backup_error">Backup error</string>
     <string name="cloud_backup_never">Not backed up</string>
     <string name="cloud_backup_disabled">Cloud backup is off</string>
+    <!-- Google Sign-In -->
+    <string name="google_web_client_id" translatable="false">966880978020-1onfl9tbf8aq1175j2hmflrq89hpj3ou.apps.googleusercontent.com</string>
+    <string name="cloud_sign_in_google">Sign in with Google</string>
+    <string name="cloud_sign_out">Sign out</string>
+    <string name="cloud_sign_in_failed">Sign-in failed. Please try again.</string>
+    <string name="cloud_signed_in_as">Signed in as %1$s</string>
     <!-- Capacity -->
     <string name="cloud_capacity_banner">%1$d of %2$d cloud records used</string>
     <string name="cloud_capacity_upgrade">Upgrade</string>

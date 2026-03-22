@@ -4,15 +4,16 @@ import app.cash.turbine.test
 import com.socialvideodownloader.core.domain.model.SyncStatus
 import com.socialvideodownloader.core.domain.repository.BillingRepository
 import com.socialvideodownloader.core.domain.sync.BackupPreferences
+import com.socialvideodownloader.core.domain.sync.CloudAuthService
 import com.socialvideodownloader.core.domain.sync.DisableCloudBackupUseCase
 import com.socialvideodownloader.core.domain.sync.EnableCloudBackupUseCase
 import com.socialvideodownloader.core.domain.sync.ObserveCloudCapacityUseCase
 import com.socialvideodownloader.core.domain.sync.RestoreFromCloudUseCase
-import com.socialvideodownloader.core.domain.sync.RestoreResult
 import com.socialvideodownloader.core.domain.sync.SyncManager
 import com.socialvideodownloader.feature.history.domain.DeleteHistoryItemUseCase
 import com.socialvideodownloader.feature.history.domain.ObserveHistoryItemsUseCase
 import com.socialvideodownloader.feature.history.testutil.MainDispatcherRule
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -40,6 +42,7 @@ class HistoryViewModelCloudTest {
     private val syncManager = mockk<SyncManager>(relaxed = true)
     private val backupPreferences = mockk<BackupPreferences>(relaxed = true)
     private val restoreFromCloudUseCase = mockk<RestoreFromCloudUseCase>(relaxed = true)
+    private val cloudAuthService = mockk<CloudAuthService>(relaxed = true)
 
     private val isBackupEnabledFlow = MutableStateFlow(false)
     private val syncStatusFlow = MutableStateFlow<SyncStatus>(SyncStatus.Idle)
@@ -50,6 +53,9 @@ class HistoryViewModelCloudTest {
         every { observeCloudCapacity() } returns flowOf()
         every { backupPreferences.observeIsBackupEnabled() } returns isBackupEnabledFlow
         every { syncManager.observeSyncStatus() } returns syncStatusFlow
+        every { cloudAuthService.isAuthenticated() } returns false
+        every { cloudAuthService.getDisplayName() } returns null
+        every { cloudAuthService.getPhotoUrl() } returns null
     }
 
     private fun createViewModel() = HistoryViewModel(
@@ -62,6 +68,7 @@ class HistoryViewModelCloudTest {
         syncManager = syncManager,
         backupPreferences = backupPreferences,
         restoreFromCloudUseCase = restoreFromCloudUseCase,
+        cloudAuthService = cloudAuthService,
     )
 
     @Test
@@ -79,23 +86,93 @@ class HistoryViewModelCloudTest {
     }
 
     @Test
-    fun `ToggleCloudBackup when off calls EnableCloudBackupUseCase`() = runTest {
-        isBackupEnabledFlow.value = false
+    fun `initial state has isSignedIn false when not authenticated`() = runTest {
         val vm = createViewModel()
-
-        vm.onIntent(HistoryIntent.ToggleCloudBackup)
-
-        coVerify { enableCloudBackupUseCase() }
+        val state = vm.cloudBackupState.value
+        assertFalse(state.isSignedIn)
     }
 
     @Test
-    fun `ToggleCloudBackup when on calls DisableCloudBackupUseCase`() = runTest {
-        isBackupEnabledFlow.value = true
+    fun `ToggleCloudBackup when not signed in emits LaunchGoogleSignIn effect`() = runTest {
+        every { cloudAuthService.isAuthenticated() } returns false
         val vm = createViewModel()
 
-        vm.onIntent(HistoryIntent.ToggleCloudBackup)
+        vm.effect.test {
+            vm.onIntent(HistoryIntent.ToggleCloudBackup)
+            assertEquals(HistoryEffect.LaunchGoogleSignIn, awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `ToggleCloudBackup when signed in and enabled calls DisableCloudBackupUseCase`() =
+        runTest {
+            every { cloudAuthService.isAuthenticated() } returns true
+            isBackupEnabledFlow.value = true
+            val vm = createViewModel()
+
+            vm.onIntent(HistoryIntent.ToggleCloudBackup)
+
+            coVerify { disableCloudBackupUseCase() }
+        }
+
+    @Test
+    fun `SignInWithGoogle calls enableCloudBackupUseCase with idToken`() = runTest {
+        every { cloudAuthService.isAuthenticated() } returns false
+        coEvery { enableCloudBackupUseCase(any()) } coAnswers {
+            every { cloudAuthService.isAuthenticated() } returns true
+        }
+        val vm = createViewModel()
+
+        vm.onIntent(HistoryIntent.SignInWithGoogle("test-token"))
+
+        coVerify { enableCloudBackupUseCase("test-token") }
+    }
+
+    @Test
+    fun `SignInWithGoogle on failure sets signInError`() = runTest {
+        every { cloudAuthService.isAuthenticated() } returns false
+        coEvery { enableCloudBackupUseCase(any()) } throws RuntimeException("auth failed")
+        val vm = createViewModel()
+
+        vm.onIntent(HistoryIntent.SignInWithGoogle("bad-token"))
+
+        vm.cloudBackupState.test {
+            val state = awaitItem()
+            assertFalse(state.isSigningIn)
+            assertEquals("auth failed", state.signInError)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `SignOutCloud calls disableCloudBackupUseCase and updates auth state`() = runTest {
+        every { cloudAuthService.isAuthenticated() } returns true
+        val vm = createViewModel()
+
+        coEvery { disableCloudBackupUseCase() } coAnswers {
+            every { cloudAuthService.isAuthenticated() } returns false
+        }
+
+        vm.onIntent(HistoryIntent.SignOutCloud)
 
         coVerify { disableCloudBackupUseCase() }
+    }
+
+    @Test
+    fun `DismissSignInError clears signInError`() = runTest {
+        every { cloudAuthService.isAuthenticated() } returns false
+        coEvery { enableCloudBackupUseCase(any()) } throws RuntimeException("auth failed")
+        val vm = createViewModel()
+
+        vm.onIntent(HistoryIntent.SignInWithGoogle("bad-token"))
+        vm.onIntent(HistoryIntent.DismissSignInError)
+
+        vm.cloudBackupState.test {
+            val state = awaitItem()
+            assertNull(state.signInError)
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test

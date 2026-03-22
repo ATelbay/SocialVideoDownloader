@@ -7,6 +7,7 @@ import com.socialvideodownloader.core.domain.sync.BackupPreferences
 import com.socialvideodownloader.core.domain.sync.DisableCloudBackupUseCase
 import com.socialvideodownloader.core.domain.sync.EnableCloudBackupUseCase
 import com.socialvideodownloader.core.domain.sync.ObserveCloudCapacityUseCase
+import com.socialvideodownloader.core.domain.sync.CloudAuthService
 import com.socialvideodownloader.core.domain.sync.RestoreFromCloudUseCase
 import com.socialvideodownloader.core.domain.sync.RestoreResult
 import com.socialvideodownloader.core.domain.sync.SyncManager
@@ -42,6 +43,7 @@ class HistoryViewModelRestoreTest {
     private val syncManager = mockk<SyncManager>(relaxed = true)
     private val backupPreferences = mockk<BackupPreferences>(relaxed = true)
     private val restoreFromCloudUseCase = mockk<RestoreFromCloudUseCase>()
+    private val cloudAuthService = mockk<CloudAuthService>(relaxed = true)
 
     private val isBackupEnabledFlow = MutableStateFlow(false)
     private val syncStatusFlow = MutableStateFlow<SyncStatus>(SyncStatus.Idle)
@@ -64,6 +66,7 @@ class HistoryViewModelRestoreTest {
         syncManager = syncManager,
         backupPreferences = backupPreferences,
         restoreFromCloudUseCase = restoreFromCloudUseCase,
+        cloudAuthService = cloudAuthService,
     )
 
     @Test

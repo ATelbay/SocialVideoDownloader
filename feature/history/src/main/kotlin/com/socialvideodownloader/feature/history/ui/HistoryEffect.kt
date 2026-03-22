@@ -9,4 +9,6 @@ sealed interface HistoryEffect {
     data class RetryDownload(val sourceUrl: String) : HistoryEffect
     // US3: Billing — signal screen to show upgrade dialog (activity context needed for billing flow)
     data object LaunchUpgradeFlow : HistoryEffect
+    // Google Sign-In — signal screen to launch Credential Manager
+    data object LaunchGoogleSignIn : HistoryEffect
 }

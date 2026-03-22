@@ -1,7 +1,7 @@
 <!--
   SYNC IMPACT REPORT
   ==================
-  Version change: 1.1.0 → 2.0.0
+  Version change: 2.0.0 → 3.0.0
   Modified principles:
     - I. Privacy & Zero Bloat: Added exception clause for opt-in cloud
       features governed by Principle VIII. Core prohibitions unchanged.
@@ -32,9 +32,10 @@
 ### I. Privacy & Zero Bloat (NON-NEGOTIABLE)
 
 - The app MUST NOT include advertising, analytics, tracking, or telemetry of any kind.
-- The app MUST NOT require or offer user-facing authentication, accounts, or profiles.
-  Exception: anonymous authentication (no sign-in UI, no user identity) is permitted
-  solely for opt-in cloud features governed by Principle VIII.
+- The app MUST NOT require or offer user-facing authentication, accounts, or profiles
+  for its core functionality.
+  Exception: Google Sign-In via Credential Manager is permitted solely for opt-in
+  cloud features governed by Principle VIII.
 - The app MUST NOT transmit user data off-device beyond the video download itself.
   Exception: opt-in cloud features governed by Principle VIII MAY transmit
   on-device-encrypted data. Unencrypted user data MUST NOT leave the device.
@@ -122,9 +123,10 @@
 - All user data MUST be encrypted on-device before upload to any cloud
   service. The cloud provider MUST NOT have access to plaintext user data
   (zero-knowledge principle).
-- Authentication MUST be anonymous: no user-facing sign-in flow, no email,
-  no password, no OAuth consent screen. Firebase Anonymous Auth or
-  equivalent device-bound tokens are the only permitted mechanism.
+- Authentication MUST use Google Sign-In via Credential Manager as the sole
+  permitted mechanism. This provides a stable identity that persists across
+  reinstalls and devices, making cloud backup actually recoverable. No email/
+  password auth, no custom OAuth flows.
 - Cloud features MUST degrade gracefully:
   - When the device is offline: silent no-op, no error UI.
   - When the user has disabled cloud features: no background network
@@ -135,8 +137,10 @@
   The app's core download flow (Principle II) MUST remain fully on-device.
 - Rationale: cloud features add value (cross-device history, backup) but
   MUST NOT compromise the app's privacy-first, offline-first identity.
-  Zero-knowledge encryption and anonymous auth ensure that even if a cloud
-  provider is compromised, user data remains protected.
+  Zero-knowledge encryption ensures that even if a cloud provider is
+  compromised, user data remains protected. Google Sign-In provides a
+  stable identity that survives app reinstalls and device changes, making
+  cloud backup genuinely recoverable.
 
 ## Tech Stack & Constraints
 
@@ -187,4 +191,4 @@
   these principles. Violations MUST be flagged before merge.
 - Runtime development guidance lives in `AGENTS.md` for Codex and `.claude/CLAUDE.md` for Claude Code.
 
-**Version**: 2.0.0 | **Ratified**: 2026-03-14 | **Last Amended**: 2026-03-21
+**Version**: 3.0.0 | **Ratified**: 2026-03-14 | **Last Amended**: 2026-03-22

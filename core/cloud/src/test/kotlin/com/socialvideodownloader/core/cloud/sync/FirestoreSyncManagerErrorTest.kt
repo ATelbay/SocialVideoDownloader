@@ -109,26 +109,15 @@ class FirestoreSyncManagerErrorTest {
         }
 
     @Test
-    fun `when auth expired, silent re-auth called and operation retried`() = runTest(testDispatcher) {
+    fun `when auth expired, error is propagated without silent re-auth`() = runTest(testDispatcher) {
         coEvery { syncQueueDao.getAll() } returns listOf(uploadOp)
-        coEvery { cloudAuthService.signInAnonymously() } returns "uid-123"
-
-        // First call throws FirebaseAuthException, second call succeeds
-        var callCount = 0
-        coEvery { cloudBackupRepository.uploadRecord(any()) } answers {
-            callCount++
-            if (callCount == 1) {
-                throw com.google.firebase.auth.FirebaseAuthException("ERROR_USER_TOKEN_EXPIRED", "Token expired")
-            }
-            true
-        }
+        coEvery { cloudBackupRepository.uploadRecord(any()) } throws
+            com.google.firebase.auth.FirebaseAuthException("ERROR_USER_TOKEN_EXPIRED", "Token expired")
 
         syncManager.processPendingOperations()
 
-        // Verify re-auth was called
-        coVerify { cloudAuthService.signInAnonymously() }
-        // Verify upload was attempted twice (first fails, second after re-auth succeeds)
-        coVerify(exactly = 2) { cloudBackupRepository.uploadRecord(any()) }
+        // Verify upload was attempted only once (no re-auth retry)
+        coVerify(exactly = 1) { cloudBackupRepository.uploadRecord(any()) }
     }
 
     @Test

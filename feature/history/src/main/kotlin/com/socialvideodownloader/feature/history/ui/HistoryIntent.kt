@@ -14,6 +14,10 @@ sealed interface HistoryIntent {
     data object TapUpgrade : HistoryIntent
     // US1: Cloud backup toggle
     data object ToggleCloudBackup : HistoryIntent
+    // Google Sign-In
+    data class SignInWithGoogle(val idToken: String) : HistoryIntent
+    data object SignOutCloud : HistoryIntent
+    data object DismissSignInError : HistoryIntent
     // US2: Restore from cloud
     data object RestoreFromCloud : HistoryIntent
     data object DismissRestoreDialog : HistoryIntent

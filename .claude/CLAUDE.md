@@ -90,7 +90,7 @@ io.github.junkfood02.youtubedl-android:aria2c:0.18.+
 - Do NOT use kapt
 - Do NOT add network interceptors or analytics
 - Do NOT create a backend service
-- Do NOT add authentication of any kind
+- Do NOT add authentication except Google Sign-In for opt-in cloud features
 - Do NOT over-engineer: this is a focused utility, not a framework
 
 ## Active Technologies

@@ -1,22 +1,54 @@
 {
   "project_info": {
-    "project_number": "REPLACE_ME",
-    "project_id": "REPLACE_ME",
-    "storage_bucket": "REPLACE_ME.appspot.com"
+    "project_number": "966880978020",
+    "project_id": "social-video-downloader-2996d",
+    "storage_bucket": "social-video-downloader-2996d.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+        "mobilesdk_app_id": "1:966880978020:android:4e30a286b734ed2430ab71",
         "android_client_info": {
           "package_name": "com.socialvideodownloader"
         }
       },
+      "oauth_client": [
+        {
+          "client_id": "966880978020-chkigfmkfddfehtk3qlmv9p886ri4im8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.socialvideodownloader",
+            "certificate_hash": "0631cb69fd43b0d0020ecebfac7b07f1392aa077"
+          }
+        },
+        {
+          "client_id": "966880978020-qgd70fl652ieo32plc5v9h8he14a7q75.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.socialvideodownloader",
+            "certificate_hash": "bc5f16dee842f950cbcb26936489a164bce64dbe"
+          }
+        },
+        {
+          "client_id": "966880978020-1onfl9tbf8aq1175j2hmflrq89hpj3ou.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "REPLACE_ME"
+          "current_key": "AIzaSyCPfNOv5gVmz_WbWXTF4FK-afrB9zzRQto"
         }
-      ]
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "966880978020-1onfl9tbf8aq1175j2hmflrq89hpj3ou.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"

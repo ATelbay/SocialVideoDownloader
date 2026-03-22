@@ -1,3 +1,7 @@
+@file:Suppress("DSL_SCOPE_VIOLATION")
+
+import java.util.Properties
+
 plugins {
     id("svd.android.application")
     id("svd.android.compose")
@@ -6,8 +10,23 @@ plugins {
     alias(libs.plugins.google.services)
 }
 
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.reader().use { keystoreProperties.load(it) }
+}
+
 android {
     namespace = "com.socialvideodownloader"
+
+    signingConfigs {
+        create("release") {
+            storeFile = file(keystoreProperties.getProperty("storeFile", "../svd.jks"))
+            storePassword = keystoreProperties.getProperty("storePassword", "")
+            keyAlias = keystoreProperties.getProperty("keyAlias", "")
+            keyPassword = keystoreProperties.getProperty("keyPassword", "")
+        }
+    }
 
     defaultConfig {
         applicationId = "com.socialvideodownloader"
@@ -23,6 +42,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
@@ -58,6 +78,8 @@ dependencies {
     implementation(libs.youtubedl.android.ffmpeg)
     implementation(libs.youtubedl.android.aria2c)
 
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
     testImplementation(libs.junit5)
     testImplementation(libs.mockk)
     testImplementation(libs.turbine)

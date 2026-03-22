@@ -9,6 +9,7 @@ import com.socialvideodownloader.core.domain.sync.BackupPreferences
 import com.socialvideodownloader.core.domain.sync.DisableCloudBackupUseCase
 import com.socialvideodownloader.core.domain.sync.EnableCloudBackupUseCase
 import com.socialvideodownloader.core.domain.sync.ObserveCloudCapacityUseCase
+import com.socialvideodownloader.core.domain.sync.CloudAuthService
 import com.socialvideodownloader.core.domain.sync.RestoreFromCloudUseCase
 import com.socialvideodownloader.core.domain.sync.SyncManager
 import com.socialvideodownloader.feature.history.domain.DeleteHistoryItemUseCase
@@ -42,6 +43,7 @@ class HistoryViewModelTest {
     private val syncManager = mockk<SyncManager>(relaxed = true)
     private val backupPreferences = mockk<BackupPreferences>(relaxed = true)
     private val restoreFromCloudUseCase = mockk<RestoreFromCloudUseCase>(relaxed = true)
+    private val cloudAuthService = mockk<CloudAuthService>(relaxed = true)
     private lateinit var viewModel: HistoryViewModel
 
     private lateinit var testItems: List<HistoryItem>
@@ -67,6 +69,7 @@ class HistoryViewModelTest {
             syncManager = syncManager,
             backupPreferences = backupPreferences,
             restoreFromCloudUseCase = restoreFromCloudUseCase,
+            cloudAuthService = cloudAuthService,
         )
     }
 
@@ -86,6 +89,7 @@ class HistoryViewModelTest {
                 syncManager = syncManager,
                 backupPreferences = backupPreferences,
                 restoreFromCloudUseCase = restoreFromCloudUseCase,
+                cloudAuthService = cloudAuthService,
             )
         assertEquals(HistoryUiState.Loading, vm.uiState.value)
     }
@@ -113,6 +117,7 @@ class HistoryViewModelTest {
                 syncManager = syncManager,
                 backupPreferences = backupPreferences,
                 restoreFromCloudUseCase = restoreFromCloudUseCase,
+                cloudAuthService = cloudAuthService,
             )
         vm.uiState.test {
             val state = awaitItem()
@@ -212,6 +217,7 @@ class HistoryViewModelTest {
                 syncManager = syncManager,
                 backupPreferences = backupPreferences,
                 restoreFromCloudUseCase = restoreFromCloudUseCase,
+                cloudAuthService = cloudAuthService,
             )
 
         vm.uiState.test {
@@ -246,6 +252,7 @@ class HistoryViewModelTest {
                 syncManager = syncManager,
                 backupPreferences = backupPreferences,
                 restoreFromCloudUseCase = restoreFromCloudUseCase,
+                cloudAuthService = cloudAuthService,
             )
 
         vm.uiState.test {
@@ -279,6 +286,7 @@ class HistoryViewModelTest {
                 syncManager = syncManager,
                 backupPreferences = backupPreferences,
                 restoreFromCloudUseCase = restoreFromCloudUseCase,
+                cloudAuthService = cloudAuthService,
             )
 
         vm.uiState.test {
@@ -314,6 +322,7 @@ class HistoryViewModelTest {
                 syncManager = syncManager,
                 backupPreferences = backupPreferences,
                 restoreFromCloudUseCase = restoreFromCloudUseCase,
+                cloudAuthService = cloudAuthService,
             )
 
         vm.uiState.test {
@@ -348,6 +357,7 @@ class HistoryViewModelTest {
                 syncManager = syncManager,
                 backupPreferences = backupPreferences,
                 restoreFromCloudUseCase = restoreFromCloudUseCase,
+                cloudAuthService = cloudAuthService,
             )
 
         vm.uiState.test {
