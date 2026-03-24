@@ -1,21 +1,50 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# ── General attributes ──────────────────────────────────────────────────────
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# ── youtubedl-android ───────────────────────────────────────────────────────
+# JNI and reflection used internally; keep the entire library namespace
+-keep class com.yausername.youtubedl_android.** { *; }
+-keep class com.yausername.ffmpeg.** { *; }
+-keep class com.yausername.aria2c.** { *; }
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# ── Room ────────────────────────────────────────────────────────────────────
+# Keep all RoomDatabase subclasses (generated _Impl classes)
+-keep class * extends androidx.room.RoomDatabase { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Keep all @Entity annotated classes and their fields
+-keep @androidx.room.Entity class * { *; }
+
+# Keep all @Dao annotated interfaces and their @Query methods
+-keep @androidx.room.Dao interface * { *; }
+-keepclassmembers @androidx.room.Dao interface * {
+    @androidx.room.Query <methods>;
+    @androidx.room.Insert <methods>;
+    @androidx.room.Update <methods>;
+    @androidx.room.Delete <methods>;
+    @androidx.room.Transaction <methods>;
+}
+
+# ── Firebase ─────────────────────────────────────────────────────────────────
+-keep class com.google.firebase.** { *; }
+-keep class com.google.android.gms.** { *; }
+
+# ── Play Billing ─────────────────────────────────────────────────────────────
+-keep class com.android.vending.billing.** { *; }
+
+# ── Kotlin serialization ─────────────────────────────────────────────────────
+# Keep Companion objects, serializer() methods, and $$serializer classes
+-keepclassmembers class com.socialvideodownloader.** {
+    kotlinx.serialization.KSerializer serializer(...);
+}
+-keep class com.socialvideodownloader.**$$serializer { *; }
+-keepclassmembers class com.socialvideodownloader.** {
+    public static ** Companion;
+}
+-keepclassmembers class com.socialvideodownloader.**$Companion {
+    kotlinx.serialization.KSerializer serializer(...);
+}
+
+# ── Hilt ─────────────────────────────────────────────────────────────────────
+-keep class dagger.hilt.** { *; }
+-keep class * extends dagger.hilt.android.internal.managers.ViewComponentManager$FragmentContextWrapper { *; }
