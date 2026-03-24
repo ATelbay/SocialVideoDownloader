@@ -49,6 +49,7 @@ class DownloadViewModel @Inject constructor(
     val events = _events.receiveAsFlow()
 
     private var currentUrl: String = ""
+    private var backgroundDownload: DownloadUiState.Downloading? = null
     private var duplicateCheckJob: Job? = null
     private var pendingShareOnly: Boolean = false
 
@@ -80,7 +81,10 @@ class DownloadViewModel @Inject constructor(
                         }
                     }
                     is DownloadServiceState.Completed -> {
-                        val downloading = current as? DownloadUiState.Downloading ?: return@collect
+                        val downloading = current as? DownloadUiState.Downloading
+                            ?: backgroundDownload?.takeIf { it.progress.requestId == serviceState.requestId }
+                            ?: return@collect
+                        backgroundDownload = null
                         if (downloading.progress.requestId != serviceState.requestId) return@collect
                         if (downloading.isShareMode) {
                             _events.send(DownloadEvent.ShareFile(serviceState.filePath))
@@ -96,7 +100,10 @@ class DownloadViewModel @Inject constructor(
                         }
                     }
                     is DownloadServiceState.Failed -> {
-                        val downloading = current as? DownloadUiState.Downloading ?: return@collect
+                        val downloading = current as? DownloadUiState.Downloading
+                            ?: backgroundDownload?.takeIf { it.progress.requestId == serviceState.requestId }
+                            ?: return@collect
+                        backgroundDownload = null
                         if (downloading.progress.requestId != serviceState.requestId) return@collect
                         if (downloading.isShareMode) {
                             _events.send(DownloadEvent.ShowSnackbar(errorMessageMapper.map(Exception(serviceState.error))))
@@ -146,6 +153,7 @@ class DownloadViewModel @Inject constructor(
             is DownloadIntent.ShareExistingClicked -> handleShareExisting()
             is DownloadIntent.ShareFormatClicked -> handleShareFormat()
             is DownloadIntent.DismissExistingBanner -> handleDismissExistingBanner()
+            is DownloadIntent.BackToIdleClicked -> handleBackToIdle()
         }
     }
 
@@ -325,9 +333,17 @@ class DownloadViewModel @Inject constructor(
     }
 
     private fun handleNewDownload() {
+        val current = _uiState.value
+        if (current is DownloadUiState.Downloading) {
+            backgroundDownload = current
+        }
         currentUrl = ""
         duplicateCheckJob?.cancel()
         _uiState.value = DownloadUiState.Idle()
+    }
+
+    private fun handleBackToIdle() {
+        _uiState.value = DownloadUiState.Idle(prefillUrl = currentUrl)
     }
 
     private fun handleOpenExisting() {
