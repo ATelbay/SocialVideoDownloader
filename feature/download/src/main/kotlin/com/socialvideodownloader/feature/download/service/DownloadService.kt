@@ -107,7 +107,7 @@ class DownloadService : Service() {
                 val outputPath = downloadVideo(request) { progressPercent, etaSeconds, speedText ->
                     val speedBytes = parseSpeedToBytes(speedText)
                     val safeProgress = progressPercent.coerceAtLeast(0f)
-                    val isMuxing = highWaterMark >= 95f && safeProgress < highWaterMark
+                    val isMuxing = highWaterMark >= MUXING_DETECTION_THRESHOLD && safeProgress < highWaterMark
                     highWaterMark = maxOf(highWaterMark, safeProgress)
                     val displayProgress = if (isMuxing) 100f else safeProgress
                     val safeEta = etaSeconds.coerceAtLeast(0L)
@@ -298,6 +298,7 @@ class DownloadService : Service() {
 
     companion object {
         private const val TAG = "DownloadService"
+        private const val MUXING_DETECTION_THRESHOLD = 95f
         const val SHARE_TEMP_DIR = "ytdl_share"
         // XOR mask to derive completion/error notification IDs from progress IDs without collision.
         // hashCode() returns values in [-2^31, 2^31-1]; XOR with this bit pattern flips the sign bit,
