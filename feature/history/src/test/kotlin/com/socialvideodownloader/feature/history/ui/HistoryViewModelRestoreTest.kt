@@ -14,6 +14,7 @@ import com.socialvideodownloader.core.domain.sync.SyncManager
 import com.socialvideodownloader.feature.history.domain.DeleteHistoryItemUseCase
 import com.socialvideodownloader.feature.history.domain.ObserveHistoryItemsUseCase
 import com.socialvideodownloader.feature.history.testutil.MainDispatcherRule
+import android.content.Context
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -34,6 +35,7 @@ class HistoryViewModelRestoreTest {
     @RegisterExtension
     val mainDispatcherRule = MainDispatcherRule()
 
+    private val appContext = mockk<Context>(relaxed = true)
     private val observeHistoryItems = mockk<ObserveHistoryItemsUseCase>()
     private val deleteHistoryItem = mockk<DeleteHistoryItemUseCase>(relaxed = true)
     private val observeCloudCapacity = mockk<ObserveCloudCapacityUseCase>()
@@ -57,6 +59,7 @@ class HistoryViewModelRestoreTest {
     }
 
     private fun createViewModel() = HistoryViewModel(
+        appContext = appContext,
         observeHistoryItems = observeHistoryItems,
         deleteHistoryItem = deleteHistoryItem,
         observeCloudCapacity = observeCloudCapacity,
