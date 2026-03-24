@@ -1,6 +1,7 @@
 package com.socialvideodownloader.feature.history.ui
 
 import android.app.Activity
+import android.content.ClipData
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
@@ -107,9 +108,11 @@ fun HistoryScreen(
                 }
                 is HistoryEffect.ShareContent -> {
                     try {
+                        val shareUri = Uri.parse(effect.contentUri)
                         val shareIntent = Intent(Intent.ACTION_SEND).apply {
                             type = "video/*"
-                            putExtra(Intent.EXTRA_STREAM, Uri.parse(effect.contentUri))
+                            putExtra(Intent.EXTRA_STREAM, shareUri)
+                            clipData = ClipData.newRawUri(null, shareUri)
                             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         }
                         context.startActivity(
@@ -299,8 +302,18 @@ fun HistoryScreen(
                 HistoryBottomSheet(
                     title = selectedItem.title,
                     showShare = selectedItem.status != DownloadStatus.FAILED,
-                    onShare = { viewModel.onIntent(HistoryIntent.ShareClicked(openItemId)) },
-                    onDelete = { viewModel.onIntent(HistoryIntent.DeleteItemClicked(openItemId)) },
+                    onCopyLink = {
+                        viewModel.onIntent(HistoryIntent.CopyLinkClicked(openItemId))
+                        viewModel.onIntent(HistoryIntent.DismissItemMenu)
+                    },
+                    onShare = {
+                        viewModel.onIntent(HistoryIntent.ShareClicked(openItemId))
+                        viewModel.onIntent(HistoryIntent.DismissItemMenu)
+                    },
+                    onDelete = {
+                        viewModel.onIntent(HistoryIntent.DeleteItemClicked(openItemId))
+                        viewModel.onIntent(HistoryIntent.DismissItemMenu)
+                    },
                     onDismiss = { viewModel.onIntent(HistoryIntent.DismissItemMenu) },
                 )
             }

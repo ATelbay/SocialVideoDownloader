@@ -21,8 +21,10 @@
     <string name="history_no_results_description">Try a different search term</string>
 
     <!-- Bottom sheet -->
+    <string name="history_bottom_sheet_copy_link">Copy Link</string>
     <string name="history_bottom_sheet_share">Share</string>
     <string name="history_bottom_sheet_delete">Delete</string>
+    <string name="history_link_copied">Link copied to clipboard</string>
 
     <!-- Delete dialog -->
     <string name="history_delete_checkbox_label">Also delete file from storage</string>

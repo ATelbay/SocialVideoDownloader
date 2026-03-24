@@ -1,5 +1,6 @@
 package com.socialvideodownloader.feature.library.ui
 
+import android.content.ClipData
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
@@ -61,9 +62,11 @@ fun LibraryScreen(
                 }
                 is LibraryEffect.ShareContent -> {
                     try {
+                        val shareUri = Uri.parse(effect.contentUri)
                         val shareIntent = Intent(Intent.ACTION_SEND).apply {
                             type = "video/*"
-                            putExtra(Intent.EXTRA_STREAM, Uri.parse(effect.contentUri))
+                            putExtra(Intent.EXTRA_STREAM, shareUri)
+                            clipData = ClipData.newRawUri(null, shareUri)
                             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         }
                         context.startActivity(

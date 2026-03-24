@@ -1,5 +1,9 @@
 package com.socialvideodownloader.feature.history.ui
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import androidx.hilt.android.qualifiers.ApplicationContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.socialvideodownloader.core.domain.model.DownloadStatus
@@ -33,6 +37,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
+    @ApplicationContext private val appContext: Context,
     private val observeHistoryItems: ObserveHistoryItemsUseCase,
     private val deleteHistoryItem: DeleteHistoryItemUseCase,
     // US3: Billing — capacity observation and purchase flow
@@ -149,6 +154,7 @@ class HistoryViewModel @Inject constructor(
             is HistoryIntent.SearchQueryChanged -> _searchQuery.value = intent.query
             is HistoryIntent.HistoryItemClicked -> handleItemClicked(intent.itemId)
             is HistoryIntent.ShareClicked -> handleShareClicked(intent.itemId)
+            is HistoryIntent.CopyLinkClicked -> handleCopyLinkClicked(intent.itemId)
             is HistoryIntent.HistoryItemLongPressed -> _openMenuItemId.value = intent.itemId
             is HistoryIntent.DismissItemMenu -> _openMenuItemId.value = null
             is HistoryIntent.DeleteItemClicked -> handleDeleteItemClicked(intent.itemId)
@@ -249,6 +255,8 @@ class HistoryViewModel @Inject constructor(
                     val uri = item.contentUri ?: return@launch
                     _effect.emit(HistoryEffect.OpenContent(uri))
                 }
+                item.status == DownloadStatus.COMPLETED && !item.isFileAccessible ->
+                    _effect.emit(HistoryEffect.RetryDownload(item.sourceUrl))
                 else ->
                     _effect.emit(HistoryEffect.ShowMessage(R.string.history_file_unavailable))
             }
@@ -265,6 +273,17 @@ class HistoryViewModel @Inject constructor(
             } else {
                 _effect.emit(HistoryEffect.ShowMessage(R.string.history_file_unavailable))
             }
+        }
+    }
+
+    private fun handleCopyLinkClicked(itemId: Long) {
+        val item = (uiState.value as? HistoryUiState.Content)?.items?.find { it.id == itemId }
+            ?: return
+        val clipboard = appContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(ClipData.newPlainText(null, item.sourceUrl))
+        _openMenuItemId.value = null
+        viewModelScope.launch {
+            _effect.emit(HistoryEffect.ShowMessage(R.string.history_link_copied))
         }
     }
 
