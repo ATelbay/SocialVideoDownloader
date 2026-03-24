@@ -61,6 +61,7 @@
     <string name="download_extract_video">EXTRACT VIDEO</string>
     <string name="download_extracting_status">Extracting video info…</string>
     <string name="download_downloading_status">Downloading video…</string>
+    <string name="download_finalizing_status">Finalizing video…</string>
     <string name="download_cancel_download">Cancel Download</string>
     <string name="download_speed">Speed</string>
     <string name="download_eta">ETA</string>

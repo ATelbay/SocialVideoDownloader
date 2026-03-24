@@ -7,4 +7,5 @@ data class DownloadProgress(
     val totalBytes: Long? = null,
     val speedBytesPerSec: Long,
     val etaSeconds: Long,
+    val isMuxing: Boolean = false,
 )

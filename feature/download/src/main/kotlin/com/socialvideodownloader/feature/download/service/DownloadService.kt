@@ -103,22 +103,27 @@ class DownloadService : Service() {
 
         serviceScope.launch(ioDispatcher) {
             try {
+                var highWaterMark = 0f
                 val outputPath = downloadVideo(request) { progressPercent, etaSeconds, speedText ->
                     val speedBytes = parseSpeedToBytes(speedText)
                     val safeProgress = progressPercent.coerceAtLeast(0f)
+                    val isMuxing = highWaterMark >= 95f && safeProgress < highWaterMark
+                    highWaterMark = maxOf(highWaterMark, safeProgress)
+                    val displayProgress = if (isMuxing) 100f else safeProgress
                     val safeEta = etaSeconds.coerceAtLeast(0L)
                     val totalBytes = request.totalBytes
                     val progress = DownloadProgress(
                         requestId = request.id,
-                        progressPercent = safeProgress,
-                        downloadedBytes = if (totalBytes != null && totalBytes > 0) {
-                            ((safeProgress / 100f) * totalBytes).toLong()
+                        progressPercent = displayProgress,
+                        downloadedBytes = if (!isMuxing && totalBytes != null && totalBytes > 0) {
+                            ((displayProgress / 100f) * totalBytes).toLong()
                         } else {
                             0L
                         },
                         totalBytes = request.totalBytes,
-                        speedBytesPerSec = speedBytes,
-                        etaSeconds = safeEta,
+                        speedBytesPerSec = if (isMuxing) 0L else speedBytes,
+                        etaSeconds = if (isMuxing) 0L else safeEta,
+                        isMuxing = isMuxing,
                     )
                     stateHolder.update(DownloadServiceState.Downloading(request.id, progress))
 
@@ -126,9 +131,9 @@ class DownloadService : Service() {
                         notificationId = notificationId,
                         requestId = request.id,
                         videoTitle = request.videoTitle,
-                        progressPercent = safeProgress.toInt(),
-                        speedText = speedText,
-                        etaText = formatEta(safeEta),
+                        progressPercent = if (isMuxing) 100 else displayProgress.toInt(),
+                        speedText = if (isMuxing) "" else speedText,
+                        etaText = if (isMuxing) "" else formatEta(safeEta),
                     )
                     notificationManager.updateNotification(notificationId, updatedNotification)
                 }
