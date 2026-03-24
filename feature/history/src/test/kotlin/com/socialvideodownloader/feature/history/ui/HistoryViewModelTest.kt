@@ -15,6 +15,7 @@ import com.socialvideodownloader.core.domain.sync.SyncManager
 import com.socialvideodownloader.feature.history.domain.DeleteHistoryItemUseCase
 import com.socialvideodownloader.feature.history.domain.ObserveHistoryItemsUseCase
 import com.socialvideodownloader.feature.history.testutil.MainDispatcherRule
+import android.content.Context
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -34,6 +35,7 @@ class HistoryViewModelTest {
     @RegisterExtension
     val mainDispatcherRule = MainDispatcherRule()
 
+    private val appContext = mockk<Context>(relaxed = true)
     private val observeHistoryItems = mockk<ObserveHistoryItemsUseCase>()
     private val deleteHistoryItem = mockk<DeleteHistoryItemUseCase>(relaxed = true)
     private val observeCloudCapacity = mockk<ObserveCloudCapacityUseCase>()
@@ -60,6 +62,7 @@ class HistoryViewModelTest {
         every { backupPreferences.observeIsBackupEnabled() } returns flowOf(false)
         every { syncManager.observeSyncStatus() } returns flowOf(SyncStatus.Idle)
         viewModel = HistoryViewModel(
+            appContext = appContext,
             observeHistoryItems = observeHistoryItems,
             deleteHistoryItem = deleteHistoryItem,
             observeCloudCapacity = observeCloudCapacity,
@@ -80,6 +83,7 @@ class HistoryViewModelTest {
         // by recreating with a never-emitting flow
         every { observeHistoryItems() } returns kotlinx.coroutines.flow.flow { /* never emits */ }
         val vm = HistoryViewModel(
+                appContext = appContext,
                 observeHistoryItems = observeHistoryItems,
                 deleteHistoryItem = deleteHistoryItem,
                 observeCloudCapacity = observeCloudCapacity,
@@ -108,6 +112,7 @@ class HistoryViewModelTest {
     fun `when use case emits empty list state becomes Empty with isFiltering false`() = runTest {
         every { observeHistoryItems() } returns flowOf(emptyList())
         val vm = HistoryViewModel(
+                appContext = appContext,
                 observeHistoryItems = observeHistoryItems,
                 deleteHistoryItem = deleteHistoryItem,
                 observeCloudCapacity = observeCloudCapacity,
@@ -208,6 +213,7 @@ class HistoryViewModelTest {
         )
         every { observeHistoryItems() } returns flowOf(listOf(accessibleItem))
         val vm = HistoryViewModel(
+                appContext = appContext,
                 observeHistoryItems = observeHistoryItems,
                 deleteHistoryItem = deleteHistoryItem,
                 observeCloudCapacity = observeCloudCapacity,
@@ -234,7 +240,7 @@ class HistoryViewModelTest {
     }
 
     @Test
-    fun `historyItemClicked on completed inaccessible item emits ShowMessage`() = runTest {
+    fun `historyItemClicked on completed inaccessible item emits RetryDownload`() = runTest {
         val inaccessibleItem = historyItem(
             id = 11L,
             title = "Inaccessible Video",
@@ -243,6 +249,7 @@ class HistoryViewModelTest {
         )
         every { observeHistoryItems() } returns flowOf(listOf(inaccessibleItem))
         val vm = HistoryViewModel(
+                appContext = appContext,
                 observeHistoryItems = observeHistoryItems,
                 deleteHistoryItem = deleteHistoryItem,
                 observeCloudCapacity = observeCloudCapacity,
@@ -260,7 +267,7 @@ class HistoryViewModelTest {
             vm.effect.test {
                 vm.onIntent(HistoryIntent.HistoryItemClicked(11L))
                 val effect = awaitItem()
-                assertTrue(effect is HistoryEffect.ShowMessage)
+                assertTrue(effect is HistoryEffect.RetryDownload)
                 cancelAndIgnoreRemainingEvents()
             }
             cancelAndIgnoreRemainingEvents()
@@ -277,6 +284,7 @@ class HistoryViewModelTest {
         )
         every { observeHistoryItems() } returns flowOf(listOf(failedItem))
         val vm = HistoryViewModel(
+                appContext = appContext,
                 observeHistoryItems = observeHistoryItems,
                 deleteHistoryItem = deleteHistoryItem,
                 observeCloudCapacity = observeCloudCapacity,
@@ -313,6 +321,7 @@ class HistoryViewModelTest {
         )
         every { observeHistoryItems() } returns flowOf(listOf(accessibleItem))
         val vm = HistoryViewModel(
+                appContext = appContext,
                 observeHistoryItems = observeHistoryItems,
                 deleteHistoryItem = deleteHistoryItem,
                 observeCloudCapacity = observeCloudCapacity,
@@ -348,6 +357,7 @@ class HistoryViewModelTest {
         )
         every { observeHistoryItems() } returns flowOf(listOf(inaccessibleItem))
         val vm = HistoryViewModel(
+                appContext = appContext,
                 observeHistoryItems = observeHistoryItems,
                 deleteHistoryItem = deleteHistoryItem,
                 observeCloudCapacity = observeCloudCapacity,
