@@ -284,7 +284,7 @@ fun HistoryScreen(
             if (selectedItem != null) {
                 HistoryBottomSheet(
                     title = selectedItem.title,
-                    showShare = selectedItem.status != DownloadStatus.FAILED,
+                    showShare = selectedItem.status == DownloadStatus.COMPLETED && selectedItem.isFileAccessible,
                     onCopyLink = {
                         viewModel.onIntent(HistoryIntent.CopyLinkClicked(openItemId))
                         viewModel.onIntent(HistoryIntent.DismissItemMenu)
