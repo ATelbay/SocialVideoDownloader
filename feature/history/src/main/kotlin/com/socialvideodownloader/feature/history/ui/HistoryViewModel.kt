@@ -3,7 +3,7 @@ package com.socialvideodownloader.feature.history.ui
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import androidx.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.android.qualifiers.ApplicationContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.socialvideodownloader.core.domain.model.DownloadStatus
