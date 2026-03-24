@@ -1,9 +1,6 @@
 package com.socialvideodownloader.feature.history.ui
 
 import android.app.Activity
-import android.content.ClipData
-import android.content.Intent
-import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -54,6 +51,8 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.socialvideodownloader.core.domain.model.DownloadStatus
 import com.socialvideodownloader.core.ui.components.SvdTopBar
+import com.socialvideodownloader.core.ui.util.openVideo
+import com.socialvideodownloader.core.ui.util.shareVideo
 import com.socialvideodownloader.core.ui.theme.AppShapesInstance
 import com.socialvideodownloader.core.ui.theme.SvdBg
 import com.socialvideodownloader.core.ui.theme.SvdBorder
@@ -94,12 +93,7 @@ fun HistoryScreen(
                 }
                 is HistoryEffect.OpenContent -> {
                     try {
-                        val intent = Intent(Intent.ACTION_VIEW).apply {
-                            setDataAndType(Uri.parse(effect.contentUri), "video/*")
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        }
-                        context.startActivity(intent)
+                        context.openVideo(effect.contentUri)
                     } catch (e: Exception) {
                         snackbarHostState.showSnackbar(
                             context.getString(R.string.history_open_error),
@@ -108,18 +102,7 @@ fun HistoryScreen(
                 }
                 is HistoryEffect.ShareContent -> {
                     try {
-                        val shareUri = Uri.parse(effect.contentUri)
-                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                            type = "video/*"
-                            putExtra(Intent.EXTRA_STREAM, shareUri)
-                            clipData = ClipData.newRawUri(null, shareUri)
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
-                        context.startActivity(
-                            Intent.createChooser(shareIntent, null).apply {
-                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            },
-                        )
+                        context.shareVideo(effect.contentUri)
                     } catch (e: Exception) {
                         snackbarHostState.showSnackbar(
                             context.getString(R.string.history_share_error),
