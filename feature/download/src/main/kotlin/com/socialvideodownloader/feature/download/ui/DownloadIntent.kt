@@ -11,7 +11,7 @@ sealed interface DownloadIntent {
     data object OpenFileClicked : DownloadIntent
     data object ShareFileClicked : DownloadIntent
     data object NewDownloadClicked : DownloadIntent
-    data class PrefillUrl(val url: String) : DownloadIntent
+    data class PrefillUrl(val url: String, val existingRecordId: Long? = null) : DownloadIntent
     data object OpenExistingClicked : DownloadIntent
     data object ShareExistingClicked : DownloadIntent
     data object DismissExistingBanner : DownloadIntent

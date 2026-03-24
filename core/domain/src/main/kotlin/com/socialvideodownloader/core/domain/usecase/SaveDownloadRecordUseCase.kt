@@ -9,5 +9,12 @@ class SaveDownloadRecordUseCase
     constructor(
         private val repository: DownloadRepository,
     ) {
-        suspend operator fun invoke(record: DownloadRecord): Long = repository.insert(record)
+        suspend operator fun invoke(record: DownloadRecord): Long {
+            return if (record.id != 0L) {
+                repository.update(record)
+                record.id
+            } else {
+                repository.insert(record)
+            }
+        }
     }

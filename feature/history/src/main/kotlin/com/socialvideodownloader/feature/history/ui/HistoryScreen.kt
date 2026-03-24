@@ -68,7 +68,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
-    onNavigateToDownload: (initialUrl: String) -> Unit,
+    onNavigateToDownload: (initialUrl: String, existingRecordId: Long?) -> Unit,
     viewModel: HistoryViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
 ) {
@@ -110,7 +110,7 @@ fun HistoryScreen(
                     }
                 }
                 is HistoryEffect.RetryDownload -> {
-                    onNavigateToDownload(effect.sourceUrl)
+                    onNavigateToDownload(effect.sourceUrl, effect.existingRecordId)
                 }
                 // US3: Billing — show upgrade dialog
                 is HistoryEffect.LaunchUpgradeFlow -> {
@@ -272,7 +272,7 @@ fun HistoryScreen(
             HistoryContent(
                 uiState = uiState,
                 onIntent = viewModel::onIntent,
-                onStartDownloading = { onNavigateToDownload("") },
+                onStartDownloading = { onNavigateToDownload("", null) },
                 modifier = Modifier.fillMaxSize(),
             )
         }

@@ -52,6 +52,7 @@ class DownloadViewModel @Inject constructor(
     private var backgroundDownload: DownloadUiState.Downloading? = null
     private var duplicateCheckJob: Job? = null
     private var pendingShareOnly: Boolean = false
+    private var existingRecordId: Long? = null
 
     init {
         collectServiceState()
@@ -148,7 +149,7 @@ class DownloadViewModel @Inject constructor(
             is DownloadIntent.OpenFileClicked -> handleOpenFile()
             is DownloadIntent.ShareFileClicked -> handleShareFile()
             is DownloadIntent.NewDownloadClicked -> handleNewDownload()
-            is DownloadIntent.PrefillUrl -> handlePrefillUrl(intent.url)
+            is DownloadIntent.PrefillUrl -> handlePrefillUrl(intent.url, intent.existingRecordId)
             is DownloadIntent.OpenExistingClicked -> handleOpenExisting()
             is DownloadIntent.ShareExistingClicked -> handleShareExisting()
             is DownloadIntent.ShareFormatClicked -> handleShareFormat()
@@ -159,6 +160,7 @@ class DownloadViewModel @Inject constructor(
 
     private fun handleUrlChanged(url: String) {
         currentUrl = url
+        existingRecordId = null
         savedStateHandle["currentUrl"] = url
 
         duplicateCheckJob?.cancel()
@@ -263,6 +265,7 @@ class DownloadViewModel @Inject constructor(
             isVideoOnly = selectedFormat.isVideoOnly,
             totalBytes = selectedFormat.fileSizeBytes,
             shareOnly = shareOnly,
+            existingRecordId = existingRecordId,
         )
 
         _uiState.value = DownloadUiState.Downloading(
@@ -289,6 +292,7 @@ class DownloadViewModel @Inject constructor(
             putExtra(DownloadService.EXTRA_FORMAT_LABEL, request.formatLabel)
             putExtra(DownloadService.EXTRA_IS_VIDEO_ONLY, request.isVideoOnly)
             putExtra(DownloadService.EXTRA_SHARE_ONLY, request.shareOnly)
+            request.existingRecordId?.let { putExtra(DownloadService.EXTRA_EXISTING_RECORD_ID, it) }
         }
         context.startForegroundService(serviceIntent)
     }
@@ -338,6 +342,7 @@ class DownloadViewModel @Inject constructor(
             backgroundDownload = current
         }
         currentUrl = ""
+        existingRecordId = null
         duplicateCheckJob?.cancel()
         _uiState.value = DownloadUiState.Idle()
     }
@@ -387,9 +392,10 @@ class DownloadViewModel @Inject constructor(
         }
     }
 
-    private fun handlePrefillUrl(url: String) {
+    private fun handlePrefillUrl(url: String, recordId: Long? = null) {
         duplicateCheckJob?.cancel()
         currentUrl = url
+        existingRecordId = recordId
         viewModelScope.launch {
             val existing = findExistingDownload(url)
             if (existing != null) {

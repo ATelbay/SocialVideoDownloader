@@ -189,6 +189,7 @@ class DownloadService : Service() {
 
                     saveDownloadRecord(
                         DownloadRecord(
+                            id = request.existingRecordId ?: 0,
                             sourceUrl = request.sourceUrl,
                             videoTitle = request.videoTitle,
                             thumbnailUrl = request.thumbnailUrl,
@@ -227,6 +228,7 @@ class DownloadService : Service() {
                     )
                     saveDownloadRecord(
                         DownloadRecord(
+                            id = request.existingRecordId ?: 0,
                             sourceUrl = request.sourceUrl,
                             videoTitle = request.videoTitle,
                             thumbnailUrl = request.thumbnailUrl,
@@ -284,6 +286,7 @@ class DownloadService : Service() {
         val videoTitle = intent.getStringExtra(EXTRA_VIDEO_TITLE) ?: return null
         val formatId = intent.getStringExtra(EXTRA_FORMAT_ID) ?: return null
         val formatLabel = intent.getStringExtra(EXTRA_FORMAT_LABEL) ?: return null
+        val existingRecordId = intent.getLongExtra(EXTRA_EXISTING_RECORD_ID, -1L).takeIf { it > 0 }
         return DownloadRequest(
             id = id,
             sourceUrl = sourceUrl,
@@ -293,6 +296,7 @@ class DownloadService : Service() {
             formatLabel = formatLabel,
             isVideoOnly = intent.getBooleanExtra(EXTRA_IS_VIDEO_ONLY, false),
             shareOnly = intent.getBooleanExtra(EXTRA_SHARE_ONLY, false),
+            existingRecordId = existingRecordId,
         )
     }
 
@@ -315,5 +319,6 @@ class DownloadService : Service() {
         const val EXTRA_FORMAT_LABEL = "extra_format_label"
         const val EXTRA_IS_VIDEO_ONLY = "extra_is_video_only"
         const val EXTRA_SHARE_ONLY = "extra_share_only"
+        const val EXTRA_EXISTING_RECORD_ID = "extra_existing_record_id"
     }
 }

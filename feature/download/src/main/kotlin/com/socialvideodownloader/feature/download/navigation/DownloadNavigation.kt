@@ -7,13 +7,17 @@ import com.socialvideodownloader.feature.download.ui.DownloadScreen
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class DownloadRoute(val initialUrl: String? = null)
+data class DownloadRoute(
+    val initialUrl: String? = null,
+    val existingRecordId: Long? = null,
+)
 
 fun NavGraphBuilder.downloadScreen() {
     composable<DownloadRoute> { backStackEntry ->
         val route = backStackEntry.toRoute<DownloadRoute>()
         DownloadScreen(
             initialUrl = route.initialUrl,
+            existingRecordId = route.existingRecordId,
         )
     }
 }

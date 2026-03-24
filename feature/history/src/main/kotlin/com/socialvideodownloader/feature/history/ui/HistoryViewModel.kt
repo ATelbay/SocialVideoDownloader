@@ -250,13 +250,13 @@ class HistoryViewModel @Inject constructor(
         viewModelScope.launch {
             when {
                 item.status == DownloadStatus.FAILED ->
-                    _effect.emit(HistoryEffect.RetryDownload(item.sourceUrl))
+                    _effect.emit(HistoryEffect.RetryDownload(item.sourceUrl, existingRecordId = item.id))
                 item.status == DownloadStatus.COMPLETED && item.isFileAccessible -> {
                     val uri = item.contentUri ?: return@launch
                     _effect.emit(HistoryEffect.OpenContent(uri))
                 }
                 item.status == DownloadStatus.COMPLETED && !item.isFileAccessible ->
-                    _effect.emit(HistoryEffect.RetryDownload(item.sourceUrl))
+                    _effect.emit(HistoryEffect.RetryDownload(item.sourceUrl, existingRecordId = item.id))
                 else ->
                     _effect.emit(HistoryEffect.ShowMessage(R.string.history_file_unavailable))
             }
