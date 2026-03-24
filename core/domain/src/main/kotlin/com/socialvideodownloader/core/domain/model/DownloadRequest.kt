@@ -10,4 +10,5 @@ data class DownloadRequest(
     val isVideoOnly: Boolean,
     val totalBytes: Long? = null,
     val shareOnly: Boolean = false,
+    val existingRecordId: Long? = null,
 )

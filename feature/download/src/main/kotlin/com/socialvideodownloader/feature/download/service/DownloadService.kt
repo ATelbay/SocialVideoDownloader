@@ -103,22 +103,27 @@ class DownloadService : Service() {
 
         serviceScope.launch(ioDispatcher) {
             try {
+                var highWaterMark = 0f
                 val outputPath = downloadVideo(request) { progressPercent, etaSeconds, speedText ->
                     val speedBytes = parseSpeedToBytes(speedText)
                     val safeProgress = progressPercent.coerceAtLeast(0f)
+                    val isMuxing = highWaterMark >= MUXING_DETECTION_THRESHOLD && safeProgress < highWaterMark
+                    highWaterMark = maxOf(highWaterMark, safeProgress)
+                    val displayProgress = if (isMuxing) 100f else safeProgress
                     val safeEta = etaSeconds.coerceAtLeast(0L)
                     val totalBytes = request.totalBytes
                     val progress = DownloadProgress(
                         requestId = request.id,
-                        progressPercent = safeProgress,
-                        downloadedBytes = if (totalBytes != null && totalBytes > 0) {
-                            ((safeProgress / 100f) * totalBytes).toLong()
+                        progressPercent = displayProgress,
+                        downloadedBytes = if (!isMuxing && totalBytes != null && totalBytes > 0) {
+                            ((displayProgress / 100f) * totalBytes).toLong()
                         } else {
                             0L
                         },
                         totalBytes = request.totalBytes,
-                        speedBytesPerSec = speedBytes,
-                        etaSeconds = safeEta,
+                        speedBytesPerSec = if (isMuxing) 0L else speedBytes,
+                        etaSeconds = if (isMuxing) 0L else safeEta,
+                        isMuxing = isMuxing,
                     )
                     stateHolder.update(DownloadServiceState.Downloading(request.id, progress))
 
@@ -126,9 +131,9 @@ class DownloadService : Service() {
                         notificationId = notificationId,
                         requestId = request.id,
                         videoTitle = request.videoTitle,
-                        progressPercent = safeProgress.toInt(),
-                        speedText = speedText,
-                        etaText = formatEta(safeEta),
+                        progressPercent = if (isMuxing) 100 else displayProgress.toInt(),
+                        speedText = if (isMuxing) "" else speedText,
+                        etaText = if (isMuxing) "" else formatEta(safeEta),
                     )
                     notificationManager.updateNotification(notificationId, updatedNotification)
                 }
@@ -184,6 +189,7 @@ class DownloadService : Service() {
 
                     saveDownloadRecord(
                         DownloadRecord(
+                            id = request.existingRecordId ?: 0,
                             sourceUrl = request.sourceUrl,
                             videoTitle = request.videoTitle,
                             thumbnailUrl = request.thumbnailUrl,
@@ -222,6 +228,7 @@ class DownloadService : Service() {
                     )
                     saveDownloadRecord(
                         DownloadRecord(
+                            id = request.existingRecordId ?: 0,
                             sourceUrl = request.sourceUrl,
                             videoTitle = request.videoTitle,
                             thumbnailUrl = request.thumbnailUrl,
@@ -279,6 +286,7 @@ class DownloadService : Service() {
         val videoTitle = intent.getStringExtra(EXTRA_VIDEO_TITLE) ?: return null
         val formatId = intent.getStringExtra(EXTRA_FORMAT_ID) ?: return null
         val formatLabel = intent.getStringExtra(EXTRA_FORMAT_LABEL) ?: return null
+        val existingRecordId = intent.getLongExtra(EXTRA_EXISTING_RECORD_ID, -1L).takeIf { it > 0 }
         return DownloadRequest(
             id = id,
             sourceUrl = sourceUrl,
@@ -288,11 +296,13 @@ class DownloadService : Service() {
             formatLabel = formatLabel,
             isVideoOnly = intent.getBooleanExtra(EXTRA_IS_VIDEO_ONLY, false),
             shareOnly = intent.getBooleanExtra(EXTRA_SHARE_ONLY, false),
+            existingRecordId = existingRecordId,
         )
     }
 
     companion object {
         private const val TAG = "DownloadService"
+        private const val MUXING_DETECTION_THRESHOLD = 95f
         const val SHARE_TEMP_DIR = "ytdl_share"
         // XOR mask to derive completion/error notification IDs from progress IDs without collision.
         // hashCode() returns values in [-2^31, 2^31-1]; XOR with this bit pattern flips the sign bit,
@@ -309,5 +319,6 @@ class DownloadService : Service() {
         const val EXTRA_FORMAT_LABEL = "extra_format_label"
         const val EXTRA_IS_VIDEO_ONLY = "extra_is_video_only"
         const val EXTRA_SHARE_ONLY = "extra_share_only"
+        const val EXTRA_EXISTING_RECORD_ID = "extra_existing_record_id"
     }
 }

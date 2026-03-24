@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -75,26 +76,41 @@ fun DownloadProgressContent(
 
             // Time estimate
             Text(
-                text = stringResource(R.string.download_downloading_status),
+                text = if (progress.isMuxing) {
+                    stringResource(R.string.download_finalizing_status)
+                } else {
+                    stringResource(R.string.download_downloading_status)
+                },
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                 color = SvdMutedForeground,
             )
 
             // Progress bar
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(Spacing.ProgressTrackHeight)
-                    .clip(AppShapesInstance.pill)
-                    .background(SvdSurfaceStrong),
-            ) {
-                if (animatedProgress > 0f) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(animatedProgress)
-                            .fillMaxHeight()
-                            .background(SvdPrimary, AppShapesInstance.pill),
-                    )
+            if (progress.isMuxing) {
+                LinearProgressIndicator(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(Spacing.ProgressTrackHeight)
+                        .clip(AppShapesInstance.pill),
+                    color = SvdPrimary,
+                    trackColor = SvdSurfaceStrong,
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(Spacing.ProgressTrackHeight)
+                        .clip(AppShapesInstance.pill)
+                        .background(SvdSurfaceStrong),
+                ) {
+                    if (animatedProgress > 0f) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(animatedProgress)
+                                .fillMaxHeight()
+                                .background(SvdPrimary, AppShapesInstance.pill),
+                        )
+                    }
                 }
             }
 
@@ -104,12 +120,12 @@ fun DownloadProgressContent(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
-                    text = progress.totalBytes?.let { Formatter.formatFileSize(context, it) } ?: "—",
+                    text = if (progress.isMuxing) "—" else progress.totalBytes?.let { Formatter.formatFileSize(context, it) } ?: "—",
                     style = StatsValue,
                     color = SvdForeground,
                 )
                 Text(
-                    text = if (progress.speedBytesPerSec > 0) formatSpeed(progress.speedBytesPerSec) else "—",
+                    text = if (progress.isMuxing || progress.speedBytesPerSec <= 0) "—" else formatSpeed(progress.speedBytesPerSec),
                     style = StatsValue,
                     color = SvdForeground,
                 )

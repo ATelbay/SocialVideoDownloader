@@ -58,6 +58,7 @@ import com.socialvideodownloader.feature.download.ui.components.IdleContent
 fun DownloadScreen(
     viewModel: DownloadViewModel = hiltViewModel(),
     initialUrl: String? = null,
+    existingRecordId: Long? = null,
     modifier: Modifier = Modifier,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -72,7 +73,7 @@ fun DownloadScreen(
 
     LaunchedEffect(initialUrl) {
         if (initialUrl != null) {
-            viewModel.onIntent(DownloadIntent.PrefillUrl(initialUrl))
+            viewModel.onIntent(DownloadIntent.PrefillUrl(initialUrl, existingRecordId))
         }
     }
 
@@ -152,7 +153,7 @@ private fun DownloadScreenContent(
                     SvdTopBar(
                         title = stringResource(R.string.download_title_select_format),
                         actionLabel = stringResource(R.string.download_action_back),
-                        onActionClick = { onIntent(DownloadIntent.NewDownloadClicked) },
+                        onActionClick = { onIntent(DownloadIntent.BackToIdleClicked) },
                     )
                 }
                 is DownloadUiState.Downloading -> {

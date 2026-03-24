@@ -1,7 +1,5 @@
 package com.socialvideodownloader.feature.library.ui
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -27,6 +25,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.socialvideodownloader.core.ui.components.SvdTopBar
 import com.socialvideodownloader.core.ui.theme.SvdBg
+import com.socialvideodownloader.core.ui.util.openVideo
+import com.socialvideodownloader.core.ui.util.shareVideo
 import com.socialvideodownloader.core.ui.theme.SvdPrimary
 import com.socialvideodownloader.core.ui.tokens.Spacing
 import com.socialvideodownloader.feature.library.R
@@ -49,28 +49,14 @@ fun LibraryScreen(
             when (effect) {
                 is LibraryEffect.OpenContent -> {
                     try {
-                        val intent = Intent(Intent.ACTION_VIEW).apply {
-                            setDataAndType(Uri.parse(effect.contentUri), "video/*")
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        }
-                        context.startActivity(intent)
+                        context.openVideo(effect.contentUri)
                     } catch (e: Exception) {
                         snackbarHostState.showSnackbar(context.getString(R.string.library_open_error))
                     }
                 }
                 is LibraryEffect.ShareContent -> {
                     try {
-                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                            type = "video/*"
-                            putExtra(Intent.EXTRA_STREAM, Uri.parse(effect.contentUri))
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
-                        context.startActivity(
-                            Intent.createChooser(shareIntent, null).apply {
-                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            },
-                        )
+                        context.shareVideo(effect.contentUri)
                     } catch (e: Exception) {
                         snackbarHostState.showSnackbar(context.getString(R.string.library_share_error))
                     }

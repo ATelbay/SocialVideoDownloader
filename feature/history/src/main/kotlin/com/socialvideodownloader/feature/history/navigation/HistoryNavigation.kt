@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 object HistoryRoute
 
-fun NavGraphBuilder.historyScreen(onNavigateToDownload: (initialUrl: String) -> Unit) {
+fun NavGraphBuilder.historyScreen(onNavigateToDownload: (initialUrl: String, existingRecordId: Long?) -> Unit) {
     composable<HistoryRoute> {
         HistoryScreen(onNavigateToDownload = onNavigateToDownload)
     }

@@ -6,6 +6,7 @@ sealed interface HistoryIntent {
     data class HistoryItemLongPressed(val itemId: Long) : HistoryIntent
     data object DismissItemMenu : HistoryIntent
     data class ShareClicked(val itemId: Long) : HistoryIntent
+    data class CopyLinkClicked(val itemId: Long) : HistoryIntent
     data class DeleteItemClicked(val itemId: Long) : HistoryIntent
     data class DeleteFilesSelectionChanged(val selected: Boolean) : HistoryIntent
     data object ConfirmDeletion : HistoryIntent

@@ -1,8 +1,6 @@
 package com.socialvideodownloader.feature.history.ui
 
 import android.app.Activity
-import android.content.Intent
-import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -53,6 +51,8 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.socialvideodownloader.core.domain.model.DownloadStatus
 import com.socialvideodownloader.core.ui.components.SvdTopBar
+import com.socialvideodownloader.core.ui.util.openVideo
+import com.socialvideodownloader.core.ui.util.shareVideo
 import com.socialvideodownloader.core.ui.theme.AppShapesInstance
 import com.socialvideodownloader.core.ui.theme.SvdBg
 import com.socialvideodownloader.core.ui.theme.SvdBorder
@@ -68,7 +68,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
-    onNavigateToDownload: (initialUrl: String) -> Unit,
+    onNavigateToDownload: (initialUrl: String, existingRecordId: Long?) -> Unit,
     viewModel: HistoryViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
 ) {
@@ -93,12 +93,7 @@ fun HistoryScreen(
                 }
                 is HistoryEffect.OpenContent -> {
                     try {
-                        val intent = Intent(Intent.ACTION_VIEW).apply {
-                            setDataAndType(Uri.parse(effect.contentUri), "video/*")
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        }
-                        context.startActivity(intent)
+                        context.openVideo(effect.contentUri)
                     } catch (e: Exception) {
                         snackbarHostState.showSnackbar(
                             context.getString(R.string.history_open_error),
@@ -107,16 +102,7 @@ fun HistoryScreen(
                 }
                 is HistoryEffect.ShareContent -> {
                     try {
-                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                            type = "video/*"
-                            putExtra(Intent.EXTRA_STREAM, Uri.parse(effect.contentUri))
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
-                        context.startActivity(
-                            Intent.createChooser(shareIntent, null).apply {
-                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            },
-                        )
+                        context.shareVideo(effect.contentUri)
                     } catch (e: Exception) {
                         snackbarHostState.showSnackbar(
                             context.getString(R.string.history_share_error),
@@ -124,7 +110,7 @@ fun HistoryScreen(
                     }
                 }
                 is HistoryEffect.RetryDownload -> {
-                    onNavigateToDownload(effect.sourceUrl)
+                    onNavigateToDownload(effect.sourceUrl, effect.existingRecordId)
                 }
                 // US3: Billing — show upgrade dialog
                 is HistoryEffect.LaunchUpgradeFlow -> {
@@ -286,7 +272,7 @@ fun HistoryScreen(
             HistoryContent(
                 uiState = uiState,
                 onIntent = viewModel::onIntent,
-                onStartDownloading = { onNavigateToDownload("") },
+                onStartDownloading = { onNavigateToDownload("", null) },
                 modifier = Modifier.fillMaxSize(),
             )
         }
@@ -298,9 +284,19 @@ fun HistoryScreen(
             if (selectedItem != null) {
                 HistoryBottomSheet(
                     title = selectedItem.title,
-                    showShare = selectedItem.status != DownloadStatus.FAILED,
-                    onShare = { viewModel.onIntent(HistoryIntent.ShareClicked(openItemId)) },
-                    onDelete = { viewModel.onIntent(HistoryIntent.DeleteItemClicked(openItemId)) },
+                    showShare = selectedItem.status == DownloadStatus.COMPLETED && selectedItem.isFileAccessible,
+                    onCopyLink = {
+                        viewModel.onIntent(HistoryIntent.CopyLinkClicked(openItemId))
+                        viewModel.onIntent(HistoryIntent.DismissItemMenu)
+                    },
+                    onShare = {
+                        viewModel.onIntent(HistoryIntent.ShareClicked(openItemId))
+                        viewModel.onIntent(HistoryIntent.DismissItemMenu)
+                    },
+                    onDelete = {
+                        viewModel.onIntent(HistoryIntent.DeleteItemClicked(openItemId))
+                        viewModel.onIntent(HistoryIntent.DismissItemMenu)
+                    },
                     onDismiss = { viewModel.onIntent(HistoryIntent.DismissItemMenu) },
                 )
             }

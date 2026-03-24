@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -42,6 +43,7 @@ import com.socialvideodownloader.feature.history.R
 fun HistoryBottomSheet(
     title: String,
     showShare: Boolean,
+    onCopyLink: () -> Unit,
     onShare: () -> Unit,
     onDelete: () -> Unit,
     onDismiss: () -> Unit,
@@ -79,6 +81,28 @@ fun HistoryBottomSheet(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 12.dp),
             )
+
+            HorizontalDivider(color = SvdBorder)
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onCopyLink)
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Link,
+                    contentDescription = null,
+                    tint = SvdForeground,
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Text(
+                    text = stringResource(R.string.history_bottom_sheet_copy_link),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = SvdForeground,
+                )
+            }
 
             HorizontalDivider(color = SvdBorder)
 

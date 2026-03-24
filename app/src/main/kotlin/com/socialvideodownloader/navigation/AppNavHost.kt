@@ -31,8 +31,8 @@ fun AppNavHost(
             },
         )
         historyScreen(
-            onNavigateToDownload = { initialUrl ->
-                navController.navigate(DownloadRoute(initialUrl = initialUrl)) {
+            onNavigateToDownload = { initialUrl, existingRecordId ->
+                navController.navigate(DownloadRoute(initialUrl = initialUrl, existingRecordId = existingRecordId)) {
                     popUpTo(navController.graph.startDestinationId) { saveState = true }
                     launchSingleTop = true
                     restoreState = false
