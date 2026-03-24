@@ -281,7 +281,6 @@ class HistoryViewModel @Inject constructor(
             ?: return
         val clipboard = appContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboard.setPrimaryClip(ClipData.newPlainText(null, item.sourceUrl))
-        _openMenuItemId.value = null
         viewModelScope.launch {
             _effect.emit(HistoryEffect.ShowMessage(R.string.history_link_copied))
         }
