@@ -15,4 +15,5 @@ sealed interface DownloadIntent {
     data object OpenExistingClicked : DownloadIntent
     data object ShareExistingClicked : DownloadIntent
     data object DismissExistingBanner : DownloadIntent
+    data object BackToIdleClicked : DownloadIntent
 }

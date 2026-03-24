@@ -152,7 +152,7 @@ private fun DownloadScreenContent(
                     SvdTopBar(
                         title = stringResource(R.string.download_title_select_format),
                         actionLabel = stringResource(R.string.download_action_back),
-                        onActionClick = { onIntent(DownloadIntent.NewDownloadClicked) },
+                        onActionClick = { onIntent(DownloadIntent.BackToIdleClicked) },
                     )
                 }
                 is DownloadUiState.Downloading -> {
