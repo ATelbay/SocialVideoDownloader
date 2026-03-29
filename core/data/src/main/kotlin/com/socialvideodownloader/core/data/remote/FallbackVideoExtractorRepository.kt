@@ -7,6 +7,7 @@ import com.socialvideodownloader.core.domain.model.DownloadRequest
 import com.socialvideodownloader.core.domain.model.VideoMetadata
 import com.socialvideodownloader.core.domain.repository.VideoExtractorRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -23,6 +24,7 @@ class FallbackVideoExtractorRepository @Inject constructor(
         return try {
             local.extractInfo(url)
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Log.w(TAG, "Local extraction failed, trying server", e)
             withContext(ioDispatcher) {
                 serverApi.extractInfo(url)

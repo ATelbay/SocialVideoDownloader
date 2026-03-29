@@ -35,15 +35,17 @@ class ServerVideoExtractorApi @Inject constructor(
         val request = requestBuilder.build()
 
         val response = client.newCall(request).execute()
-        if (!response.isSuccessful) {
-            val errorBody = response.body?.string() ?: ""
-            throw IOException("Server extraction failed (${response.code}): $errorBody")
-        }
+        return response.use {
+            if (!response.isSuccessful) {
+                response.body?.string() // consume to release connection
+                throw IOException("Server extraction failed (${response.code})")
+            }
 
-        val body = response.body?.string()
-            ?: throw IOException("Empty response from server")
-        val serverResponse = json.decodeFromString<ServerExtractResponse>(body)
-        return mapper.mapToMetadata(serverResponse, url)
+            val body = response.body?.string()
+                ?: throw IOException("Empty response from server")
+            val serverResponse = json.decodeFromString<ServerExtractResponse>(body)
+            mapper.mapToMetadata(serverResponse, url)
+        }
     }
 
     fun downloadFile(
