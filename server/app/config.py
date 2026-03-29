@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     ALLOWED_ORIGINS: list[str] = ["*"]
     RATE_LIMIT_PER_MINUTE: int = 10
     UPDATE_API_KEY: str = ""
+    EXTRACT_API_KEY: str = ""
 
     class Config:
         env_file = ".env"

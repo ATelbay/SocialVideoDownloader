@@ -26,10 +26,13 @@ class ServerVideoExtractorApi @Inject constructor(
         val requestBody = json.encodeToString(ServerExtractRequest(url = url))
             .toRequestBody("application/json".toMediaType())
 
-        val request = Request.Builder()
+        val requestBuilder = Request.Builder()
             .url("${ServerConfig.BASE_URL}${ServerConfig.EXTRACT_PATH}")
             .post(requestBody)
-            .build()
+        if (ServerConfig.EXTRACT_API_KEY.isNotEmpty()) {
+            requestBuilder.addHeader("X-API-Key", ServerConfig.EXTRACT_API_KEY)
+        }
+        val request = requestBuilder.build()
 
         val response = client.newCall(request).execute()
         if (!response.isSuccessful) {

@@ -3,8 +3,10 @@ from __future__ import annotations
 from typing import Optional
 
 import yt_dlp
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel
+
+from app.config import settings
 
 router = APIRouter(tags=["extract"])
 
@@ -29,7 +31,13 @@ class ExtractResponse(BaseModel):
 
 
 @router.post("", response_model=ExtractResponse)
-async def extract_video_info(request: ExtractRequest) -> ExtractResponse:
+async def extract_video_info(
+    request: ExtractRequest,
+    x_api_key: Optional[str] = Header(default=None),
+) -> ExtractResponse:
+    if settings.EXTRACT_API_KEY and x_api_key != settings.EXTRACT_API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+
     url = request.url.strip() if request.url else ""
     if not url:
         raise HTTPException(status_code=400, detail="URL must not be empty")
