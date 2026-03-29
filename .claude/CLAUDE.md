@@ -102,6 +102,8 @@ io.github.junkfood02.youtubedl-android:aria2c:0.18.+
 - Kotlin 2.2.10 + Jetpack Compose (BOM 2026.03.00), Hilt 2.59.2, Room 2.8.4, Navigation Compose 2.9.7, Coil 2.7.0, Firebase BOM 33.15.0 (Auth + Firestore), Play Billing 7.1.1 (009-cloud-history-backup)
 - Room (download history + sync queue), Firestore (encrypted cloud records), DataStore Preferences (backup settings) (009-cloud-history-backup)
 - Kotlin 2.2.10 + Jetpack Compose (BOM 2026.03.00), Hilt (KSP), Room (KSP), Navigation Compose 2.9.7, Coil 2.7.0, youtubedl-android 0.18.x (library + ffmpeg + aria2c), Firebase BOM 33.15.0 (Auth + Firestore), Play Billing 7.1.1 (010-apk-size-optimization)
+- Kotlin 2.2.10, Swift 6.x (iOS) + Room KMP 2.8.4, Ktor 3.4.1, Koin 4.2.0, SKIE 0.10.10, Multiplatform Settings 1.3.0. Android retains: Jetpack Compose (BOM 2026.03.00), Hilt 2.59.2, Navigation Compose 2.9.7, Coil 2.7.0, Firebase BOM 33.15.0, Play Billing 7.1.1. (011-kmp-ios-migration)
+- Room KMP (shared DB schema in commonMain, platform builders), MediaStore (Android), Documents directory (iOS), Multiplatform Settings (preferences) (011-kmp-ios-migration)
 
 ## Recent Changes
 - 005-ui-redesign-dark-theme: Added Kotlin 2.2.10 + Jetpack Compose (BOM 2026.03.00), Material 3, Hilt (KSP), Navigation Compose 2.9.7, Coil
