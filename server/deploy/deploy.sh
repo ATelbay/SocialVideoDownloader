@@ -3,7 +3,7 @@ set -euo pipefail
 
 EC2_HOST="13.50.106.77"
 EC2_USER="ubuntu"
-KEY_PATH="~/Downloads/aws-per-ytdl.pem"
+KEY_PATH="~/Downloads/ytdlp-per-aws.pem"
 REMOTE_DIR="/opt/ytdlp-api"
 
 echo "=== Deploying to EC2 $EC2_HOST ==="
