@@ -87,6 +87,7 @@ class DownloadViewModelTest {
             serviceStateHolder = serviceStateHolder,
             context = context,
             savedStateHandle = androidx.lifecycle.SavedStateHandle(),
+            ioDispatcher = testDispatcher,
         )
     }
 
@@ -458,6 +459,7 @@ class DownloadViewModelTest {
             serviceStateHolder = serviceStateHolder,
             context = context,
             savedStateHandle = savedStateHandle,
+            ioDispatcher = testDispatcher,
         )
 
         vm.onIntent(DownloadIntent.UrlChanged("https://youtube.com/watch?v=saved"))
