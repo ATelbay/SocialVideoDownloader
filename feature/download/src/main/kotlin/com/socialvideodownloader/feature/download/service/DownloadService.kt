@@ -54,6 +54,13 @@ class DownloadService : Service() {
             ACTION_CANCEL_DOWNLOAD -> {
                 val requestId = intent.getStringExtra(EXTRA_REQUEST_ID) ?: return START_NOT_STICKY
                 cancelDownload(requestId)
+                // Safe to wipe the entire ytdl_downloads dir: downloads are processed serially
+                // (one active at a time via isProcessing), so cancelling the active download means
+                // no other download is currently writing to this directory. Queued downloads
+                // haven't started yet, and VideoExtractorRepositoryImpl wipes the dir before
+                // each new download begins anyway.
+                // TODO: if parallel downloads are ever supported, scope deletion to the specific
+                // download's files (requires yt-dlp output template to include requestId).
                 java.io.File(cacheDir, "ytdl_downloads").listFiles()?.forEach { it.deleteRecursively() }
                 stateHolder.update(DownloadServiceState.Cancelled(requestId))
                 stopIfQueueEmpty()
