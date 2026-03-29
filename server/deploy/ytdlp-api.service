@@ -7,10 +7,15 @@ Type=simple
 User=ytdlp
 Group=ytdlp
 WorkingDirectory=/opt/ytdlp-api
-ExecStart=/opt/ytdlp-api/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
+ExecStart=/opt/ytdlp-api/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
 Restart=always
 RestartSec=5
 EnvironmentFile=-/opt/ytdlp-api/.env
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/opt/ytdlp-api
 
 [Install]
 WantedBy=multi-user.target

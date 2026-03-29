@@ -1,6 +1,11 @@
 #!/bin/bash
 set -euo pipefail
 
+if [ "$(id -u)" -ne 0 ]; then
+    echo "Error: This script must be run as root" >&2
+    exit 1
+fi
+
 echo "=== yt-dlp API Server Bootstrap ==="
 
 # Update system and install dependencies
@@ -21,7 +26,7 @@ PORT=8000
 ALLOWED_ORIGINS=["*"]
 UPDATE_API_KEY=
 ENVEOF
-chmod 644 /opt/ytdlp-api/.env
+chmod 600 /opt/ytdlp-api/.env
 
 # Create Python virtual environment
 python3 -m venv /opt/ytdlp-api/venv
