@@ -1,10 +1,14 @@
+from __future__ import annotations
+
 import asyncio
 import os
 import subprocess
+import sys
 import time
 
 from fastapi import APIRouter, Header, HTTPException
 
+_venv_bin = os.path.dirname(sys.executable)
 _start_time = time.time()
 
 router = APIRouter(tags=["health"])
@@ -13,7 +17,7 @@ router = APIRouter(tags=["health"])
 @router.get("/health")
 async def health():
     result = subprocess.run(
-        ["yt-dlp", "--version"],
+        [os.path.join(_venv_bin, "yt-dlp"), "--version"],
         capture_output=True,
         text=True,
         timeout=5,
@@ -35,7 +39,7 @@ async def update_ytdlp(x_api_key: str | None = Header(default=None)):
         raise HTTPException(status_code=401, detail="Invalid API key")
 
     process = await asyncio.create_subprocess_exec(
-        "pip", "install", "-U", "yt-dlp",
+        os.path.join(_venv_bin, "pip"), "install", "-U", "yt-dlp",
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.STDOUT,
     )
@@ -46,7 +50,7 @@ async def update_ytdlp(x_api_key: str | None = Header(default=None)):
     new_version = None
     if success:
         version_result = subprocess.run(
-            ["yt-dlp", "--version"],
+            [os.path.join(_venv_bin, "yt-dlp"), "--version"],
             capture_output=True,
             text=True,
             timeout=5,
