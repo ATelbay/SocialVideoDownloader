@@ -1,12 +1,13 @@
 package com.socialvideodownloader.core.data.di
 
-import com.socialvideodownloader.core.data.remote.ServerConfig
+import com.socialvideodownloader.shared.network.ServerResponseMapper
+import com.socialvideodownloader.shared.network.ServerVideoExtractorApi
+import com.socialvideodownloader.shared.network.createHttpClient
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import okhttp3.OkHttpClient
-import java.util.concurrent.TimeUnit
+import io.ktor.client.HttpClient
 import javax.inject.Singleton
 
 @Module
@@ -15,10 +16,16 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
-        return OkHttpClient.Builder()
-            .connectTimeout(ServerConfig.CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            .readTimeout(ServerConfig.READ_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            .build()
-    }
+    fun provideHttpClient(): HttpClient = createHttpClient()
+
+    @Provides
+    @Singleton
+    fun provideServerResponseMapper(): ServerResponseMapper = ServerResponseMapper()
+
+    @Provides
+    @Singleton
+    fun provideServerVideoExtractorApi(
+        client: HttpClient,
+        mapper: ServerResponseMapper,
+    ): ServerVideoExtractorApi = ServerVideoExtractorApi(client, mapper)
 }

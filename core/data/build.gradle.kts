@@ -24,10 +24,13 @@ android {
 
 dependencies {
     implementation(project(":core:domain"))
+    implementation(project(":shared:data"))
+    implementation(project(":shared:network"))
 
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
-    implementation(libs.okhttp)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.okhttp)
     implementation(libs.androidx.datastore.preferences)
 
     implementation(libs.youtubedl.android.library)

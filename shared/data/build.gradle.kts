@@ -7,7 +7,9 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
+            implementation(project(":core:domain"))
             implementation(libs.androidx.room.runtime)
+            implementation(libs.androidx.sqlite.bundled)
             implementation(libs.koin.core)
             implementation(libs.multiplatform.settings)
             implementation(libs.multiplatform.settings.no.arg)
@@ -15,6 +17,12 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.androidx.room.ktx)
             implementation(libs.koin.android)
+        }
+        iosMain.dependencies {
+            implementation(project(":shared:network"))
+        }
+        commonTest.dependencies {
+            implementation(libs.kotlinx.coroutines.test)
         }
     }
 }

@@ -1,12 +1,11 @@
-package com.socialvideodownloader.core.data.remote
+package com.socialvideodownloader.shared.network
 
-import com.socialvideodownloader.core.data.remote.dto.ServerExtractResponse
-import com.socialvideodownloader.core.data.remote.dto.ServerFormatDto
 import com.socialvideodownloader.core.domain.model.VideoFormatOption
 import com.socialvideodownloader.core.domain.model.VideoMetadata
-import javax.inject.Inject
+import com.socialvideodownloader.shared.network.dto.ServerExtractResponse
+import com.socialvideodownloader.shared.network.dto.ServerFormatDto
 
-class ServerResponseMapper @Inject constructor() {
+class ServerResponseMapper {
 
     private val audioOnlyExtensions = setOf("m4a", "mp3", "opus", "ogg", "aac", "flac", "wav")
 
@@ -16,6 +15,7 @@ class ServerResponseMapper @Inject constructor() {
             title = response.title,
             thumbnailUrl = response.thumbnail,
             durationSeconds = response.duration?.toInt() ?: 0,
+            author = response.uploader,
             formats = response.formats.map { mapFormat(it) },
         )
     }

@@ -66,6 +66,8 @@ dependencies {
     implementation(project(":core:ui"))
     implementation(project(":core:cloud"))
     implementation(project(":core:billing"))
+    implementation(project(":shared:data"))
+    implementation(project(":shared:network"))
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
@@ -83,6 +85,9 @@ dependencies {
     implementation(libs.youtubedl.android.library)
     implementation(libs.youtubedl.android.ffmpeg)
     implementation(libs.youtubedl.android.aria2c)
+
+    implementation(libs.koin.core)
+    implementation(libs.koin.android)
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)

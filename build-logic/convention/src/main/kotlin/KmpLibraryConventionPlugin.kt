@@ -26,6 +26,9 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
             }
 
             extensions.configure<KotlinMultiplatformExtension> {
+                val javaVersion = libs.findVersion("javaVersion").get().toString().toInt()
+                jvmToolchain(javaVersion)
+
                 androidTarget()
                 iosArm64()
                 iosSimulatorArm64()
