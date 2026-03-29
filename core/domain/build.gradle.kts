@@ -1,25 +1,25 @@
 plugins {
-    alias(libs.plugins.kotlin.jvm)
+    id("svd.kmp.library")
     alias(libs.plugins.kotlin.serialization)
 }
 
-dependencies {
-    // javax.inject for @Qualifier annotations
-    implementation(libs.javax.inject)
-
-    // Coroutines for Flow types in repository interfaces
-    implementation(libs.kotlinx.coroutines.core)
-
-    // Serialization for domain models passed via Intent
-    implementation(libs.kotlinx.serialization.json)
-
-    testImplementation(libs.junit5)
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testImplementation(libs.mockk)
-    testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.turbine)
+android {
+    namespace = "com.socialvideodownloader.core.domain"
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation(libs.kotlinx.serialization.json)
+            implementation(libs.koin.core)
+        }
+        commonTest.dependencies {
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.turbine)
+        }
+        androidMain.dependencies {
+            // javax.inject for @Qualifier annotation (Hilt compatibility on Android)
+            implementation(libs.javax.inject)
+        }
+    }
 }
