@@ -22,6 +22,8 @@ class FormatInfo(BaseModel):
     resolution: Optional[str]
     filesize: Optional[int]
     url: str
+    vcodec: Optional[str] = None
+    acodec: Optional[str] = None
 
 
 class ExtractResponse(BaseModel):
@@ -58,13 +60,11 @@ async def extract_video_info(
     try:
         info = await asyncio.to_thread(_extract)
     except yt_dlp.utils.DownloadError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+        raise HTTPException(status_code=422, detail="Extraction failed for the provided URL") from exc
     except yt_dlp.utils.ExtractorError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
-    except TimeoutError as exc:
-        raise HTTPException(status_code=500, detail="Request timed out") from exc
+        raise HTTPException(status_code=422, detail="Extraction failed for the provided URL") from exc
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {exc}") from exc
+        raise HTTPException(status_code=500, detail="An unexpected server error occurred") from exc
 
     if info is None:
         raise HTTPException(status_code=422, detail="Could not extract video info")
@@ -97,6 +97,8 @@ async def extract_video_info(
                 resolution=resolution,
                 filesize=fmt.get("filesize"),
                 url=fmt_url,
+                vcodec=fmt.get("vcodec"),
+                acodec=fmt.get("acodec"),
             )
         )
 

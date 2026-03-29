@@ -25,6 +25,9 @@ class ServerResponseMapper @Inject constructor() {
         val isAudioOnly = height == null && dto.ext in audioOnlyExtensions
         val label = buildLabel(height, dto.ext, isAudioOnly)
 
+        val isVideoOnly = dto.vcodec != null && dto.vcodec != "none" &&
+            (dto.acodec == null || dto.acodec == "none")
+
         return VideoFormatOption(
             formatId = dto.formatId,
             label = label,
@@ -32,7 +35,7 @@ class ServerResponseMapper @Inject constructor() {
             ext = dto.ext,
             fileSizeBytes = dto.filesize,
             isAudioOnly = isAudioOnly,
-            isVideoOnly = false,
+            isVideoOnly = isVideoOnly,
             directDownloadUrl = dto.url,
         )
     }
@@ -44,8 +47,8 @@ class ServerResponseMapper @Inject constructor() {
         if (parts.size == 2) {
             return parts[1].toIntOrNull()
         }
-        // "1080p" -> 1080
-        return resolution.replace("p", "").toIntOrNull()
+        // "1080p", "144p60" -> 1080, 144
+        return Regex("""(\d+)p""").find(resolution)?.groupValues?.get(1)?.toIntOrNull()
     }
 
     private fun buildLabel(height: Int?, ext: String, isAudioOnly: Boolean): String {

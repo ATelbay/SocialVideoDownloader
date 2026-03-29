@@ -23,4 +23,6 @@ data class ServerFormatDto(
     val resolution: String? = null,
     val filesize: Long? = null,
     val url: String,
+    val vcodec: String? = null,
+    val acodec: String? = null,
 )

@@ -44,7 +44,9 @@ class FallbackVideoExtractorRepository @Inject constructor(
                 val safeTitle = request.videoTitle
                     .replace(Regex("[^a-zA-Z0-9._\\-]"), "_")
                     .take(200)
-                val ext = request.formatId.substringAfterLast('.', "mp4")
+                // TODO: add a dedicated `ext` field to DownloadRequest for reliable extension derivation
+                // formatLabel is built as "$ext audio", "${height}p $ext", or "$ext" — ext is the last word
+                val ext = request.formatLabel.trim().substringAfterLast(' ').takeIf { it.isNotEmpty() } ?: "mp4"
                 serverApi.downloadFile(
                     url = directUrl,
                     outputDir = outputDir,
