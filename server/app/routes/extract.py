@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from typing import Optional
 
 import yt_dlp
@@ -50,9 +51,12 @@ async def extract_video_info(
         "socket_timeout": 30,
     }
 
-    try:
+    def _extract():
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
+            return ydl.extract_info(url, download=False)
+
+    try:
+        info = await asyncio.to_thread(_extract)
     except yt_dlp.utils.DownloadError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except yt_dlp.utils.ExtractorError as exc:

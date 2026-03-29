@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import os
-import subprocess
 import sys
 import time
 from typing import Optional
@@ -17,13 +16,13 @@ router = APIRouter(tags=["health"])
 
 @router.get("/health")
 async def health():
-    result = subprocess.run(
-        [os.path.join(_venv_bin, "yt-dlp"), "--version"],
-        capture_output=True,
-        text=True,
-        timeout=5,
+    proc = await asyncio.create_subprocess_exec(
+        os.path.join(_venv_bin, "yt-dlp"), "--version",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.DEVNULL,
     )
-    ytdlp_version = result.stdout.strip() if result.returncode == 0 else "unknown"
+    stdout, _ = await proc.communicate()
+    ytdlp_version = stdout.decode().strip() if proc.returncode == 0 else "unknown"
     return {
         "status": "ok",
         "ytdlp_version": ytdlp_version,
@@ -50,14 +49,14 @@ async def update_ytdlp(x_api_key: Optional[str] = Header(default=None)):
 
     new_version = None
     if success:
-        version_result = subprocess.run(
-            [os.path.join(_venv_bin, "yt-dlp"), "--version"],
-            capture_output=True,
-            text=True,
-            timeout=5,
+        version_proc = await asyncio.create_subprocess_exec(
+            os.path.join(_venv_bin, "yt-dlp"), "--version",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL,
         )
-        if version_result.returncode == 0:
-            new_version = version_result.stdout.strip()
+        version_stdout, _ = await version_proc.communicate()
+        if version_proc.returncode == 0:
+            new_version = version_stdout.decode().strip()
 
     return {
         "success": success,
