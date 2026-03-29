@@ -11,9 +11,8 @@ apt-get install -y python3 python3-venv python3-pip
 # Create system user with no login shell
 useradd --system --no-create-home --shell /usr/sbin/nologin ytdlp || echo "User ytdlp already exists"
 
-# Create app directory and set ownership
+# Create app directory (owned by ubuntu for deploy access)
 mkdir -p /opt/ytdlp-api
-chown ytdlp:ytdlp /opt/ytdlp-api
 
 # Create default .env
 cat > /opt/ytdlp-api/.env << 'ENVEOF'
@@ -22,8 +21,7 @@ PORT=8000
 ALLOWED_ORIGINS=["*"]
 UPDATE_API_KEY=
 ENVEOF
-chown ytdlp:ytdlp /opt/ytdlp-api/.env
-chmod 600 /opt/ytdlp-api/.env
+chmod 644 /opt/ytdlp-api/.env
 
 # Create Python virtual environment
 python3 -m venv /opt/ytdlp-api/venv

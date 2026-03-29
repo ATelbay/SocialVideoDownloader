@@ -25,10 +25,14 @@ rsync -avz \
   -e "ssh -i $KEY_PATH" \
   server/deploy/ "$EC2_USER@$EC2_HOST:$REMOTE_DIR/deploy/"
 
-# Install dependencies and restart service
+# Install dependencies and restart service (skip on first deploy when venv doesn't exist)
 ssh -i "$KEY_PATH" "$EC2_USER@$EC2_HOST" \
-  "source $REMOTE_DIR/venv/bin/activate && \
-   pip install -r $REMOTE_DIR/requirements.txt && \
-   (sudo systemctl restart ytdlp-api 2>/dev/null || echo 'Service not installed yet — run setup.sh first')"
+  "if [ -d $REMOTE_DIR/venv ]; then \
+     source $REMOTE_DIR/venv/bin/activate && \
+     pip install -r $REMOTE_DIR/requirements.txt && \
+     (sudo systemctl restart ytdlp-api 2>/dev/null || echo 'Service not installed yet — run setup.sh first'); \
+   else \
+     echo 'No venv found — run setup.sh on the server first'; \
+   fi"
 
 echo "=== Deploy complete. ==="
