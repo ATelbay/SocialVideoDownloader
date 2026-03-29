@@ -2,6 +2,7 @@ plugins {
     id("svd.android.library")
     id("svd.android.hilt")
     id("svd.android.room")
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -17,6 +18,8 @@ dependencies {
     implementation(project(":core:domain"))
 
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.okhttp)
     implementation(libs.androidx.datastore.preferences)
 
     implementation(libs.youtubedl.android.library)

@@ -11,4 +11,5 @@ data class DownloadRequest(
     val totalBytes: Long? = null,
     val shareOnly: Boolean = false,
     val existingRecordId: Long? = null,
+    val directDownloadUrl: String? = null,
 )

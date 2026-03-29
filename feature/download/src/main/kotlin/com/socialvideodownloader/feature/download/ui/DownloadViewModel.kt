@@ -266,6 +266,7 @@ class DownloadViewModel @Inject constructor(
             totalBytes = selectedFormat.fileSizeBytes,
             shareOnly = shareOnly,
             existingRecordId = existingRecordId,
+            directDownloadUrl = selectedFormat.directDownloadUrl,
         )
 
         _uiState.value = DownloadUiState.Downloading(
@@ -292,6 +293,7 @@ class DownloadViewModel @Inject constructor(
             putExtra(DownloadService.EXTRA_FORMAT_LABEL, request.formatLabel)
             putExtra(DownloadService.EXTRA_IS_VIDEO_ONLY, request.isVideoOnly)
             putExtra(DownloadService.EXTRA_SHARE_ONLY, request.shareOnly)
+            request.directDownloadUrl?.let { putExtra(DownloadService.EXTRA_DIRECT_DOWNLOAD_URL, it) }
             request.existingRecordId?.let { putExtra(DownloadService.EXTRA_EXISTING_RECORD_ID, it) }
         }
         context.startForegroundService(serviceIntent)

@@ -8,4 +8,5 @@ data class VideoFormatOption(
     val fileSizeBytes: Long? = null,
     val isAudioOnly: Boolean,
     val isVideoOnly: Boolean,
+    val directDownloadUrl: String? = null,
 )
