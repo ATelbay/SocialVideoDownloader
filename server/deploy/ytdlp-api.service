@@ -1,0 +1,16 @@
+[Unit]
+Description=yt-dlp API Server
+After=network.target
+
+[Service]
+Type=simple
+User=ytdlp
+Group=ytdlp
+WorkingDirectory=/opt/ytdlp-api
+ExecStart=/opt/ytdlp-api/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
+Restart=always
+RestartSec=5
+EnvironmentFile=/opt/ytdlp-api/.env
+
+[Install]
+WantedBy=multi-user.target
