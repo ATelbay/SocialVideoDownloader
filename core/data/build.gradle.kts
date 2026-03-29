@@ -7,6 +7,12 @@ plugins {
 
 android {
     namespace = "com.socialvideodownloader.core.data"
+    buildFeatures {
+        buildConfig = true
+    }
+    defaultConfig {
+        buildConfigField("String", "YTDLP_SERVER_URL", "\"${project.findProperty("ytdlp.server.url") ?: "http://13.50.106.77:8000"}\"")
+    }
     testOptions {
         unitTests.all {
             it.useJUnitPlatform()
