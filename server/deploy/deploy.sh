@@ -8,6 +8,10 @@ REMOTE_DIR="/opt/ytdlp-api"
 
 echo "=== Deploying to EC2 $EC2_HOST ==="
 
+# Ensure remote directory exists
+ssh -i "$KEY_PATH" "$EC2_USER@$EC2_HOST" \
+  "sudo mkdir -p $REMOTE_DIR && sudo chown $EC2_USER:$EC2_USER $REMOTE_DIR"
+
 # Sync app code and requirements to remote
 rsync -avz --delete \
   -e "ssh -i $KEY_PATH" \
@@ -17,10 +21,14 @@ rsync -avz \
   -e "ssh -i $KEY_PATH" \
   server/requirements.txt "$EC2_USER@$EC2_HOST:$REMOTE_DIR/requirements.txt"
 
+rsync -avz \
+  -e "ssh -i $KEY_PATH" \
+  server/deploy/ "$EC2_USER@$EC2_HOST:$REMOTE_DIR/deploy/"
+
 # Install dependencies and restart service
 ssh -i "$KEY_PATH" "$EC2_USER@$EC2_HOST" \
   "source $REMOTE_DIR/venv/bin/activate && \
    pip install -r $REMOTE_DIR/requirements.txt && \
-   sudo systemctl restart ytdlp-api"
+   (sudo systemctl restart ytdlp-api 2>/dev/null || echo 'Service not installed yet — run setup.sh first')"
 
 echo "=== Deploy complete. ==="
