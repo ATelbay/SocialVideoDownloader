@@ -54,6 +54,13 @@ class DownloadService : Service() {
             ACTION_CANCEL_DOWNLOAD -> {
                 val requestId = intent.getStringExtra(EXTRA_REQUEST_ID) ?: return START_NOT_STICKY
                 cancelDownload(requestId)
+                // Safe to wipe the entire ytdl_downloads dir: downloads are processed serially
+                // (one active at a time via isProcessing), so cancelling the active download means
+                // no other download is currently writing to this directory. Queued downloads
+                // haven't started yet, and VideoExtractorRepositoryImpl wipes the dir before
+                // each new download begins anyway.
+                // TODO: if parallel downloads are ever supported, scope deletion to the specific
+                // download's files (requires yt-dlp output template to include requestId).
                 java.io.File(cacheDir, "ytdl_downloads").listFiles()?.forEach { it.deleteRecursively() }
                 stateHolder.update(DownloadServiceState.Cancelled(requestId))
                 stopIfQueueEmpty()
@@ -297,6 +304,7 @@ class DownloadService : Service() {
             isVideoOnly = intent.getBooleanExtra(EXTRA_IS_VIDEO_ONLY, false),
             shareOnly = intent.getBooleanExtra(EXTRA_SHARE_ONLY, false),
             existingRecordId = existingRecordId,
+            directDownloadUrl = intent.getStringExtra(EXTRA_DIRECT_DOWNLOAD_URL),
         )
     }
 
@@ -319,6 +327,7 @@ class DownloadService : Service() {
         const val EXTRA_FORMAT_LABEL = "extra_format_label"
         const val EXTRA_IS_VIDEO_ONLY = "extra_is_video_only"
         const val EXTRA_SHARE_ONLY = "extra_share_only"
+        const val EXTRA_DIRECT_DOWNLOAD_URL = "extra_direct_download_url"
         const val EXTRA_EXISTING_RECORD_ID = "extra_existing_record_id"
     }
 }

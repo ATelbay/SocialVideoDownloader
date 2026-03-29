@@ -1,7 +1,7 @@
 package com.socialvideodownloader.core.data.di
 
 import com.socialvideodownloader.core.data.local.MediaStoreRepositoryImpl
-import com.socialvideodownloader.core.data.remote.VideoExtractorRepositoryImpl
+import com.socialvideodownloader.core.data.remote.FallbackVideoExtractorRepository
 import com.socialvideodownloader.core.domain.repository.MediaStoreRepository
 import com.socialvideodownloader.core.domain.repository.VideoExtractorRepository
 import dagger.Binds
@@ -17,7 +17,7 @@ abstract class ExtractorModule {
     @Binds
     @Singleton
     abstract fun bindVideoExtractorRepository(
-        impl: VideoExtractorRepositoryImpl,
+        impl: FallbackVideoExtractorRepository,
     ): VideoExtractorRepository
 
     @Binds

@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.socialvideodownloader.core.domain.di.IoDispatcher
 import com.socialvideodownloader.core.domain.model.DownloadProgress
 import com.socialvideodownloader.core.domain.model.DownloadRequest
 import com.socialvideodownloader.core.domain.usecase.ExtractVideoInfoUseCase
@@ -19,8 +20,8 @@ import com.socialvideodownloader.feature.download.service.DownloadServiceState
 import com.socialvideodownloader.feature.download.service.DownloadServiceStateHolder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -40,6 +41,7 @@ class DownloadViewModel @Inject constructor(
     private val serviceStateHolder: DownloadServiceStateHolder,
     @ApplicationContext private val context: Context,
     private val savedStateHandle: SavedStateHandle,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<DownloadUiState>(DownloadUiState.Idle())
@@ -266,6 +268,7 @@ class DownloadViewModel @Inject constructor(
             totalBytes = selectedFormat.fileSizeBytes,
             shareOnly = shareOnly,
             existingRecordId = existingRecordId,
+            directDownloadUrl = selectedFormat.directDownloadUrl,
         )
 
         _uiState.value = DownloadUiState.Downloading(
@@ -292,6 +295,7 @@ class DownloadViewModel @Inject constructor(
             putExtra(DownloadService.EXTRA_FORMAT_LABEL, request.formatLabel)
             putExtra(DownloadService.EXTRA_IS_VIDEO_ONLY, request.isVideoOnly)
             putExtra(DownloadService.EXTRA_SHARE_ONLY, request.shareOnly)
+            request.directDownloadUrl?.let { putExtra(DownloadService.EXTRA_DIRECT_DOWNLOAD_URL, it) }
             request.existingRecordId?.let { putExtra(DownloadService.EXTRA_EXISTING_RECORD_ID, it) }
         }
         context.startForegroundService(serviceIntent)
@@ -386,7 +390,7 @@ class DownloadViewModel @Inject constructor(
         // Note: viewModelScope is cancelled by the time onCleared runs, so use a
         // standalone scope for fire-and-forget IO work.
         if (serviceStateHolder.state.value is DownloadServiceState.Idle) {
-            CoroutineScope(Dispatchers.IO).launch {
+            CoroutineScope(ioDispatcher).launch {
                 java.io.File(context.cacheDir, DownloadService.SHARE_TEMP_DIR).deleteRecursively()
             }
         }
