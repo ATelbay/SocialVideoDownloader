@@ -28,7 +28,7 @@ class ExtractResponse(BaseModel):
     formats: list[FormatInfo]
 
 
-@router.post("/extract", response_model=ExtractResponse)
+@router.post("", response_model=ExtractResponse)
 async def extract_video_info(request: ExtractRequest) -> ExtractResponse:
     url = request.url.strip() if request.url else ""
     if not url:
