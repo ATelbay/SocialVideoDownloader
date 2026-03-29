@@ -25,6 +25,39 @@
       work begins (currently says "Do NOT add authentication of any kind").
 -->
 
+<!--
+  SYNC IMPACT REPORT
+  ==================
+  Version change: 3.0.0 → 4.0.0
+  Modified principles:
+    - II. On-Device Architecture: Renamed to "On-Device Architecture (Android) /
+      Server-Mediated Architecture (iOS)". Added iOS-specific clause: iOS uses
+      the yt-dlp API server exclusively for extraction and download because
+      Apple §2.5.2 prohibits embedded interpreters. Android behaviour unchanged.
+    - III. Modern Android Stack: Broadened to "Modern Stack". iOS uses SwiftUI
+      (not Compose) and shared KMP modules use Koin (not Hilt). Both are
+      explicitly permitted alongside the existing Android-only stack.
+    - IV. Modular Separation: Expanded module list to include the new
+      :shared:network, :shared:data, :shared:feature-download,
+      :shared:feature-history, :shared:feature-library KMP modules with
+      commonMain/androidMain/iosMain source sets.
+    - VIII. Optional Cloud Features: Added Sign in with Apple as a permitted
+      authentication mechanism on iOS. App Store rules require it when any
+      third-party sign-in is offered. Google Sign-In remains the Android
+      mechanism; both are needed for cross-platform cloud identity.
+  Added sections: N/A
+  Removed sections: N/A
+  Templates requiring updates:
+    ✅ plan-template.md — "Constitution Check" is dynamic, no changes needed
+    ✅ spec-template.md — generic, compatible with new principles
+    ✅ tasks-template.md — generic, compatible with new principles
+  Follow-up TODOs:
+    - All specs touching shared KMP modules MUST verify Principle IV compliance
+      (new shared module structure).
+    - iOS feature specs MUST cite Principle II iOS clause justifying server use.
+    - Cloud features on iOS MUST use Sign in with Apple per Principle VIII.
+-->
+
 # Social Video Downloader Constitution
 
 ## Core Principles
@@ -44,40 +77,65 @@
   sites. Any data collection or monetization defeats the entire purpose. The
   Principle VIII exceptions are narrowly scoped to preserve this guarantee.
 
-### II. On-Device Architecture
+### II. On-Device Architecture (Android) / Server-Mediated Architecture (iOS)
 
-- All video extraction, parsing, and downloading MUST happen on the device.
-- The app MUST NOT depend on any backend service, API proxy, or cloud function
-  for its core download functionality.
-- yt-dlp (via youtubedl-android) is the sole extraction engine and runs locally.
-- FFmpeg and aria2c run as local binaries bundled with the app.
-- Rationale: no backend means zero hosting costs, zero downtime, and full
-  user control. yt-dlp's 1700+ site support makes a backend unnecessary.
+- **Android**: All video extraction, parsing, and downloading MUST happen on the
+  device. yt-dlp (via youtubedl-android) is the sole extraction engine and runs
+  locally. FFmpeg and aria2c run as local binaries bundled with the app.
+  The Android app MUST NOT depend on any backend service for its core download
+  functionality (server fallback is permitted but the on-device path is primary).
+- **iOS**: Video extraction and downloading are performed via the yt-dlp API server.
+  Apple §2.5.2 prohibits embedding interpreters or executing downloaded code, making
+  on-device yt-dlp execution impossible. The server is a thin, self-hosted wrapper
+  running the same open-source tool — there is no viable alternative.
+  The iOS app MUST NOT use any third-party hosted extraction service; only the
+  user's own server instance (or a trusted self-hosted instance) is permitted.
+- Rationale: On Android, no backend means zero hosting costs, zero downtime, and
+  full user control. On iOS, the server constraint is unavoidable due to platform
+  policy; the self-hosted requirement preserves privacy and user control.
 
-### III. Modern Android Stack (Compose + KSP + MVI)
+### III. Modern Stack (Android: Compose + KSP + MVI + Hilt | iOS: SwiftUI + KMP + Koin)
 
-- UI MUST be built exclusively with Jetpack Compose + Material 3.
+- **Android UI**: MUST be built exclusively with Jetpack Compose + Material 3.
   Dynamic Color is optional; a fixed branded palette is acceptable when
   design consistency across devices is required.
   XML layouts and Android View system are forbidden for new code.
-- Code generation MUST use KSP only. kapt is forbidden (build performance).
-- Fragments are forbidden. Navigation uses Compose Navigation with composable
-  destinations in a Single Activity architecture.
-- Architecture MUST follow MVI: ViewModel exposes a single `StateFlow<UiState>`,
-  receives a sealed `Intent`. UiState and Intent are always `sealed interface`.
-- DI MUST use Hilt with KSP annotation processing.
-- Language: Kotlin 2.0+ only. Java is forbidden for new code.
+- **iOS UI**: MUST be built with SwiftUI. UIKit is forbidden for new code.
+  iOS follows the same MVI-equivalent pattern: ObservableObject/StateFlow-backed
+  ViewModels expose state; views send intents/actions only.
+- **Android DI**: MUST use Hilt with KSP annotation processing.
+- **Shared KMP modules DI**: MUST use Koin (Hilt cannot run in commonMain).
+  Hilt and Koin coexist in the Android app via a bridge module.
+- **Android code generation**: MUST use KSP only. kapt is forbidden (build performance).
+- **Android navigation**: Fragments are forbidden. Uses Compose Navigation with
+  composable destinations in a Single Activity architecture.
+- **Architecture**: Shared KMP ViewModels (in :shared:feature-*) are the canonical
+  state machines. They expose `StateFlow<UiState>` and receive a sealed `Intent`.
+  Android Compose ViewModels delegate to the shared ViewModel.
+  iOS SwiftUI ViewModels wrap the shared ViewModel via SKIE-generated async sequences.
+  UiState and Intent are always `sealed interface` (Kotlin) / equivalent Swift enums.
+- **Language**: Kotlin 2.0+ for all Kotlin code (Android + shared). Swift 6.x for iOS.
+  Java is forbidden for new code.
 
 ### IV. Modular Separation
 
 - The codebase MUST follow the defined module structure:
-  `:app`, `:feature:download`, `:feature:history`,
-  `:core:domain`, `:core:data`, `:core:ui`.
-- Repository pattern: interfaces in `:core:domain`, implementations in `:core:data`.
+  - **Android app modules**: `:app`, `:feature:download`, `:feature:history`,
+    `:core:domain`, `:core:data`, `:core:ui`, `:core:cloud`, `:core:billing`
+  - **Shared KMP modules**: `:shared:network`, `:shared:data`,
+    `:shared:feature-download`, `:shared:feature-history`, `:shared:feature-library`
+  - **iOS app**: `iosApp/` (Swift, outside Gradle)
+- Shared KMP modules use `commonMain`/`androidMain`/`iosMain` source sets.
+  Android-specific code (Hilt, Compose, MediaStore) stays in androidMain or
+  existing Android modules. iOS-specific code goes in iosMain.
+- Repository pattern: interfaces in `:core:domain` (KMP), implementations split
+  between `:shared:data` (cross-platform logic) and `:core:data` (Android-specific).
 - Use cases MUST be single-purpose classes with `operator fun invoke()`.
 - Coroutine dispatchers MUST be injected, never hardcoded (`Dispatchers.IO`).
-- Feature modules MUST NOT define their own `NavHost`.
-- All user-facing strings MUST use string resources (no hardcoded text in composables).
+- Android feature modules MUST NOT define their own `NavHost`.
+- All user-facing strings MUST use platform string resources:
+  string resources on Android, Localizable.strings on iOS.
+  No hardcoded user-facing text in composables or SwiftUI views.
 
 ### V. Minimal Friction UX
 
@@ -123,10 +181,16 @@
 - All user data MUST be encrypted on-device before upload to any cloud
   service. The cloud provider MUST NOT have access to plaintext user data
   (zero-knowledge principle).
-- Authentication MUST use Google Sign-In via Credential Manager as the sole
-  permitted mechanism. This provides a stable identity that persists across
-  reinstalls and devices, making cloud backup actually recoverable. No email/
-  password auth, no custom OAuth flows.
+- Authentication for cloud features MUST use platform-appropriate sign-in:
+  - **Android**: Google Sign-In via Credential Manager. This provides a stable
+    identity that persists across reinstalls and devices, making cloud backup
+    actually recoverable.
+  - **iOS**: Sign in with Apple is REQUIRED alongside Google Sign-In. Apple App
+    Store Review requires Sign in with Apple when any third-party sign-in is
+    offered (App Store Review Guideline 4.8). Both mechanisms MUST be supported
+    on iOS so that users can choose, and so Android and iOS users can share cloud
+    history (Google identity bridges both platforms; Apple identity is iOS-only).
+  - No email/password auth, no custom OAuth flows on either platform.
 - Cloud features MUST degrade gracefully:
   - When the device is offline: silent no-op, no error UI.
   - When the user has disabled cloud features: no background network
@@ -134,7 +198,9 @@
   - When the cloud service is unavailable: local-first behavior continues
     uninterrupted.
 - Cloud features MUST NOT introduce mandatory backend dependencies.
-  The app's core download flow (Principle II) MUST remain fully on-device.
+  The Android app's core download flow (Principle II) MUST remain fully on-device.
+  The iOS server dependency (Principle II iOS clause) is pre-existing and separate
+  from cloud feature backend dependencies.
 - Rationale: cloud features add value (cross-device history, backup) but
   MUST NOT compromise the app's privacy-first, offline-first identity.
   Zero-knowledge encryption ensures that even if a cloud provider is
@@ -144,19 +210,25 @@
 
 ## Tech Stack & Constraints
 
-- **Language**: Kotlin 2.0+ (Java forbidden for new code)
-- **UI**: Jetpack Compose + Material 3
-- **Architecture**: MVI (`sealed interface` for State + Intent)
-- **DI**: Hilt with KSP
-- **Database**: Room with KSP (download history)
-- **Extraction**: youtubedl-android (yt-dlp) + FFmpeg + aria2c
-- **Images**: Coil (video thumbnails)
-- **Async**: Coroutines + StateFlow / SharedFlow
+- **Language (Android + shared)**: Kotlin 2.0+ (Java forbidden for new code)
+- **Language (iOS)**: Swift 6.x
+- **Android UI**: Jetpack Compose + Material 3
+- **iOS UI**: SwiftUI (iOS 16.0+)
+- **Architecture**: MVI (`sealed interface` for State + Intent in Kotlin; equivalent Swift enums on iOS)
+- **Android DI**: Hilt with KSP
+- **Shared KMP DI**: Koin 4.x
+- **Database**: Room KMP (shared schema in commonMain, platform builders in androidMain/iosMain)
+- **Networking (shared)**: Ktor 3.x (OkHttp engine on Android, Darwin engine on iOS)
+- **iOS↔KMP interop**: SKIE (StateFlow → AsyncSequence, sealed class → Swift enum)
+- **Extraction (Android)**: youtubedl-android (yt-dlp) + FFmpeg + aria2c (on-device)
+- **Extraction (iOS)**: yt-dlp API server (self-hosted, server-mediated)
+- **Images**: Coil (Android video thumbnails)
+- **Async**: Coroutines + StateFlow / SharedFlow (Kotlin); async/await + AsyncStream (Swift)
 - **Build**: Gradle KTS, version catalogs
-- **Min SDK**: 26 (Android 8.0) | **Target SDK**: 36 (Android 16)
-- **Naming**: `com.socialvideodownloader.{module}.{layer}` package convention
+- **Min SDK**: 26 (Android 8.0) | **Target SDK**: 36 (Android 16) | **iOS**: 16.0+
+- **Naming (Kotlin)**: `com.socialvideodownloader.{module}.{layer}` package convention
 - **Composables**: PascalCase with Screen/Content/Item suffix
-- **ViewModels**: `{Feature}ViewModel`
+- **ViewModels**: `{Feature}ViewModel` (Android wrapper), `Shared{Feature}ViewModel` (KMP)
 - **Use cases**: verb phrase (`ExtractVideoInfoUseCase`)
 - **State types**: `{Feature}UiState`, `{Feature}Intent`
 - **Room**: `{Name}Entity`, `{Name}Dao`, `AppDatabase`
@@ -191,4 +263,4 @@
   these principles. Violations MUST be flagged before merge.
 - Runtime development guidance lives in `AGENTS.md` for Codex and `.claude/CLAUDE.md` for Claude Code.
 
-**Version**: 3.0.0 | **Ratified**: 2026-03-14 | **Last Amended**: 2026-03-22
+**Version**: 4.0.0 | **Ratified**: 2026-03-14 | **Last Amended**: 2026-03-30
