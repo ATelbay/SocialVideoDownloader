@@ -10,14 +10,18 @@ import shared_feature_history
 final class HistoryViewModelWrapper: ObservableObject {
 
     @Published var state: HistoryUiState = HistoryUiState.Loading()
+    @Published var cloudState: CloudBackupState = CloudBackupState()
 
     let shared: SharedHistoryViewModel
     private var stateTask: Task<Void, Never>?
+    private var cloudStateTask: Task<Void, Never>?
     private var effectTask: Task<Void, Never>?
 
     // One-shot effects
     @Published var toastMessage: String? = nil
     @Published var retryUrl: String? = nil
+    @Published var showUpgradeSheet = false
+    @Published var showSignInSheet = false
 
     init() {
         shared = KoinViewModelFactory.makeHistoryViewModel()
@@ -26,6 +30,7 @@ final class HistoryViewModelWrapper: ObservableObject {
 
     deinit {
         stateTask?.cancel()
+        cloudStateTask?.cancel()
         effectTask?.cancel()
         shared.cleanup()
     }
@@ -37,6 +42,12 @@ final class HistoryViewModelWrapper: ObservableObject {
                 self.state = newState
             }
         }
+        cloudStateTask = Task { [weak self] in
+            guard let self else { return }
+            for await newCloudState in shared.cloudBackupState {
+                self.cloudState = newCloudState
+            }
+        }
         effectTask = Task { [weak self] in
             guard let self else { return }
             for await effect in shared.effect {
@@ -45,6 +56,10 @@ final class HistoryViewModelWrapper: ObservableObject {
                     self.toastMessage = showMessage.messageType.localizedString
                 case let retry as HistoryEffectRetryDownload:
                     self.retryUrl = retry.sourceUrl
+                case is HistoryEffectLaunchUpgradeFlow:
+                    self.showUpgradeSheet = true
+                case is HistoryEffectLaunchGoogleSignIn:
+                    self.showSignInSheet = true
                 default:
                     break
                 }
@@ -109,6 +124,17 @@ struct HistoryView: View {
                 viewModel.toastMessage = nil
             }
         }
+        .sheet(isPresented: $viewModel.showUpgradeSheet) {
+            UpgradeView(
+                onPurchase: {
+                    viewModel.send(HistoryIntentTapUpgrade())
+                },
+                onRestorePurchases: {
+                    // TODO: Add RestorePurchases intent to HistoryIntent when StoreKit is wired
+                },
+                onDismiss: { viewModel.showUpgradeSheet = false }
+            )
+        }
         .overlay(alignment: .bottom) {
             if showToast {
                 ToastBanner(message: currentToast)
@@ -158,32 +184,38 @@ struct HistoryView: View {
     // MARK: Empty
 
     private func emptyView(state: HistoryUiState.Empty) -> some View {
-        VStack(spacing: 16) {
-            Spacer()
-            Image(systemName: "clock")
-                .font(.system(size: 56))
-                .foregroundStyle(Color.svdOnSurfaceVariant)
-            if state.isFiltering {
-                Text("No results for "\(state.query)"")
-                    .font(SVDFont.headlineMedium())
-                    .foregroundColor(.svdOnSurface)
-                    .multilineTextAlignment(.center)
-                Text("Try a different search term.")
-                    .font(SVDFont.bodyMedium())
-                    .foregroundColor(.svdOnSurfaceVariant)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
-            } else {
-                Text("No downloads yet")
-                    .font(SVDFont.headlineMedium())
-                    .foregroundColor(.svdOnSurface)
-                Text("Your download history will appear here.")
-                    .font(SVDFont.bodyMedium())
-                    .foregroundColor(.svdOnSurfaceVariant)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
+        ScrollView {
+            VStack(spacing: 16) {
+                // Cloud backup section shown even when history is empty
+                cloudBackupSection
+                    .padding(.top, 8)
+
+                Spacer(minLength: 32)
+                Image(systemName: "clock")
+                    .font(.system(size: 56))
+                    .foregroundStyle(Color.svdOnSurfaceVariant)
+                if state.isFiltering {
+                    Text("No results for "\(state.query)"")
+                        .font(SVDFont.headlineMedium())
+                        .foregroundColor(.svdOnSurface)
+                        .multilineTextAlignment(.center)
+                    Text("Try a different search term.")
+                        .font(SVDFont.bodyMedium())
+                        .foregroundColor(.svdOnSurfaceVariant)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                } else {
+                    Text("No downloads yet")
+                        .font(SVDFont.headlineMedium())
+                        .foregroundColor(.svdOnSurface)
+                    Text("Your download history will appear here.")
+                        .font(SVDFont.bodyMedium())
+                        .foregroundColor(.svdOnSurfaceVariant)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                }
+                Spacer(minLength: 32)
             }
-            Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -203,6 +235,30 @@ struct HistoryView: View {
         ) {
             deleteAlert(confirmation: state.deleteConfirmation!)
         }
+    }
+
+    // MARK: Cloud backup section
+
+    private var cloudBackupSection: some View {
+        CloudBackupView(
+            cloudState: viewModel.cloudState,
+            cloudCapacity: nil, // CloudCapacity comes from HistoryUiState.Content.cloudCapacity
+            onToggleBackup: { viewModel.send(HistoryIntentToggleCloudBackup()) },
+            onSignOut: { viewModel.send(HistoryIntentSignOutCloud()) },
+            onRestore: { viewModel.send(HistoryIntentRestoreFromCloud()) },
+            onTapUpgrade: { viewModel.send(HistoryIntentTapUpgrade()) }
+        )
+    }
+
+    private func cloudBackupSectionWithCapacity(capacity: CloudCapacity?) -> some View {
+        CloudBackupView(
+            cloudState: viewModel.cloudState,
+            cloudCapacity: capacity,
+            onToggleBackup: { viewModel.send(HistoryIntentToggleCloudBackup()) },
+            onSignOut: { viewModel.send(HistoryIntentSignOutCloud()) },
+            onRestore: { viewModel.send(HistoryIntentRestoreFromCloud()) },
+            onTapUpgrade: { viewModel.send(HistoryIntentTapUpgrade()) }
+        )
     }
 
     // MARK: Search bar
@@ -240,6 +296,14 @@ struct HistoryView: View {
 
     private func itemList(state: HistoryUiState.Content) -> some View {
         List {
+            // Cloud backup section pinned at the top of the history list
+            Section {
+                cloudBackupSectionWithCapacity(capacity: state.cloudCapacity)
+                    .listRowBackground(Color.svdBg)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+            }
+
             ForEach(state.items, id: \.id) { item in
                 HistoryItemRow(
                     item: item,
