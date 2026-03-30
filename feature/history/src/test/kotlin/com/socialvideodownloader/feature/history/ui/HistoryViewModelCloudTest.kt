@@ -14,7 +14,6 @@ import com.socialvideodownloader.feature.history.testdouble.FakeDownloadReposito
 import com.socialvideodownloader.feature.history.testdouble.FakeHistoryFileManager
 import com.socialvideodownloader.feature.history.testutil.MainDispatcherRule
 import com.socialvideodownloader.shared.data.platform.PlatformClipboard
-import io.mockk.coAnswers
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -108,16 +107,15 @@ class HistoryViewModelCloudTest {
     }
 
     @Test
-    fun `ToggleCloudBackup when signed in and enabled calls DisableCloudBackupUseCase`() =
-        runTest {
-            every { cloudAuthService.isAuthenticated() } returns true
-            isBackupEnabledFlow.value = true
-            val vm = createViewModel()
+    fun `ToggleCloudBackup when signed in and enabled calls DisableCloudBackupUseCase`() = runTest {
+        every { cloudAuthService.isAuthenticated() } returns true
+        isBackupEnabledFlow.value = true
+        val vm = createViewModel()
 
-            vm.onIntent(HistoryIntent.ToggleCloudBackup)
+        vm.onIntent(HistoryIntent.ToggleCloudBackup)
 
-            coVerify { disableCloudBackupUseCase() }
-        }
+        coVerify { disableCloudBackupUseCase() }
+    }
 
     @Test
     fun `SignInWithGoogle calls enableCloudBackupUseCase with idToken`() = runTest {

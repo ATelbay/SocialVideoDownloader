@@ -1,12 +1,11 @@
 package com.socialvideodownloader.feature.library.ui
 
 import app.cash.turbine.test
-import com.socialvideodownloader.core.domain.model.LibraryItem
-import com.socialvideodownloader.feature.library.domain.ObserveLibraryItemsUseCase
+import com.socialvideodownloader.core.domain.model.DownloadRecord
+import com.socialvideodownloader.core.domain.model.DownloadStatus
+import com.socialvideodownloader.feature.library.testdouble.FakeDownloadRepository
+import com.socialvideodownloader.feature.library.testdouble.FakeFileAccessManager
 import com.socialvideodownloader.feature.library.testutil.MainDispatcherRule
-import io.mockk.every
-import io.mockk.mockk
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -19,40 +18,44 @@ class LibraryViewModelTest {
     @RegisterExtension
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val observeLibraryItems = mockk<ObserveLibraryItemsUseCase>()
+    private val repository = FakeDownloadRepository()
+    private val fileManager = FakeFileAccessManager()
     private lateinit var viewModel: LibraryViewModel
-
-    private fun libraryItem(
-        id: Long,
-        title: String = "Test Video",
-        contentUri: String = "content://media/$id",
-    ) = LibraryItem(
-        id = id,
-        title = title,
-        formatLabel = "1080p",
-        thumbnailUrl = null,
-        platformName = "YouTube",
-        completedAt = 1000L,
-        fileSizeBytes = 12345L,
-        contentUri = contentUri,
-    )
 
     @BeforeEach
     fun setup() {
-        every { observeLibraryItems() } returns flowOf(emptyList())
-        viewModel = LibraryViewModel(observeLibraryItems)
+        viewModel = LibraryViewModel(repository, fileManager)
     }
 
+    private suspend fun emitCompleted(records: List<DownloadRecord>) {
+        repository.recordsFlow.emit(records)
+    }
+
+    private fun completedRecord(
+        id: Long,
+        title: String = "Test Video",
+        contentUri: String = "content://media/$id",
+    ) = DownloadRecord(
+        id = id,
+        videoTitle = title,
+        sourceUrl = "https://youtube.com/watch?v=$id",
+        status = DownloadStatus.COMPLETED,
+        createdAt = 1000L,
+        fileSizeBytes = 12345L,
+        mediaStoreUri = contentUri,
+    )
+
     @Test
-    fun `initial state is Loading before use case emits`() = runTest {
-        every { observeLibraryItems() } returns kotlinx.coroutines.flow.flow { /* never emits */ }
-        val vm = LibraryViewModel(observeLibraryItems)
+    fun `initial state is Loading before repository emits`() = runTest {
+        val vm = LibraryViewModel(repository, fileManager)
         assertEquals(LibraryUiState.Loading, vm.uiState.value)
     }
 
     @Test
-    fun `when use case emits empty list state becomes Empty`() = runTest {
+    fun `when repository emits no completed records state becomes Empty`() = runTest {
         viewModel.uiState.test {
+            awaitItem() // Loading
+            emitCompleted(emptyList())
             val state = awaitItem()
             assertTrue(state is LibraryUiState.Empty)
             cancelAndIgnoreRemainingEvents()
@@ -60,12 +63,17 @@ class LibraryViewModelTest {
     }
 
     @Test
-    fun `when use case emits items state becomes Content`() = runTest {
-        val items = listOf(libraryItem(1L), libraryItem(2L))
-        every { observeLibraryItems() } returns flowOf(items)
-        val vm = LibraryViewModel(observeLibraryItems)
+    fun `when repository emits completed accessible records state becomes Content`() = runTest {
+        val records = listOf(
+            completedRecord(1L, contentUri = "content://media/1"),
+            completedRecord(2L, contentUri = "content://media/2"),
+        )
+        fileManager.resolveContentUriResult = { record -> record.mediaStoreUri }
+        fileManager.isFileAccessibleResult = { true }
 
-        vm.uiState.test {
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            emitCompleted(records)
             val state = awaitItem()
             assertTrue(state is LibraryUiState.Content)
             assertEquals(2, (state as LibraryUiState.Content).items.size)
@@ -74,15 +82,38 @@ class LibraryViewModelTest {
     }
 
     @Test
-    fun `ItemClicked emits OpenContent effect`() = runTest {
-        val item = libraryItem(id = 10L, contentUri = "content://media/10")
-        every { observeLibraryItems() } returns flowOf(listOf(item))
-        val vm = LibraryViewModel(observeLibraryItems)
+    fun `inaccessible files are excluded from Content`() = runTest {
+        val records = listOf(
+            completedRecord(1L, contentUri = "content://media/1"),
+            completedRecord(2L, contentUri = "content://media/2"),
+        )
+        fileManager.resolveContentUriResult = { record -> record.mediaStoreUri }
+        // Only record 1 is accessible
+        fileManager.isFileAccessibleResult = { uri -> uri == "content://media/1" }
 
-        vm.uiState.test {
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            emitCompleted(records)
+            val state = awaitItem()
+            assertTrue(state is LibraryUiState.Content)
+            assertEquals(1, (state as LibraryUiState.Content).items.size)
+            assertEquals(1L, state.items.first().id)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `ItemClicked emits OpenContent effect`() = runTest {
+        val record = completedRecord(id = 10L, contentUri = "content://media/10")
+        fileManager.resolveContentUriResult = { it.mediaStoreUri }
+        fileManager.isFileAccessibleResult = { true }
+
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            emitCompleted(listOf(record))
             awaitItem() // Content
-            vm.effect.test {
-                vm.onIntent(LibraryIntent.ItemClicked(10L))
+            viewModel.effect.test {
+                viewModel.onIntent(LibraryIntent.ItemClicked(10L))
                 val effect = awaitItem()
                 assertTrue(effect is LibraryEffect.OpenContent)
                 assertEquals("content://media/10", (effect as LibraryEffect.OpenContent).contentUri)
@@ -94,14 +125,16 @@ class LibraryViewModelTest {
 
     @Test
     fun `ItemLongPressed emits ShareContent effect`() = runTest {
-        val item = libraryItem(id = 20L, contentUri = "content://media/20")
-        every { observeLibraryItems() } returns flowOf(listOf(item))
-        val vm = LibraryViewModel(observeLibraryItems)
+        val record = completedRecord(id = 20L, contentUri = "content://media/20")
+        fileManager.resolveContentUriResult = { it.mediaStoreUri }
+        fileManager.isFileAccessibleResult = { true }
 
-        vm.uiState.test {
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            emitCompleted(listOf(record))
             awaitItem() // Content
-            vm.effect.test {
-                vm.onIntent(LibraryIntent.ItemLongPressed(20L))
+            viewModel.effect.test {
+                viewModel.onIntent(LibraryIntent.ItemLongPressed(20L))
                 val effect = awaitItem()
                 assertTrue(effect is LibraryEffect.ShareContent)
                 assertEquals("content://media/20", (effect as LibraryEffect.ShareContent).contentUri)
@@ -113,14 +146,16 @@ class LibraryViewModelTest {
 
     @Test
     fun `ItemClicked with unknown id emits ShowMessage`() = runTest {
-        val item = libraryItem(id = 1L)
-        every { observeLibraryItems() } returns flowOf(listOf(item))
-        val vm = LibraryViewModel(observeLibraryItems)
+        val record = completedRecord(id = 1L, contentUri = "content://media/1")
+        fileManager.resolveContentUriResult = { it.mediaStoreUri }
+        fileManager.isFileAccessibleResult = { true }
 
-        vm.uiState.test {
+        viewModel.uiState.test {
+            awaitItem() // Loading
+            emitCompleted(listOf(record))
             awaitItem() // Content
-            vm.effect.test {
-                vm.onIntent(LibraryIntent.ItemClicked(999L))
+            viewModel.effect.test {
+                viewModel.onIntent(LibraryIntent.ItemClicked(999L))
                 val effect = awaitItem()
                 assertTrue(effect is LibraryEffect.ShowMessage)
                 cancelAndIgnoreRemainingEvents()

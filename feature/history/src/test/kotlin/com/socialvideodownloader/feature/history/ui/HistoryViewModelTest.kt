@@ -194,7 +194,6 @@ class HistoryViewModelTest {
             id = 10L,
             title = "Accessible Video",
             status = DownloadStatus.COMPLETED,
-            accessible = true,
             contentUri = "content://media/external/video/10",
         )
         fileManager.resolveContentUriResult = { "content://media/external/video/10" }
@@ -262,7 +261,6 @@ class HistoryViewModelTest {
             id = 20L,
             title = "Share Video",
             status = DownloadStatus.COMPLETED,
-            accessible = true,
             contentUri = "content://media/external/video/20",
         )
         fileManager.resolveContentUriResult = { "content://media/external/video/20" }
