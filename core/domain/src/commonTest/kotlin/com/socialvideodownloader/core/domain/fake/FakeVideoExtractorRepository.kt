@@ -11,8 +11,7 @@ class FakeVideoExtractorRepository : VideoExtractorRepository {
     var lastDownloadCallback: ((Float, Long, String) -> Unit)? = null
     var cancelledProcessIds = mutableListOf<String>()
 
-    override suspend fun extractInfo(url: String): VideoMetadata =
-        extractInfoResult.getOrThrow()
+    override suspend fun extractInfo(url: String): VideoMetadata = extractInfoResult.getOrThrow()
 
     override suspend fun download(
         request: DownloadRequest,

@@ -1,7 +1,6 @@
 package com.socialvideodownloader.shared.data.platform
 
 import android.content.Context
-import android.content.Intent
 import com.socialvideodownloader.core.domain.model.DownloadRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,25 +21,26 @@ import kotlinx.coroutines.flow.asStateFlow
 class AndroidDownloadManager(
     private val context: Context,
 ) : PlatformDownloadManager {
-
     private val _downloadState = MutableStateFlow<DownloadServiceState>(DownloadServiceState.Idle)
     override val downloadState: StateFlow<DownloadServiceState> = _downloadState.asStateFlow()
 
     override val activeRequestId: String?
-        get() = when (val state = _downloadState.value) {
-            is DownloadServiceState.Queued -> state.requestId
-            is DownloadServiceState.Downloading -> state.requestId
-            else -> null
-        }
+        get() =
+            when (val state = _downloadState.value) {
+                is DownloadServiceState.Queued -> state.requestId
+                is DownloadServiceState.Downloading -> state.requestId
+                else -> null
+            }
 
     override suspend fun startDownload(request: DownloadRequest) {
         // TODO: Wire to DownloadService via startForegroundService Intent.
         // This will be connected in Phase 5 (T076) when DownloadViewModel
         // delegates to SharedDownloadViewModel which uses this manager.
-        _downloadState.value = DownloadServiceState.Queued(
-            requestId = request.id,
-            videoTitle = request.videoTitle,
-        )
+        _downloadState.value =
+            DownloadServiceState.Queued(
+                requestId = request.id,
+                videoTitle = request.videoTitle,
+            )
     }
 
     override fun cancelDownload(requestId: String) {

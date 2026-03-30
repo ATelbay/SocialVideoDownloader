@@ -1,11 +1,11 @@
 package com.socialvideodownloader.shared.data.platform
 
 import platform.Foundation.NSDocumentDirectory
+import platform.Foundation.NSError
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSURL
 import platform.Foundation.NSUserDomainMask
 import platform.Foundation.lastPathComponent
-import platform.Foundation.NSError
 
 private const val SVD_DIRECTORY = "SocialVideoDownloader"
 
@@ -18,7 +18,6 @@ private const val SVD_DIRECTORY = "SocialVideoDownloader"
  * [platformUri] is always null on iOS — sharing is done via file:// URLs.
  */
 class IosFileStorage : PlatformFileStorage {
-
     /**
      * Move a downloaded file from its temp location into the permanent
      * `Documents/SocialVideoDownloader/` directory.
@@ -39,6 +38,7 @@ class IosFileStorage : PlatformFileStorage {
         val fileManager = NSFileManager.defaultManager
 
         val error: NSError? = null
+
         @Suppress("UNCHECKED_CAST")
         val moved = fileManager.moveItemAtURL(sourceUrl, toURL = uniqueDestUrl, error = null)
         if (!moved) {
@@ -51,12 +51,14 @@ class IosFileStorage : PlatformFileStorage {
         }
 
         val filePath = uniqueDestUrl.path ?: throw StorageException("Destination path is nil")
-        val fileSize = fileManager.attributesOfItemAtPath(filePath, error = null)
-            ?.get("NSFileSize") as? Long ?: 0L
+        val fileSize =
+            fileManager.attributesOfItemAtPath(filePath, error = null)
+                ?.get("NSFileSize") as? Long ?: 0L
 
+        // iOS uses file:// URLs for sharing, not content:// URIs
         return SaveResult(
             filePath = filePath,
-            platformUri = null, // iOS uses file:// URLs for sharing, not content:// URIs
+            platformUri = null,
             fileSizeBytes = fileSize,
         )
     }
@@ -82,13 +84,14 @@ class IosFileStorage : PlatformFileStorage {
     // --- Helpers ---
 
     private fun svdDirectory(): NSURL? {
-        val docDir = NSFileManager.defaultManager.URLForDirectory(
-            directory = NSDocumentDirectory,
-            inDomain = NSUserDomainMask,
-            appropriateForURL = null,
-            create = true,
-            error = null,
-        ) ?: return null
+        val docDir =
+            NSFileManager.defaultManager.URLForDirectory(
+                directory = NSDocumentDirectory,
+                inDomain = NSUserDomainMask,
+                appropriateForURL = null,
+                create = true,
+                error = null,
+            ) ?: return null
         return docDir.URLByAppendingPathComponent(SVD_DIRECTORY)
     }
 

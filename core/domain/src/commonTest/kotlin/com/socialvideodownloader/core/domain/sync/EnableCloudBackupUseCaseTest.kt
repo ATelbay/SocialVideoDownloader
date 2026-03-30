@@ -58,13 +58,14 @@ class EnableCloudBackupUseCaseTest {
     fun firstEnableBackfillsExistingCompletedDownloads() =
         runTest {
             preferences.setHasEverEnabledState(false)
-            val record = DownloadRecord(
-                id = 1L,
-                sourceUrl = "https://example.com/video",
-                videoTitle = "Test",
-                status = DownloadStatus.COMPLETED,
-                createdAt = 1000L,
-            )
+            val record =
+                DownloadRecord(
+                    id = 1L,
+                    sourceUrl = "https://example.com/video",
+                    videoTitle = "Test",
+                    status = DownloadStatus.COMPLETED,
+                    createdAt = 1000L,
+                )
             downloadRepository.setRecords(listOf(record))
 
             useCase("test-id-token")

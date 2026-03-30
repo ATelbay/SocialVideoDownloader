@@ -49,7 +49,6 @@ class SharedHistoryViewModel(
     private val cloudAuthService: CloudAuthService,
     private val clipboard: PlatformClipboard,
 ) {
-
     private val _searchQuery = MutableStateFlow("")
     private val _openMenuItemId = MutableStateFlow<Long?>(null)
     private val _deleteConfirmation = MutableStateFlow<DeleteConfirmationState?>(null)
@@ -60,33 +59,35 @@ class SharedHistoryViewModel(
     private val _allItems = MutableStateFlow<List<HistoryItem>>(emptyList())
     private val _cloudCapacity = MutableStateFlow<com.socialvideodownloader.core.domain.sync.CloudCapacity?>(null)
     private val _isCloudBackupEnabled = MutableStateFlow(false)
-    private val _syncStatus = MutableStateFlow<com.socialvideodownloader.core.domain.model.SyncStatus>(
-        com.socialvideodownloader.core.domain.model.SyncStatus.Idle,
-    )
+    private val _syncStatus =
+        MutableStateFlow<com.socialvideodownloader.core.domain.model.SyncStatus>(
+            com.socialvideodownloader.core.domain.model.SyncStatus.Idle,
+        )
     private val _restoreState = MutableStateFlow<RestoreState>(RestoreState.Idle)
     private val _isSignedIn = MutableStateFlow(cloudAuthService.isAuthenticated())
     private val _isSigningIn = MutableStateFlow(false)
     private val _signInError = MutableStateFlow<String?>(null)
 
-    val cloudBackupState: StateFlow<CloudBackupState> = combine(
-        _isCloudBackupEnabled,
-        _syncStatus,
-        _restoreState,
-        _isSignedIn,
-        _isSigningIn,
-        _signInError,
-    ) { values ->
-        CloudBackupState(
-            isCloudBackupEnabled = values[0] as Boolean,
-            syncStatus = values[1] as com.socialvideodownloader.core.domain.model.SyncStatus,
-            restoreState = values[2] as RestoreState,
-            isSignedIn = values[3] as Boolean,
-            isSigningIn = values[4] as Boolean,
-            userName = if (values[3] as Boolean) cloudAuthService.getDisplayName() else null,
-            userPhotoUrl = if (values[3] as Boolean) cloudAuthService.getPhotoUrl() else null,
-            signInError = values[5] as String?,
-        )
-    }.stateIn(coroutineScope, SharingStarted.WhileSubscribed(5_000), CloudBackupState())
+    val cloudBackupState: StateFlow<CloudBackupState> =
+        combine(
+            _isCloudBackupEnabled,
+            _syncStatus,
+            _restoreState,
+            _isSignedIn,
+            _isSigningIn,
+            _signInError,
+        ) { values ->
+            CloudBackupState(
+                isCloudBackupEnabled = values[0] as Boolean,
+                syncStatus = values[1] as com.socialvideodownloader.core.domain.model.SyncStatus,
+                restoreState = values[2] as RestoreState,
+                isSignedIn = values[3] as Boolean,
+                isSigningIn = values[4] as Boolean,
+                userName = if (values[3] as Boolean) cloudAuthService.getDisplayName() else null,
+                userPhotoUrl = if (values[3] as Boolean) cloudAuthService.getPhotoUrl() else null,
+                signInError = values[5] as String?,
+            )
+        }.stateIn(coroutineScope, SharingStarted.WhileSubscribed(5_000), CloudBackupState())
 
     init {
         downloadRepository.getAll()
@@ -124,35 +125,37 @@ class SharedHistoryViewModel(
             .launchIn(coroutineScope)
     }
 
-    val uiState: StateFlow<HistoryUiState> = combine(
-        _allItems,
-        _searchQuery,
-        _openMenuItemId,
-        _deleteConfirmation,
-        _cloudCapacity,
-    ) { allItems, query, openMenuItemId, deleteConfirmation, cloudCapacity ->
-        val trimmedQuery = query.trim()
-        if (allItems.isEmpty()) {
-            HistoryUiState.Empty(query = trimmedQuery, isFiltering = false)
-        } else {
-            val filtered = if (trimmedQuery.isBlank()) {
-                allItems
+    val uiState: StateFlow<HistoryUiState> =
+        combine(
+            _allItems,
+            _searchQuery,
+            _openMenuItemId,
+            _deleteConfirmation,
+            _cloudCapacity,
+        ) { allItems, query, openMenuItemId, deleteConfirmation, cloudCapacity ->
+            val trimmedQuery = query.trim()
+            if (allItems.isEmpty()) {
+                HistoryUiState.Empty(query = trimmedQuery, isFiltering = false)
             } else {
-                allItems.filter { it.title.contains(trimmedQuery, ignoreCase = true) }
+                val filtered =
+                    if (trimmedQuery.isBlank()) {
+                        allItems
+                    } else {
+                        allItems.filter { it.title.contains(trimmedQuery, ignoreCase = true) }
+                    }
+                if (filtered.isEmpty()) {
+                    HistoryUiState.Empty(query = trimmedQuery, isFiltering = true)
+                } else {
+                    HistoryUiState.Content(
+                        query = trimmedQuery,
+                        items = filtered.map { it.toListItem() },
+                        openMenuItemId = openMenuItemId,
+                        deleteConfirmation = deleteConfirmation,
+                        cloudCapacity = cloudCapacity,
+                    )
+                }
             }
-            if (filtered.isEmpty()) {
-                HistoryUiState.Empty(query = trimmedQuery, isFiltering = true)
-            } else {
-                HistoryUiState.Content(
-                    query = trimmedQuery,
-                    items = filtered.map { it.toListItem() },
-                    openMenuItemId = openMenuItemId,
-                    deleteConfirmation = deleteConfirmation,
-                    cloudCapacity = cloudCapacity,
-                )
-            }
-        }
-    }.stateIn(coroutineScope, SharingStarted.WhileSubscribed(5_000), HistoryUiState.Loading)
+        }.stateIn(coroutineScope, SharingStarted.WhileSubscribed(5_000), HistoryUiState.Loading)
 
     fun onIntent(intent: HistoryIntent) {
         when (intent) {
@@ -180,15 +183,17 @@ class SharedHistoryViewModel(
     private fun handleRestoreFromCloud() {
         coroutineScope.launch {
             _restoreState.value = RestoreState.InProgress(current = 0, total = 0)
-            val result = restoreFromCloudUseCase { current, total ->
-                _restoreState.value = RestoreState.InProgress(current = current, total = total)
-            }
+            val result =
+                restoreFromCloudUseCase { current, total ->
+                    _restoreState.value = RestoreState.InProgress(current = current, total = total)
+                }
             val restoreError = result.error
-            _restoreState.value = if (restoreError != null) {
-                RestoreState.Error(restoreError)
-            } else {
-                RestoreState.Completed(restored = result.restored, skipped = result.skipped)
-            }
+            _restoreState.value =
+                if (restoreError != null) {
+                    RestoreState.Error(restoreError)
+                } else {
+                    RestoreState.Completed(restored = result.restored, skipped = result.skipped)
+                }
         }
     }
 
@@ -239,8 +244,9 @@ class SharedHistoryViewModel(
     }
 
     private fun handleItemClicked(itemId: Long) {
-        val item = (uiState.value as? HistoryUiState.Content)?.items?.find { it.id == itemId }
-            ?: return
+        val item =
+            (uiState.value as? HistoryUiState.Content)?.items?.find { it.id == itemId }
+                ?: return
         coroutineScope.launch {
             when {
                 item.status == DownloadStatus.FAILED ->
@@ -258,8 +264,9 @@ class SharedHistoryViewModel(
     }
 
     private fun handleShareClicked(itemId: Long) {
-        val item = (uiState.value as? HistoryUiState.Content)?.items?.find { it.id == itemId }
-            ?: return
+        val item =
+            (uiState.value as? HistoryUiState.Content)?.items?.find { it.id == itemId }
+                ?: return
         coroutineScope.launch {
             if (item.isFileAccessible) {
                 val uri = item.contentUri ?: return@launch
@@ -271,8 +278,9 @@ class SharedHistoryViewModel(
     }
 
     private fun handleCopyLinkClicked(itemId: Long) {
-        val item = (uiState.value as? HistoryUiState.Content)?.items?.find { it.id == itemId }
-            ?: return
+        val item =
+            (uiState.value as? HistoryUiState.Content)?.items?.find { it.id == itemId }
+                ?: return
         clipboard.copyToClipboard(item.sourceUrl)
         coroutineScope.launch {
             _effect.emit(HistoryEffect.ShowMessage(HistoryMessageType.COPY_URL_SUCCESS))
@@ -281,11 +289,12 @@ class SharedHistoryViewModel(
 
     private fun handleDeleteItemClicked(itemId: Long) {
         val item = _allItems.value.find { it.id == itemId } ?: return
-        _deleteConfirmation.value = DeleteConfirmationState(
-            target = DeleteTarget.Single(itemId),
-            hasAnyAccessibleFile = item.isFileAccessible,
-            affectedCount = 1,
-        )
+        _deleteConfirmation.value =
+            DeleteConfirmationState(
+                target = DeleteTarget.Single(itemId),
+                hasAnyAccessibleFile = item.isFileAccessible,
+                affectedCount = 1,
+            )
     }
 
     private fun handleDeleteFilesSelectionChanged(selected: Boolean) {
@@ -298,10 +307,11 @@ class SharedHistoryViewModel(
         coroutineScope.launch {
             when (val target = confirmation.target) {
                 is DeleteTarget.Single -> {
-                    val result = deleteHistoryItemUseCase(
-                        target.itemId,
-                        confirmation.deleteFilesSelected,
-                    )
+                    val result =
+                        deleteHistoryItemUseCase(
+                            target.itemId,
+                            confirmation.deleteFilesSelected,
+                        )
                     if (result.fileDeleteFailed) {
                         _effect.emit(HistoryEffect.ShowMessage(HistoryMessageType.DELETE_FILE_FAILED))
                     }
@@ -316,16 +326,17 @@ class SharedHistoryViewModel(
         coroutineScope.cancel()
     }
 
-    private fun HistoryItem.toListItem() = HistoryListItem(
-        id = id,
-        title = title,
-        formatLabel = formatLabel,
-        thumbnailUrl = thumbnailUrl,
-        sourceUrl = sourceUrl,
-        status = status,
-        createdAt = createdAt,
-        fileSizeBytes = fileSizeBytes,
-        contentUri = contentUri,
-        isFileAccessible = isFileAccessible,
-    )
+    private fun HistoryItem.toListItem() =
+        HistoryListItem(
+            id = id,
+            title = title,
+            formatLabel = formatLabel,
+            thumbnailUrl = thumbnailUrl,
+            sourceUrl = sourceUrl,
+            status = status,
+            createdAt = createdAt,
+            fileSizeBytes = fileSizeBytes,
+            contentUri = contentUri,
+            isFileAccessible = isFileAccessible,
+        )
 }

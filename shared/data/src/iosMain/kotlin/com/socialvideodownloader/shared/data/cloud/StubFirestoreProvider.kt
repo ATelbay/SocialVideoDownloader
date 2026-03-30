@@ -10,7 +10,6 @@ package com.socialvideodownloader.shared.data.cloud
  * once Firebase is integrated via CocoaPods.
  */
 class StubFirestoreProvider : PlatformFirestoreProvider {
-
     override suspend fun setDocument(
         collectionPath: String,
         documentId: String,

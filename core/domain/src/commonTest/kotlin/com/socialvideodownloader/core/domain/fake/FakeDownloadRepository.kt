@@ -23,8 +23,7 @@ class FakeDownloadRepository : DownloadRepository {
             list.filter { it.status == com.socialvideodownloader.core.domain.model.DownloadStatus.COMPLETED }
         }
 
-    override suspend fun getById(id: Long): DownloadRecord? =
-        records.value.firstOrNull { it.id == id }
+    override suspend fun getById(id: Long): DownloadRecord? = records.value.firstOrNull { it.id == id }
 
     override suspend fun getCompletedSnapshot(): List<DownloadRecord> =
         records.value.filter { it.status == com.socialvideodownloader.core.domain.model.DownloadStatus.COMPLETED }

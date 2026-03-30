@@ -10,23 +10,23 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class DownloadMapperTest {
-
     @Test
     fun entityToDomainMapsAllFields() {
-        val entity = DownloadEntity(
-            id = 42,
-            sourceUrl = "https://youtube.com/watch?v=abc",
-            videoTitle = "Test Video",
-            thumbnailUrl = "https://img.youtube.com/vi/abc/0.jpg",
-            formatLabel = "1080p mp4",
-            filePath = "/storage/downloads/test.mp4",
-            mediaStoreUri = "content://media/external/downloads/123",
-            status = "COMPLETED",
-            createdAt = 1000L,
-            completedAt = 2000L,
-            fileSizeBytes = 5_000_000L,
-            syncStatus = "SYNCED",
-        )
+        val entity =
+            DownloadEntity(
+                id = 42,
+                sourceUrl = "https://youtube.com/watch?v=abc",
+                videoTitle = "Test Video",
+                thumbnailUrl = "https://img.youtube.com/vi/abc/0.jpg",
+                formatLabel = "1080p mp4",
+                filePath = "/storage/downloads/test.mp4",
+                mediaStoreUri = "content://media/external/downloads/123",
+                status = "COMPLETED",
+                createdAt = 1000L,
+                completedAt = 2000L,
+                fileSizeBytes = 5_000_000L,
+                syncStatus = "SYNCED",
+            )
 
         val record = entity.toDomain()
 
@@ -46,17 +46,18 @@ class DownloadMapperTest {
 
     @Test
     fun entityToDomainFallsBackToFailedForUnknownStatus() {
-        val entity = DownloadEntity(
-            id = 1,
-            sourceUrl = "https://example.com",
-            videoTitle = "Test",
-            thumbnailUrl = null,
-            filePath = null,
-            status = "INVALID_STATUS",
-            createdAt = 1000L,
-            completedAt = null,
-            fileSizeBytes = null,
-        )
+        val entity =
+            DownloadEntity(
+                id = 1,
+                sourceUrl = "https://example.com",
+                videoTitle = "Test",
+                thumbnailUrl = null,
+                filePath = null,
+                status = "INVALID_STATUS",
+                createdAt = 1000L,
+                completedAt = null,
+                fileSizeBytes = null,
+            )
 
         val record = entity.toDomain()
         assertEquals(DownloadStatus.FAILED, record.status)
@@ -64,20 +65,21 @@ class DownloadMapperTest {
 
     @Test
     fun domainToEntityMapsAllFields() {
-        val record = DownloadRecord(
-            id = 7,
-            sourceUrl = "https://instagram.com/reel/xyz",
-            videoTitle = "Reel",
-            thumbnailUrl = null,
-            formatLabel = "720p mp4",
-            filePath = null,
-            mediaStoreUri = null,
-            status = DownloadStatus.DOWNLOADING,
-            createdAt = 3000L,
-            completedAt = null,
-            fileSizeBytes = null,
-            syncStatus = "NOT_SYNCED",
-        )
+        val record =
+            DownloadRecord(
+                id = 7,
+                sourceUrl = "https://instagram.com/reel/xyz",
+                videoTitle = "Reel",
+                thumbnailUrl = null,
+                formatLabel = "720p mp4",
+                filePath = null,
+                mediaStoreUri = null,
+                status = DownloadStatus.DOWNLOADING,
+                createdAt = 3000L,
+                completedAt = null,
+                fileSizeBytes = null,
+                syncStatus = "NOT_SYNCED",
+            )
 
         val entity = record.toEntity()
 
@@ -97,20 +99,21 @@ class DownloadMapperTest {
 
     @Test
     fun roundTripPreservesData() {
-        val original = DownloadRecord(
-            id = 99,
-            sourceUrl = "https://tiktok.com/@user/video/123",
-            videoTitle = "TikTok Video",
-            thumbnailUrl = "https://p16.tiktokcdn.com/img.jpg",
-            formatLabel = "best",
-            filePath = "/downloads/tiktok.mp4",
-            mediaStoreUri = "content://media/123",
-            status = DownloadStatus.COMPLETED,
-            createdAt = 100L,
-            completedAt = 200L,
-            fileSizeBytes = 1_000_000L,
-            syncStatus = "PENDING_UPLOAD",
-        )
+        val original =
+            DownloadRecord(
+                id = 99,
+                sourceUrl = "https://tiktok.com/@user/video/123",
+                videoTitle = "TikTok Video",
+                thumbnailUrl = "https://p16.tiktokcdn.com/img.jpg",
+                formatLabel = "best",
+                filePath = "/downloads/tiktok.mp4",
+                mediaStoreUri = "content://media/123",
+                status = DownloadStatus.COMPLETED,
+                createdAt = 100L,
+                completedAt = 200L,
+                fileSizeBytes = 1_000_000L,
+                syncStatus = "PENDING_UPLOAD",
+            )
 
         val roundTripped = original.toEntity().toDomain()
 

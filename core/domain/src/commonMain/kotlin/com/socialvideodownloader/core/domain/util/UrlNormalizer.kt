@@ -38,8 +38,9 @@ object UrlNormalizer {
                         key !in youtubeTrackingParams && !key.startsWith("utm_")
                     }?.takeIf { it.isNotEmpty() }
                 val queryStr = if (keptParams != null) "&${keptParams.joinToString("&")}" else ""
-                val rebuilt = parseUrl("https://www.youtube.com/watch?v=$videoId$queryStr")
-                    ?: return trimmed
+                val rebuilt =
+                    parseUrl("https://www.youtube.com/watch?v=$videoId$queryStr")
+                        ?: return trimmed
                 scheme = rebuilt.scheme
                 host = rebuilt.host
                 port = rebuilt.port
@@ -132,11 +133,12 @@ object UrlNormalizer {
             val bracketEnd = authority.indexOf(']')
             if (bracketEnd < 0) return null
             host = authority.substring(0, bracketEnd + 1)
-            port = if (bracketEnd + 1 < authority.length && authority[bracketEnd + 1] == ':') {
-                authority.substring(bracketEnd + 2)
-            } else {
-                null
-            }
+            port =
+                if (bracketEnd + 1 < authority.length && authority[bracketEnd + 1] == ':') {
+                    authority.substring(bracketEnd + 2)
+                } else {
+                    null
+                }
         } else {
             val colonIdx = authority.indexOf(':')
             if (colonIdx >= 0) {

@@ -16,22 +16,23 @@ import org.koin.dsl.module
  * Platform-specific dependencies (database builder, platform abstractions)
  * are provided by [AndroidDataModule] or [IosDataModule].
  */
-val sharedDataModule = module {
+val sharedDataModule =
+    module {
 
-    single<AppDatabase> {
-        createDatabaseBuilder()
-            .addMigrations(*ALL_MIGRATIONS)
-            .build()
+        single<AppDatabase> {
+            createDatabaseBuilder()
+                .addMigrations(*ALL_MIGRATIONS)
+                .build()
+        }
+
+        single<DownloadDao> { get<AppDatabase>().downloadDao() }
+
+        single<SyncQueueDao> { get<AppDatabase>().syncQueueDao() }
+
+        single<DownloadRepositoryImpl> { DownloadRepositoryImpl(get()) }
+
+        // Bind the shared DownloadRepositoryImpl as the DownloadRepository interface.
+        // On Android, the Hilt bridge may override this with the sync-aware wrapper
+        // from core/data if cloud backup is needed.
+        single<DownloadRepository> { get<DownloadRepositoryImpl>() }
     }
-
-    single<DownloadDao> { get<AppDatabase>().downloadDao() }
-
-    single<SyncQueueDao> { get<AppDatabase>().syncQueueDao() }
-
-    single<DownloadRepositoryImpl> { DownloadRepositoryImpl(get()) }
-
-    // Bind the shared DownloadRepositoryImpl as the DownloadRepository interface.
-    // On Android, the Hilt bridge may override this with the sync-aware wrapper
-    // from core/data if cloud backup is needed.
-    single<DownloadRepository> { get<DownloadRepositoryImpl>() }
-}

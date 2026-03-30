@@ -19,7 +19,6 @@ import platform.Foundation.NSURLSessionConfiguration
 import platform.Foundation.NSURLSessionDownloadDelegateProtocol
 import platform.Foundation.NSURLSessionDownloadTask
 import platform.Foundation.NSURLSessionTask
-import platform.Foundation.NSURLSessionTaskStateCanceling
 import platform.Foundation.NSUserDomainMask
 import platform.darwin.NSObject
 
@@ -37,7 +36,6 @@ private const val SVD_DIRECTORY = "SocialVideoDownloader"
  */
 @OptIn(ExperimentalForeignApi::class)
 class IosDownloadManager : PlatformDownloadManager {
-
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     private val _downloadState = MutableStateFlow<DownloadServiceState>(DownloadServiceState.Idle)
@@ -54,9 +52,10 @@ class IosDownloadManager : PlatformDownloadManager {
 
     private val delegate = DownloadSessionDelegate()
     private val session: NSURLSession by lazy {
-        val config = NSURLSessionConfiguration.backgroundSessionConfigurationWithIdentifier(
-            BACKGROUND_SESSION_ID,
-        )
+        val config =
+            NSURLSessionConfiguration.backgroundSessionConfigurationWithIdentifier(
+                BACKGROUND_SESSION_ID,
+            )
         config.timeoutIntervalForRequest = 30.0
         config.timeoutIntervalForResource = 3600.0 // 1 hour for large videos
         NSURLSession.sessionWithConfiguration(config, delegate = delegate, delegateQueue = null)
@@ -65,27 +64,31 @@ class IosDownloadManager : PlatformDownloadManager {
     init {
         delegate.onProgress = { taskId, bytesWritten, totalWritten, totalExpected ->
             val request = taskRequests[taskId] ?: return@onProgress
-            val progress = if (totalExpected > 0) {
-                totalWritten.toFloat() / totalExpected.toFloat()
-            } else {
-                -1f
-            }
+            val progress =
+                if (totalExpected > 0) {
+                    totalWritten.toFloat() / totalExpected.toFloat()
+                } else {
+                    -1f
+                }
             val speedBytesPerSec = bytesWritten // crude approximation per callback
-            _downloadState.value = DownloadServiceState.Downloading(
-                requestId = request.id,
-                progress = DownloadProgress(
+            _downloadState.value =
+                DownloadServiceState.Downloading(
                     requestId = request.id,
-                    progressPercent = progress.coerceIn(0f, 1f),
-                    downloadedBytes = totalWritten,
-                    totalBytes = if (totalExpected > 0) totalExpected else null,
-                    speedBytesPerSec = speedBytesPerSec,
-                    etaSeconds = if (totalExpected > 0 && speedBytesPerSec > 0) {
-                        (totalExpected - totalWritten) / speedBytesPerSec
-                    } else {
-                        0L
-                    },
-                ),
-            )
+                    progress =
+                        DownloadProgress(
+                            requestId = request.id,
+                            progressPercent = progress.coerceIn(0f, 1f),
+                            downloadedBytes = totalWritten,
+                            totalBytes = if (totalExpected > 0) totalExpected else null,
+                            speedBytesPerSec = speedBytesPerSec,
+                            etaSeconds =
+                                if (totalExpected > 0 && speedBytesPerSec > 0) {
+                                    (totalExpected - totalWritten) / speedBytesPerSec
+                                } else {
+                                    0L
+                                },
+                        ),
+                )
         }
 
         delegate.onCompleted = { taskId, tempUrl ->
@@ -96,16 +99,18 @@ class IosDownloadManager : PlatformDownloadManager {
             scope.launch {
                 try {
                     val destPath = moveToDownloads(tempUrl, request.videoTitle, request.formatId)
-                    _downloadState.value = DownloadServiceState.Completed(
-                        requestId = request.id,
-                        filePath = destPath,
-                        fileUri = null,
-                    )
+                    _downloadState.value =
+                        DownloadServiceState.Completed(
+                            requestId = request.id,
+                            filePath = destPath,
+                            fileUri = null,
+                        )
                 } catch (e: Exception) {
-                    _downloadState.value = DownloadServiceState.Failed(
-                        requestId = request.id,
-                        error = DownloadErrorType.STORAGE_FULL,
-                    )
+                    _downloadState.value =
+                        DownloadServiceState.Failed(
+                            requestId = request.id,
+                            error = DownloadErrorType.STORAGE_FULL,
+                        )
                 }
             }
         }
@@ -115,31 +120,35 @@ class IosDownloadManager : PlatformDownloadManager {
             activeTasks.remove(request.id)
             if (activeRequestId == request.id) activeRequestId = null
 
-            val errorType = when {
-                error?.code?.toInt() == -999 -> {
-                    // NSURLErrorCancelled — task was cancelled intentionally
-                    _downloadState.value = DownloadServiceState.Cancelled(requestId = request.id)
-                    return@onFailed
+            val errorType =
+                when {
+                    error?.code?.toInt() == -999 -> {
+                        // NSURLErrorCancelled — task was cancelled intentionally
+                        _downloadState.value = DownloadServiceState.Cancelled(requestId = request.id)
+                        return@onFailed
+                    }
+                    (error?.code?.toInt() ?: 0) in -1009..-1000 -> DownloadErrorType.NETWORK_ERROR
+                    else -> DownloadErrorType.DOWNLOAD_FAILED
                 }
-                (error?.code?.toInt() ?: 0) in -1009..-1000 -> DownloadErrorType.NETWORK_ERROR
-                else -> DownloadErrorType.DOWNLOAD_FAILED
-            }
-            _downloadState.value = DownloadServiceState.Failed(
-                requestId = request.id,
-                error = errorType,
-            )
+            _downloadState.value =
+                DownloadServiceState.Failed(
+                    requestId = request.id,
+                    error = errorType,
+                )
         }
     }
 
     override suspend fun startDownload(request: DownloadRequest) {
-        val downloadUrl = request.directDownloadUrl
-            ?: throw IllegalStateException(
-                "IosDownloadManager requires a directDownloadUrl. " +
-                    "Ensure the server provides download URLs in the extract response.",
-            )
+        val downloadUrl =
+            request.directDownloadUrl
+                ?: throw IllegalStateException(
+                    "IosDownloadManager requires a directDownloadUrl. " +
+                        "Ensure the server provides download URLs in the extract response.",
+                )
 
-        val url = NSURL.URLWithString(downloadUrl)
-            ?: throw IllegalStateException("Invalid download URL: $downloadUrl")
+        val url =
+            NSURL.URLWithString(downloadUrl)
+                ?: throw IllegalStateException("Invalid download URL: $downloadUrl")
 
         val task = session.downloadTaskWithURL(url)
         val taskId = task.taskIdentifier.toLong()
@@ -148,10 +157,11 @@ class IosDownloadManager : PlatformDownloadManager {
         taskRequests[taskId] = request
         activeRequestId = request.id
 
-        _downloadState.value = DownloadServiceState.Queued(
-            requestId = request.id,
-            videoTitle = request.videoTitle,
-        )
+        _downloadState.value =
+            DownloadServiceState.Queued(
+                requestId = request.id,
+                videoTitle = request.videoTitle,
+            )
 
         task.resume()
     }
@@ -164,18 +174,26 @@ class IosDownloadManager : PlatformDownloadManager {
 
     // --- File helpers ---
 
-    private fun moveToDownloads(tempUrl: NSURL, videoTitle: String, formatId: String): String {
-        val destDir = svdDirectory()
-            ?: throw StorageException("Cannot resolve Documents directory")
+    private fun moveToDownloads(
+        tempUrl: NSURL,
+        videoTitle: String,
+        formatId: String,
+    ): String {
+        val destDir =
+            svdDirectory()
+                ?: throw StorageException("Cannot resolve Documents directory")
 
         ensureDirectory(destDir)
 
         val safeTitle = sanitizeFileName(videoTitle).take(100)
         val ext = formatId.substringAfterLast('.', "mp4")
         val fileName = "$safeTitle.$ext"
-        val destUrl = (destDir.URLByAppendingPathComponent(fileName)
-            ?: throw StorageException("Cannot build destination URL"))
-            .let { uniqueUrl(it) }
+        val destUrl =
+            (
+                destDir.URLByAppendingPathComponent(fileName)
+                    ?: throw StorageException("Cannot build destination URL")
+            )
+                .let { uniqueUrl(it) }
 
         val fileManager = NSFileManager.defaultManager
         val moved = fileManager.moveItemAtURL(tempUrl, toURL = destUrl, error = null)
@@ -189,13 +207,14 @@ class IosDownloadManager : PlatformDownloadManager {
     }
 
     private fun svdDirectory(): NSURL? {
-        val docDir = NSFileManager.defaultManager.URLForDirectory(
-            directory = NSDocumentDirectory,
-            inDomain = NSUserDomainMask,
-            appropriateForURL = null,
-            create = true,
-            error = null,
-        ) ?: return null
+        val docDir =
+            NSFileManager.defaultManager.URLForDirectory(
+                directory = NSDocumentDirectory,
+                inDomain = NSUserDomainMask,
+                appropriateForURL = null,
+                create = true,
+                error = null,
+            ) ?: return null
         return docDir.URLByAppendingPathComponent(SVD_DIRECTORY)
     }
 
@@ -241,7 +260,6 @@ class IosDownloadManager : PlatformDownloadManager {
  */
 @OptIn(ExperimentalForeignApi::class)
 private class DownloadSessionDelegate : NSObject(), NSURLSessionDownloadDelegateProtocol {
-
     var onProgress: ((taskId: Long, bytesWritten: Long, totalWritten: Long, totalExpected: Long) -> Unit)? = null
     var onCompleted: ((taskId: Long, location: NSURL) -> Unit)? = null
     var onFailed: ((taskId: Long, error: NSError?) -> Unit)? = null

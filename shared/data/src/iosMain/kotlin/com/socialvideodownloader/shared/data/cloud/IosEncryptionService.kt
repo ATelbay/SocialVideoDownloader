@@ -22,7 +22,6 @@ import com.socialvideodownloader.core.domain.sync.EncryptionService
  *   - decrypt: AES-GCM decrypt, then deserialize JSON bytes to DownloadRecord
  */
 class IosEncryptionService : EncryptionService {
-
     /**
      * Stub: converts the record to a UTF-8 JSON byte array without encryption.
      *
@@ -77,22 +76,23 @@ class IosEncryptionService : EncryptionService {
     // Private helpers: minimal JSON serialization (matches IosCloudBackupRepository format)
     // ---------------------------------------------------------------------------
 
-    private fun serializeToJson(record: DownloadRecord): String = buildString {
-        append("{")
-        append("\"id\":${record.id},")
-        append("\"sourceUrl\":\"${record.sourceUrl.escapeJson()}\",")
-        append("\"videoTitle\":\"${record.videoTitle.escapeJson()}\",")
-        append("\"thumbnailUrl\":${record.thumbnailUrl?.let { "\"${it.escapeJson()}\"" } ?: "null"},")
-        append("\"formatLabel\":\"${record.formatLabel.escapeJson()}\",")
-        append("\"filePath\":\"${record.filePath.escapeJson()}\",")
-        append("\"mediaStoreUri\":${record.mediaStoreUri?.let { "\"${it.escapeJson()}\"" } ?: "null"},")
-        append("\"status\":\"${record.status.name}\",")
-        append("\"createdAt\":${record.createdAt},")
-        append("\"completedAt\":${record.completedAt ?: "null"},")
-        append("\"fileSizeBytes\":${record.fileSizeBytes ?: "null"},")
-        append("\"syncStatus\":\"${record.syncStatus.name}\"")
-        append("}")
-    }
+    private fun serializeToJson(record: DownloadRecord): String =
+        buildString {
+            append("{")
+            append("\"id\":${record.id},")
+            append("\"sourceUrl\":\"${record.sourceUrl.escapeJson()}\",")
+            append("\"videoTitle\":\"${record.videoTitle.escapeJson()}\",")
+            append("\"thumbnailUrl\":${record.thumbnailUrl?.let { "\"${it.escapeJson()}\"" } ?: "null"},")
+            append("\"formatLabel\":\"${record.formatLabel.escapeJson()}\",")
+            append("\"filePath\":\"${record.filePath.escapeJson()}\",")
+            append("\"mediaStoreUri\":${record.mediaStoreUri?.let { "\"${it.escapeJson()}\"" } ?: "null"},")
+            append("\"status\":\"${record.status.name}\",")
+            append("\"createdAt\":${record.createdAt},")
+            append("\"completedAt\":${record.completedAt ?: "null"},")
+            append("\"fileSizeBytes\":${record.fileSizeBytes ?: "null"},")
+            append("\"syncStatus\":\"${record.syncStatus.name}\"")
+            append("}")
+        }
 
     private fun deserializeFromJson(json: String): DownloadRecord? {
         return try {
@@ -104,9 +104,10 @@ class IosEncryptionService : EncryptionService {
                 formatLabel = extractString(json, "formatLabel") ?: "",
                 filePath = extractString(json, "filePath") ?: "",
                 mediaStoreUri = extractString(json, "mediaStoreUri"),
-                status = DownloadStatus.valueOf(
-                    extractString(json, "status") ?: DownloadStatus.COMPLETED.name,
-                ),
+                status =
+                    DownloadStatus.valueOf(
+                        extractString(json, "status") ?: DownloadStatus.COMPLETED.name,
+                    ),
                 createdAt = extractLong(json, "createdAt") ?: 0L,
                 completedAt = extractLong(json, "completedAt"),
                 fileSizeBytes = extractLong(json, "fileSizeBytes"),
@@ -117,11 +118,15 @@ class IosEncryptionService : EncryptionService {
         }
     }
 
-    private fun extractString(json: String, key: String): String? =
-        Regex("\"$key\":\"([^\"]*)\"").find(json)?.groupValues?.get(1)
+    private fun extractString(
+        json: String,
+        key: String,
+    ): String? = Regex("\"$key\":\"([^\"]*)\"").find(json)?.groupValues?.get(1)
 
-    private fun extractLong(json: String, key: String): Long? =
-        Regex("\"$key\":(\\d+)").find(json)?.groupValues?.get(1)?.toLongOrNull()
+    private fun extractLong(
+        json: String,
+        key: String,
+    ): Long? = Regex("\"$key\":(\\d+)").find(json)?.groupValues?.get(1)?.toLongOrNull()
 
     private fun String.escapeJson() = replace("\\", "\\\\").replace("\"", "\\\"")
 }

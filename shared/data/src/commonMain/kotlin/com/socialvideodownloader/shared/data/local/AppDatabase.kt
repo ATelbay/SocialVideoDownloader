@@ -13,6 +13,7 @@ import androidx.room.RoomDatabaseConstructor
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun downloadDao(): DownloadDao
+
     abstract fun syncQueueDao(): SyncQueueDao
 }
 

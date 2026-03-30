@@ -26,30 +26,31 @@ import org.koin.dsl.module
  * val vm = getKoin().get<SharedHistoryViewModel> { parametersOf(myScope) }
  * ```
  */
-val sharedHistoryModule = module {
+val sharedHistoryModule =
+    module {
 
-    factory {
-        DeleteHistoryItemUseCaseShared(
-            repository = get<DownloadRepository>(),
-            fileManager = get<FileAccessManager>(),
-        )
-    }
+        factory {
+            DeleteHistoryItemUseCaseShared(
+                repository = get<DownloadRepository>(),
+                fileManager = get<FileAccessManager>(),
+            )
+        }
 
-    factory { (scope: CoroutineScope) ->
-        SharedHistoryViewModel(
-            coroutineScope = scope,
-            downloadRepository = get<DownloadRepository>(),
-            fileManager = get<FileAccessManager>(),
-            deleteHistoryItemUseCase = get<DeleteHistoryItemUseCaseShared>(),
-            observeCloudCapacity = get<ObserveCloudCapacityUseCase>(),
-            billingRepository = get<BillingRepository>(),
-            enableCloudBackupUseCase = get<EnableCloudBackupUseCase>(),
-            disableCloudBackupUseCase = get<DisableCloudBackupUseCase>(),
-            syncManager = get<SyncManager>(),
-            backupPreferences = get<BackupPreferences>(),
-            restoreFromCloudUseCase = get<RestoreFromCloudUseCase>(),
-            cloudAuthService = get<CloudAuthService>(),
-            clipboard = get<PlatformClipboard>(),
-        )
+        factory { (scope: CoroutineScope) ->
+            SharedHistoryViewModel(
+                coroutineScope = scope,
+                downloadRepository = get<DownloadRepository>(),
+                fileManager = get<FileAccessManager>(),
+                deleteHistoryItemUseCase = get<DeleteHistoryItemUseCaseShared>(),
+                observeCloudCapacity = get<ObserveCloudCapacityUseCase>(),
+                billingRepository = get<BillingRepository>(),
+                enableCloudBackupUseCase = get<EnableCloudBackupUseCase>(),
+                disableCloudBackupUseCase = get<DisableCloudBackupUseCase>(),
+                syncManager = get<SyncManager>(),
+                backupPreferences = get<BackupPreferences>(),
+                restoreFromCloudUseCase = get<RestoreFromCloudUseCase>(),
+                cloudAuthService = get<CloudAuthService>(),
+                clipboard = get<PlatformClipboard>(),
+            )
+        }
     }
-}

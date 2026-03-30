@@ -5,8 +5,9 @@ import com.socialvideodownloader.shared.network.ServerVideoExtractorApi
 import com.socialvideodownloader.shared.network.createHttpClient
 import org.koin.dsl.module
 
-val networkModule = module {
-    single { createHttpClient() }
-    single { ServerResponseMapper() }
-    single { ServerVideoExtractorApi(get(), get()) }
-}
+val networkModule =
+    module {
+        single { createHttpClient() }
+        single { ServerResponseMapper() }
+        single { ServerVideoExtractorApi(get(), get()) }
+    }

@@ -9,20 +9,20 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class ServerResponseMapperTest {
-
     private val mapper = ServerResponseMapper()
 
     private val sourceUrl = "https://youtube.com/watch?v=test"
 
     @Test
     fun mapToMetadata_mapsBasicFields_correctly() {
-        val response = ServerExtractResponse(
-            title = "My Video",
-            thumbnail = "https://example.com/thumb.jpg",
-            duration = 300.0,
-            uploader = "MyChannel",
-            formats = emptyList(),
-        )
+        val response =
+            ServerExtractResponse(
+                title = "My Video",
+                thumbnail = "https://example.com/thumb.jpg",
+                duration = 300.0,
+                uploader = "MyChannel",
+                formats = emptyList(),
+            )
 
         val metadata = mapper.mapToMetadata(response, sourceUrl)
 
@@ -34,13 +34,14 @@ class ServerResponseMapperTest {
 
     @Test
     fun mapToMetadata_handlesNullOptionalFields() {
-        val response = ServerExtractResponse(
-            title = "No Extras",
-            thumbnail = null,
-            duration = null,
-            uploader = null,
-            formats = emptyList(),
-        )
+        val response =
+            ServerExtractResponse(
+                title = "No Extras",
+                thumbnail = null,
+                duration = null,
+                uploader = null,
+                formats = emptyList(),
+            )
 
         val metadata = mapper.mapToMetadata(response, sourceUrl)
 
@@ -50,13 +51,14 @@ class ServerResponseMapperTest {
 
     @Test
     fun mapToMetadata_roundsFloatDuration() {
-        val response = ServerExtractResponse(
-            title = "Test",
-            thumbnail = null,
-            duration = 123.7,
-            uploader = null,
-            formats = emptyList(),
-        )
+        val response =
+            ServerExtractResponse(
+                title = "Test",
+                thumbnail = null,
+                duration = 123.7,
+                uploader = null,
+                formats = emptyList(),
+            )
 
         val metadata = mapper.mapToMetadata(response, sourceUrl)
 
@@ -65,23 +67,25 @@ class ServerResponseMapperTest {
 
     @Test
     fun mapFormat_detectsVideoWithAudio_correctly() {
-        val response = ServerExtractResponse(
-            title = "Test",
-            thumbnail = null,
-            duration = null,
-            uploader = null,
-            formats = listOf(
-                ServerFormatDto(
-                    formatId = "22",
-                    ext = "mp4",
-                    resolution = "1280x720",
-                    filesize = 20_000_000L,
-                    url = "https://example.com/v.mp4",
-                    vcodec = "avc1",
-                    acodec = "mp4a",
-                ),
-            ),
-        )
+        val response =
+            ServerExtractResponse(
+                title = "Test",
+                thumbnail = null,
+                duration = null,
+                uploader = null,
+                formats =
+                    listOf(
+                        ServerFormatDto(
+                            formatId = "22",
+                            ext = "mp4",
+                            resolution = "1280x720",
+                            filesize = 20_000_000L,
+                            url = "https://example.com/v.mp4",
+                            vcodec = "avc1",
+                            acodec = "mp4a",
+                        ),
+                    ),
+            )
 
         val metadata = mapper.mapToMetadata(response, sourceUrl)
 
@@ -95,23 +99,25 @@ class ServerResponseMapperTest {
 
     @Test
     fun mapFormat_detectsVideoOnly_whenAcodecIsNone() {
-        val response = ServerExtractResponse(
-            title = "Test",
-            thumbnail = null,
-            duration = null,
-            uploader = null,
-            formats = listOf(
-                ServerFormatDto(
-                    formatId = "137",
-                    ext = "mp4",
-                    resolution = "1920x1080",
-                    filesize = null,
-                    url = "https://example.com/v.mp4",
-                    vcodec = "avc1",
-                    acodec = "none",
-                ),
-            ),
-        )
+        val response =
+            ServerExtractResponse(
+                title = "Test",
+                thumbnail = null,
+                duration = null,
+                uploader = null,
+                formats =
+                    listOf(
+                        ServerFormatDto(
+                            formatId = "137",
+                            ext = "mp4",
+                            resolution = "1920x1080",
+                            filesize = null,
+                            url = "https://example.com/v.mp4",
+                            vcodec = "avc1",
+                            acodec = "none",
+                        ),
+                    ),
+            )
 
         val metadata = mapper.mapToMetadata(response, sourceUrl)
 
@@ -122,23 +128,25 @@ class ServerResponseMapperTest {
 
     @Test
     fun mapFormat_detectsAudioOnly_byExtension() {
-        val response = ServerExtractResponse(
-            title = "Test",
-            thumbnail = null,
-            duration = null,
-            uploader = null,
-            formats = listOf(
-                ServerFormatDto(
-                    formatId = "140",
-                    ext = "m4a",
-                    resolution = null,
-                    filesize = 3_000_000L,
-                    url = "https://example.com/a.m4a",
-                    vcodec = null,
-                    acodec = "mp4a",
-                ),
-            ),
-        )
+        val response =
+            ServerExtractResponse(
+                title = "Test",
+                thumbnail = null,
+                duration = null,
+                uploader = null,
+                formats =
+                    listOf(
+                        ServerFormatDto(
+                            formatId = "140",
+                            ext = "m4a",
+                            resolution = null,
+                            filesize = 3_000_000L,
+                            url = "https://example.com/a.m4a",
+                            vcodec = null,
+                            acodec = "mp4a",
+                        ),
+                    ),
+            )
 
         val metadata = mapper.mapToMetadata(response, sourceUrl)
 
@@ -149,23 +157,25 @@ class ServerResponseMapperTest {
 
     @Test
     fun mapFormat_parsesResolutionCorrectly_fromWidthxHeight() {
-        val response = ServerExtractResponse(
-            title = "Test",
-            thumbnail = null,
-            duration = null,
-            uploader = null,
-            formats = listOf(
-                ServerFormatDto(
-                    formatId = "22",
-                    ext = "mp4",
-                    resolution = "1920x1080",
-                    filesize = null,
-                    url = "https://example.com/v.mp4",
-                    vcodec = "avc1",
-                    acodec = "mp4a",
-                ),
-            ),
-        )
+        val response =
+            ServerExtractResponse(
+                title = "Test",
+                thumbnail = null,
+                duration = null,
+                uploader = null,
+                formats =
+                    listOf(
+                        ServerFormatDto(
+                            formatId = "22",
+                            ext = "mp4",
+                            resolution = "1920x1080",
+                            filesize = null,
+                            url = "https://example.com/v.mp4",
+                            vcodec = "avc1",
+                            acodec = "mp4a",
+                        ),
+                    ),
+            )
 
         val metadata = mapper.mapToMetadata(response, sourceUrl)
 
@@ -176,23 +186,25 @@ class ServerResponseMapperTest {
 
     @Test
     fun mapFormat_parsesResolutionCorrectly_fromPFormat() {
-        val response = ServerExtractResponse(
-            title = "Test",
-            thumbnail = null,
-            duration = null,
-            uploader = null,
-            formats = listOf(
-                ServerFormatDto(
-                    formatId = "22",
-                    ext = "webm",
-                    resolution = "720p",
-                    filesize = null,
-                    url = "https://example.com/v.webm",
-                    vcodec = "vp9",
-                    acodec = "opus",
-                ),
-            ),
-        )
+        val response =
+            ServerExtractResponse(
+                title = "Test",
+                thumbnail = null,
+                duration = null,
+                uploader = null,
+                formats =
+                    listOf(
+                        ServerFormatDto(
+                            formatId = "22",
+                            ext = "webm",
+                            resolution = "720p",
+                            filesize = null,
+                            url = "https://example.com/v.webm",
+                            vcodec = "vp9",
+                            acodec = "opus",
+                        ),
+                    ),
+            )
 
         val metadata = mapper.mapToMetadata(response, sourceUrl)
 
@@ -203,23 +215,25 @@ class ServerResponseMapperTest {
 
     @Test
     fun mapFormat_buildsAudioLabel_forAudioOnlyFormats() {
-        val response = ServerExtractResponse(
-            title = "Test",
-            thumbnail = null,
-            duration = null,
-            uploader = null,
-            formats = listOf(
-                ServerFormatDto(
-                    formatId = "140",
-                    ext = "m4a",
-                    resolution = null,
-                    filesize = null,
-                    url = "https://example.com/a.m4a",
-                    vcodec = "none",
-                    acodec = "mp4a",
-                ),
-            ),
-        )
+        val response =
+            ServerExtractResponse(
+                title = "Test",
+                thumbnail = null,
+                duration = null,
+                uploader = null,
+                formats =
+                    listOf(
+                        ServerFormatDto(
+                            formatId = "140",
+                            ext = "m4a",
+                            resolution = null,
+                            filesize = null,
+                            url = "https://example.com/a.m4a",
+                            vcodec = "none",
+                            acodec = "mp4a",
+                        ),
+                    ),
+            )
 
         val metadata = mapper.mapToMetadata(response, sourceUrl)
 
@@ -230,23 +244,25 @@ class ServerResponseMapperTest {
     @Test
     fun mapFormat_setsDirectDownloadUrl_fromDtoUrl() {
         val url = "https://cdn.example.com/video.mp4?token=abc"
-        val response = ServerExtractResponse(
-            title = "Test",
-            thumbnail = null,
-            duration = null,
-            uploader = null,
-            formats = listOf(
-                ServerFormatDto(
-                    formatId = "22",
-                    ext = "mp4",
-                    resolution = null,
-                    filesize = null,
-                    url = url,
-                    vcodec = "avc1",
-                    acodec = "mp4a",
-                ),
-            ),
-        )
+        val response =
+            ServerExtractResponse(
+                title = "Test",
+                thumbnail = null,
+                duration = null,
+                uploader = null,
+                formats =
+                    listOf(
+                        ServerFormatDto(
+                            formatId = "22",
+                            ext = "mp4",
+                            resolution = null,
+                            filesize = null,
+                            url = url,
+                            vcodec = "avc1",
+                            acodec = "mp4a",
+                        ),
+                    ),
+            )
 
         val metadata = mapper.mapToMetadata(response, sourceUrl)
 
@@ -255,13 +271,14 @@ class ServerResponseMapperTest {
 
     @Test
     fun mapToMetadata_handlesEmptyFormats() {
-        val response = ServerExtractResponse(
-            title = "Test",
-            thumbnail = null,
-            duration = null,
-            uploader = null,
-            formats = emptyList(),
-        )
+        val response =
+            ServerExtractResponse(
+                title = "Test",
+                thumbnail = null,
+                duration = null,
+                uploader = null,
+                formats = emptyList(),
+            )
 
         val metadata = mapper.mapToMetadata(response, sourceUrl)
 

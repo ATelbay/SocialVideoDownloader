@@ -6,18 +6,19 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
-actual fun createHttpClient(): HttpClient = HttpClient(Darwin) {
-    engine {
-        configureRequest {
-            setTimeoutInterval(ServerConfig.readTimeoutSeconds.toDouble())
+actual fun createHttpClient(): HttpClient =
+    HttpClient(Darwin) {
+        engine {
+            configureRequest {
+                setTimeoutInterval(ServerConfig.readTimeoutSeconds.toDouble())
+            }
+        }
+        install(ContentNegotiation) {
+            json(
+                Json {
+                    ignoreUnknownKeys = true
+                    isLenient = true
+                },
+            )
         }
     }
-    install(ContentNegotiation) {
-        json(
-            Json {
-                ignoreUnknownKeys = true
-                isLenient = true
-            },
-        )
-    }
-}

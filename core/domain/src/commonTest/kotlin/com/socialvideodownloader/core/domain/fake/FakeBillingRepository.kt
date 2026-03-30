@@ -13,6 +13,5 @@ class FakeBillingRepository : BillingRepository {
 
     override suspend fun restorePurchases(): CloudTier = tierFlow.value
 
-    override suspend fun launchPurchaseFlow(activityRef: Any): BillingResult =
-        BillingResult.Success
+    override suspend fun launchPurchaseFlow(activityRef: Any): BillingResult = BillingResult.Success
 }

@@ -46,7 +46,6 @@ import com.socialvideodownloader.core.domain.repository.BillingResult
  * TODO: Implement in Swift and register in KoinHelper.
  */
 interface PlatformBillingProvider {
-
     /**
      * Returns the current [CloudTier] based on active in-app purchases.
      * Checks StoreKit 2 Transaction.currentEntitlements for an active subscription.

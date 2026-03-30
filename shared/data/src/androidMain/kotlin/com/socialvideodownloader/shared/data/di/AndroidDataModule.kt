@@ -17,21 +17,21 @@ import org.koin.dsl.module
  * Requires androidContext to be set before this module is loaded.
  * This is handled by KoinInitializer in the app module.
  */
-val androidDataModule = module {
+val androidDataModule =
+    module {
+        single<PlatformDownloadManager> {
+            AndroidDownloadManager(context = androidContext)
+        }
 
-    single<PlatformDownloadManager> {
-        AndroidDownloadManager(context = androidContext)
-    }
+        single<PlatformFileStorage> {
+            AndroidFileStorage(context = androidContext)
+        }
 
-    single<PlatformFileStorage> {
-        AndroidFileStorage(context = androidContext)
-    }
+        single<PlatformClipboard> {
+            AndroidClipboard(context = androidContext)
+        }
 
-    single<PlatformClipboard> {
-        AndroidClipboard(context = androidContext)
+        single<PlatformStringProvider> {
+            AndroidStringProvider(context = androidContext)
+        }
     }
-
-    single<PlatformStringProvider> {
-        AndroidStringProvider(context = androidContext)
-    }
-}

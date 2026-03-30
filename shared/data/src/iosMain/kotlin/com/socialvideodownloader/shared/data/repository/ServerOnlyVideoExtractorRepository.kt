@@ -14,7 +14,6 @@ import com.socialvideodownloader.shared.network.ServerVideoExtractorApi
 class ServerOnlyVideoExtractorRepository(
     private val serverApi: ServerVideoExtractorApi,
 ) : VideoExtractorRepository {
-
     override suspend fun extractInfo(url: String): VideoMetadata {
         return serverApi.extractInfo(url)
     }
@@ -23,11 +22,12 @@ class ServerOnlyVideoExtractorRepository(
         request: DownloadRequest,
         callback: (Float, Long, String) -> Unit,
     ): String {
-        val downloadUrl = request.directDownloadUrl
-            ?: throw IllegalStateException(
-                "iOS downloads require a directDownloadUrl from the server. " +
-                    "Extract info first to obtain format-specific download URLs.",
-            )
+        val downloadUrl =
+            request.directDownloadUrl
+                ?: throw IllegalStateException(
+                    "iOS downloads require a directDownloadUrl from the server. " +
+                        "Extract info first to obtain format-specific download URLs.",
+                )
 
         return serverApi.downloadFile(
             url = downloadUrl,

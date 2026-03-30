@@ -12,7 +12,6 @@ import android.content.Context
 class AndroidClipboard(
     private val context: Context,
 ) : PlatformClipboard {
-
     override fun copyToClipboard(text: String) {
         val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText("url", text)

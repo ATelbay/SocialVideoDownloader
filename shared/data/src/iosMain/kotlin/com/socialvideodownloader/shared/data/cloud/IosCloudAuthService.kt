@@ -22,7 +22,6 @@ import com.socialvideodownloader.core.domain.sync.CloudAuthService
 class IosCloudAuthService(
     private val platformAuthProvider: PlatformAuthProvider,
 ) : CloudAuthService {
-
     /**
      * Sign in with a Google ID token. The token is obtained on the Swift side using
      * the Google Sign-In SDK for iOS, then passed here to authenticate with Firebase.

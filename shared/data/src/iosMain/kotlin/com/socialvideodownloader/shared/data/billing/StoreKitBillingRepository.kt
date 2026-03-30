@@ -28,7 +28,6 @@ import kotlinx.coroutines.flow.asStateFlow
 class StoreKitBillingRepository(
     private val billingProvider: PlatformBillingProvider,
 ) : BillingRepository {
-
     private val _currentTier = MutableStateFlow<CloudTier>(CloudTier.FREE)
 
     /**

@@ -13,7 +13,6 @@ import com.socialvideodownloader.core.domain.repository.BillingResult
  * when the App Store Connect products are configured.
  */
 class StubBillingProvider : PlatformBillingProvider {
-
     override suspend fun getCurrentTier(): CloudTier = CloudTier.FREE
 
     override suspend fun purchase(): BillingResult =

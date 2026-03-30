@@ -2,7 +2,9 @@ package com.socialvideodownloader.shared.feature.library
 
 sealed interface LibraryUiState {
     data object Loading : LibraryUiState
+
     data object Empty : LibraryUiState
+
     data class Content(val items: List<LibraryListItem>) : LibraryUiState
 }
 

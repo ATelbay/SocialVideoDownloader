@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 class IosBackupPreferences(
     private val settings: Settings,
 ) : BackupPreferences {
-
     companion object {
         private const val KEY_IS_BACKUP_ENABLED = "cloud_backup_is_enabled"
         private const val KEY_LAST_SYNC_TIMESTAMP = "cloud_backup_last_sync_ts"
@@ -26,19 +25,20 @@ class IosBackupPreferences(
 
     // MutableStateFlows used as hot sources to bridge Settings (not natively reactive) to Flow.
     // Updated every time a setting is written.
-    private val _isBackupEnabled = MutableStateFlow(
-        settings.getBoolean(KEY_IS_BACKUP_ENABLED, defaultValue = false),
-    )
-    private val _lastSyncTimestamp = MutableStateFlow(
-        settings.getLong(KEY_LAST_SYNC_TIMESTAMP, defaultValue = 0L),
-    )
+    private val _isBackupEnabled =
+        MutableStateFlow(
+            settings.getBoolean(KEY_IS_BACKUP_ENABLED, defaultValue = false),
+        )
+    private val _lastSyncTimestamp =
+        MutableStateFlow(
+            settings.getLong(KEY_LAST_SYNC_TIMESTAMP, defaultValue = 0L),
+        )
 
     override fun observeIsBackupEnabled(): Flow<Boolean> = _isBackupEnabled
 
     override fun observeLastSyncTimestamp(): Flow<Long> = _lastSyncTimestamp
 
-    override suspend fun hasEverEnabled(): Boolean =
-        settings.getBoolean(KEY_HAS_EVER_ENABLED, defaultValue = false)
+    override suspend fun hasEverEnabled(): Boolean = settings.getBoolean(KEY_HAS_EVER_ENABLED, defaultValue = false)
 
     override suspend fun setBackupEnabled(enabled: Boolean) {
         settings.putBoolean(KEY_IS_BACKUP_ENABLED, enabled)

@@ -7,11 +7,9 @@ class FakeFileAccessManager : FileAccessManager {
     var contentUriMap = mutableMapOf<Long, String?>()
     var accessibleUris = mutableSetOf<String>()
 
-    override suspend fun resolveContentUri(record: DownloadRecord): String? =
-        contentUriMap[record.id]
+    override suspend fun resolveContentUri(record: DownloadRecord): String? = contentUriMap[record.id]
 
-    override suspend fun isFileAccessible(contentUri: String): Boolean =
-        contentUri in accessibleUris
+    override suspend fun isFileAccessible(contentUri: String): Boolean = contentUri in accessibleUris
 
     override suspend fun deleteFile(contentUri: String): Boolean {
         accessibleUris.remove(contentUri)

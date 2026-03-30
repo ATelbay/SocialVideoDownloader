@@ -27,7 +27,6 @@ class IosCloudBackupRepository(
     private val firestoreProvider: PlatformFirestoreProvider,
     private val encryptionService: EncryptionService,
 ) : CloudBackupRepository {
-
     companion object {
         private const val META_DOC_ID = "meta"
         private const val META_FIELD_COUNT = "record_count"
@@ -36,14 +35,16 @@ class IosCloudBackupRepository(
     }
 
     private fun downloadsPath(): String {
-        val uid = firestoreProvider.currentUid()
-            ?: throw IllegalStateException("User not authenticated — cannot access cloud backup")
+        val uid =
+            firestoreProvider.currentUid()
+                ?: throw IllegalStateException("User not authenticated — cannot access cloud backup")
         return "users/$uid/downloads"
     }
 
     private fun metaPath(): String {
-        val uid = firestoreProvider.currentUid()
-            ?: throw IllegalStateException("User not authenticated — cannot access cloud backup")
+        val uid =
+            firestoreProvider.currentUid()
+                ?: throw IllegalStateException("User not authenticated — cannot access cloud backup")
         return "users/$uid/meta"
     }
 
@@ -119,22 +120,23 @@ class IosCloudBackupRepository(
     // Stub serialization — replace with encryption-based flow in Xcode phase
     // ---------------------------------------------------------------------------
 
-    private fun buildRecordJson(record: DownloadRecord): String = buildString {
-        append("{")
-        append("\"id\":${record.id},")
-        append("\"sourceUrl\":\"${record.sourceUrl.escapeJson()}\",")
-        append("\"videoTitle\":\"${record.videoTitle.escapeJson()}\",")
-        append("\"thumbnailUrl\":${record.thumbnailUrl?.let { "\"${it.escapeJson()}\"" } ?: "null"},")
-        append("\"formatLabel\":\"${record.formatLabel.escapeJson()}\",")
-        append("\"filePath\":\"${record.filePath.escapeJson()}\",")
-        append("\"mediaStoreUri\":${record.mediaStoreUri?.let { "\"${it.escapeJson()}\"" } ?: "null"},")
-        append("\"status\":\"${record.status.name}\",")
-        append("\"createdAt\":${record.createdAt},")
-        append("\"completedAt\":${record.completedAt ?: "null"},")
-        append("\"fileSizeBytes\":${record.fileSizeBytes ?: "null"},")
-        append("\"syncStatus\":\"${record.syncStatus.name}\"")
-        append("}")
-    }
+    private fun buildRecordJson(record: DownloadRecord): String =
+        buildString {
+            append("{")
+            append("\"id\":${record.id},")
+            append("\"sourceUrl\":\"${record.sourceUrl.escapeJson()}\",")
+            append("\"videoTitle\":\"${record.videoTitle.escapeJson()}\",")
+            append("\"thumbnailUrl\":${record.thumbnailUrl?.let { "\"${it.escapeJson()}\"" } ?: "null"},")
+            append("\"formatLabel\":\"${record.formatLabel.escapeJson()}\",")
+            append("\"filePath\":\"${record.filePath.escapeJson()}\",")
+            append("\"mediaStoreUri\":${record.mediaStoreUri?.let { "\"${it.escapeJson()}\"" } ?: "null"},")
+            append("\"status\":\"${record.status.name}\",")
+            append("\"createdAt\":${record.createdAt},")
+            append("\"completedAt\":${record.completedAt ?: "null"},")
+            append("\"fileSizeBytes\":${record.fileSizeBytes ?: "null"},")
+            append("\"syncStatus\":\"${record.syncStatus.name}\"")
+            append("}")
+        }
 
     private fun parseRecordJson(json: String): DownloadRecord? {
         return try {
@@ -146,9 +148,10 @@ class IosCloudBackupRepository(
                 formatLabel = extractString(json, "formatLabel") ?: "",
                 filePath = extractString(json, "filePath") ?: "",
                 mediaStoreUri = extractString(json, "mediaStoreUri"),
-                status = DownloadStatus.valueOf(
-                    extractString(json, "status") ?: DownloadStatus.COMPLETED.name,
-                ),
+                status =
+                    DownloadStatus.valueOf(
+                        extractString(json, "status") ?: DownloadStatus.COMPLETED.name,
+                    ),
                 createdAt = extractLong(json, "createdAt") ?: 0L,
                 completedAt = extractLong(json, "completedAt"),
                 fileSizeBytes = extractLong(json, "fileSizeBytes"),
@@ -159,17 +162,26 @@ class IosCloudBackupRepository(
         }
     }
 
-    private fun parseIntField(json: String, field: String): Int? {
+    private fun parseIntField(
+        json: String,
+        field: String,
+    ): Int? {
         return extractLong(json, field)?.toInt()
     }
 
-    private fun extractString(json: String, key: String): String? {
+    private fun extractString(
+        json: String,
+        key: String,
+    ): String? {
         val pattern = "\"$key\":\"([^\"]*)\""
         val match = Regex(pattern).find(json) ?: return null
         return match.groupValues[1]
     }
 
-    private fun extractLong(json: String, key: String): Long? {
+    private fun extractLong(
+        json: String,
+        key: String,
+    ): Long? {
         val pattern = "\"$key\":(\\d+)"
         val match = Regex(pattern).find(json) ?: return null
         return match.groupValues[1].toLongOrNull()

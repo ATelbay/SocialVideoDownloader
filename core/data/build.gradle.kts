@@ -13,7 +13,6 @@ android {
     defaultConfig {
         buildConfigField("String", "YTDLP_SERVER_URL", "\"${project.findProperty("ytdlp.server.url") ?: "http://13.50.106.77:8000"}\"")
         buildConfigField("String", "YTDLP_API_KEY", "\"${project.findProperty("ytdlp.api.key") ?: ""}\"")
-
     }
     testOptions {
         unitTests.all {

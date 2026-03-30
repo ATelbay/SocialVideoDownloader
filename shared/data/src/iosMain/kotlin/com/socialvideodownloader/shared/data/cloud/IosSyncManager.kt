@@ -11,7 +11,6 @@ import com.socialvideodownloader.shared.data.local.SyncQueueEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import platform.Foundation.NSDate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,6 +18,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import platform.Foundation.NSDate
 
 /**
  * iOS implementation of [SyncManager].
@@ -44,7 +44,6 @@ class IosSyncManager(
     private val backupPreferences: BackupPreferences,
     private val connectivityObserver: IosConnectivityObserver,
 ) : SyncManager {
-
     private val managerScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val _syncStatus = MutableStateFlow<SyncStatus>(SyncStatus.Idle)
     private var isOnline = true
@@ -56,13 +55,14 @@ class IosSyncManager(
             .onEach { online ->
                 isOnline = online
                 if (online) {
-                    val isBackupEnabled = runCatching {
-                        var enabled = false
-                        backupPreferences.observeIsBackupEnabled()
-                            .onEach { enabled = it }
-                            .launchIn(managerScope)
-                        enabled
-                    }.getOrDefault(false)
+                    val isBackupEnabled =
+                        runCatching {
+                            var enabled = false
+                            backupPreferences.observeIsBackupEnabled()
+                                .onEach { enabled = it }
+                                .launchIn(managerScope)
+                            enabled
+                        }.getOrDefault(false)
 
                     if (isBackupEnabled) {
                         managerScope.launch { processPendingOperations() }
@@ -104,15 +104,16 @@ class IosSyncManager(
         var lastError: String? = null
         for (item in pendingItems) {
             try {
-                val success = when (item.operation) {
-                    "UPLOAD" -> processUpload(item)
-                    "DELETE" -> processDelete(item)
-                    else -> {
-                        // Unknown operation — remove from queue to prevent infinite loops
-                        syncQueueDao.delete(item)
-                        true
+                val success =
+                    when (item.operation) {
+                        "UPLOAD" -> processUpload(item)
+                        "DELETE" -> processDelete(item)
+                        else -> {
+                            // Unknown operation — remove from queue to prevent infinite loops
+                            syncQueueDao.delete(item)
+                            true
+                        }
                     }
-                }
                 if (success) {
                     syncQueueDao.deleteById(item.id)
                 }
@@ -129,11 +130,12 @@ class IosSyncManager(
         }
 
         val timestamp = currentTimeMillis()
-        _syncStatus.value = if (lastError != null) {
-            SyncStatus.Error(lastError)
-        } else {
-            SyncStatus.Synced(timestamp)
-        }
+        _syncStatus.value =
+            if (lastError != null) {
+                SyncStatus.Error(lastError)
+            } else {
+                SyncStatus.Synced(timestamp)
+            }
         if (lastError == null) {
             backupPreferences.setLastSyncTimestamp(timestamp)
         }
@@ -149,11 +151,12 @@ class IosSyncManager(
         if (!cloudAuthService.isAuthenticated()) return
 
         // Add to queue — the unique index on (downloadId, operation) prevents duplicates
-        val queueItem = SyncQueueEntity(
-            downloadId = record.id,
-            operation = "UPLOAD",
-            createdAt = currentTimeMillis(),
-        )
+        val queueItem =
+            SyncQueueEntity(
+                downloadId = record.id,
+                operation = "UPLOAD",
+                createdAt = currentTimeMillis(),
+            )
         syncQueueDao.insert(queueItem)
 
         // Attempt immediate sync if online
@@ -180,11 +183,12 @@ class IosSyncManager(
         }
 
         // Queue the deletion
-        val queueItem = SyncQueueEntity(
-            downloadId = record.id,
-            operation = "DELETE",
-            createdAt = currentTimeMillis(),
-        )
+        val queueItem =
+            SyncQueueEntity(
+                downloadId = record.id,
+                operation = "DELETE",
+                createdAt = currentTimeMillis(),
+            )
         syncQueueDao.insert(queueItem)
     }
 
@@ -214,6 +218,4 @@ class IosSyncManager(
 }
 
 /** iOS-compatible replacement for JVM System.currentTimeMillis(). */
-private fun currentTimeMillis(): Long =
-    (NSDate().timeIntervalSince1970 * 1000).toLong()
-
+private fun currentTimeMillis(): Long = (NSDate().timeIntervalSince1970 * 1000).toLong()

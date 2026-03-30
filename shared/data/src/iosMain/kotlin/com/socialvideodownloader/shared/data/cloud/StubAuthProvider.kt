@@ -10,7 +10,6 @@ package com.socialvideodownloader.shared.data.cloud
  * in `App.swift` once Firebase is integrated via CocoaPods.
  */
 class StubAuthProvider : PlatformAuthProvider {
-
     override suspend fun signInWithGoogle(idToken: String): String =
         throw UnsupportedOperationException(
             "Firebase Auth not configured — implement FirebaseAuthProvider in Swift and " +

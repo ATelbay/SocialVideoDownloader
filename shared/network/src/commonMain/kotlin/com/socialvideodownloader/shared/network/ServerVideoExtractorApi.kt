@@ -21,16 +21,16 @@ class ServerVideoExtractorApi(
     private val client: HttpClient,
     private val mapper: ServerResponseMapper,
 ) {
-
     suspend fun extractInfo(url: String): VideoMetadata {
         val apiKey = ServerConfig.extractApiKey
-        val response: HttpResponse = client.post("${ServerConfig.baseUrl}${ServerConfig.extractPath}") {
-            contentType(ContentType.Application.Json)
-            if (!apiKey.isNullOrEmpty()) {
-                header("X-API-Key", apiKey)
+        val response: HttpResponse =
+            client.post("${ServerConfig.baseUrl}${ServerConfig.extractPath}") {
+                contentType(ContentType.Application.Json)
+                if (!apiKey.isNullOrEmpty()) {
+                    header("X-API-Key", apiKey)
+                }
+                setBody(ServerExtractRequest(url = url, apiKey = apiKey))
             }
-            setBody(ServerExtractRequest(url = url, apiKey = apiKey))
-        }
 
         if (response.status != HttpStatusCode.OK) {
             throw ServerExtractionException(
@@ -49,15 +49,16 @@ class ServerVideoExtractorApi(
         requestId: String,
         onProgress: (Float, Long, String) -> Unit,
     ): String {
-        val response: HttpResponse = try {
-            client.get(url) {
-                header("X-Request-Id", requestId)
+        val response: HttpResponse =
+            try {
+                client.get(url) {
+                    header("X-Request-Id", requestId)
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                throw DownloadException("Download request failed: ${e.message}", cause = e)
             }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            throw DownloadException("Download request failed: ${e.message}", cause = e)
-        }
 
         if (response.status != HttpStatusCode.OK) {
             throw DownloadException("Download failed (${response.status.value})")
@@ -75,11 +76,12 @@ class ServerVideoExtractorApi(
             val bytesRead = channel.readAvailable(buffer)
             if (bytesRead <= 0) break
             downloadedBytes += bytesRead
-            val progress = if (contentLength > 0) {
-                (downloadedBytes.toFloat() / contentLength * 100f)
-            } else {
-                -1f
-            }
+            val progress =
+                if (contentLength > 0) {
+                    (downloadedBytes.toFloat() / contentLength * 100f)
+                } else {
+                    -1f
+                }
             onProgress(progress, downloadedBytes, "")
         }
 

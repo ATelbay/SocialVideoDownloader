@@ -13,19 +13,25 @@ package com.socialvideodownloader.shared.data.cloud
  * Collection path convention: `users/{uid}/downloads/{documentId}`
  */
 interface PlatformFirestoreProvider {
-
     /**
      * Write a document to Firestore at the given path.
      * [data] is a JSON string representation of the document.
      * Returns true if the write succeeded.
      */
-    suspend fun setDocument(collectionPath: String, documentId: String, data: String): Boolean
+    suspend fun setDocument(
+        collectionPath: String,
+        documentId: String,
+        data: String,
+    ): Boolean
 
     /**
      * Delete a document from Firestore.
      * Returns true if the delete succeeded.
      */
-    suspend fun deleteDocument(collectionPath: String, documentId: String): Boolean
+    suspend fun deleteDocument(
+        collectionPath: String,
+        documentId: String,
+    ): Boolean
 
     /**
      * Fetch all documents from a Firestore collection.
@@ -37,7 +43,10 @@ interface PlatformFirestoreProvider {
      * Get a Firestore document by path.
      * Returns the JSON string representation, or null if not found.
      */
-    suspend fun getDocument(collectionPath: String, documentId: String): String?
+    suspend fun getDocument(
+        collectionPath: String,
+        documentId: String,
+    ): String?
 
     /**
      * Returns the UID of the currently authenticated user for path construction.

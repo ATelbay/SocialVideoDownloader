@@ -26,7 +26,6 @@ import kotlinx.coroutines.flow.asStateFlow
 class IosConnectivityObserver(
     private val connectivityProvider: PlatformConnectivityProvider,
 ) {
-
     /** Returns a cold [Flow] that emits true when the network is reachable. */
     fun observeConnectivity(): Flow<Boolean> = connectivityProvider.observeIsOnline()
 }
@@ -66,5 +65,6 @@ interface PlatformConnectivityProvider {
  */
 class StubConnectivityProvider : PlatformConnectivityProvider {
     private val _isOnline = MutableStateFlow(true)
+
     override fun observeIsOnline(): Flow<Boolean> = _isOnline.asStateFlow()
 }

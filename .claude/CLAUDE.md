@@ -17,21 +17,42 @@ Built on yt-dlp via youtubedl-android. Personal tool.
 
 ## Module structure
 ```
-:app                    — Activity, navigation, DI setup
-:feature:download       — Main screen (URL input, format selection, progress)
-:feature:history        — Download history screen
-:core:domain            — Use cases, domain models, repository interfaces
-:core:data              — Repository implementations, Room DB, yt-dlp wrapper
-:core:ui                — Shared composables, theme, design tokens
+Android-only modules:
+:app                       — Activity, navigation, Hilt DI setup, KMP bridge
+:feature:download          — Download screen (Compose, delegates to :shared:feature-download VM)
+:feature:history           — History screen (Compose, delegates to :shared:feature-history VM)
+:feature:library           — Library/file browser screen (Compose)
+:core:domain               — KMP: use cases, domain models, repository interfaces (commonMain + androidMain/iosMain)
+:core:data                 — Android: Room DB impl, yt-dlp wrapper, MediaStore, server client
+:core:ui                   — Android: shared Compose components, theme, design tokens
+:core:cloud                — Android: Firebase Auth + Firestore cloud backup
+:core:billing              — Android: Play Billing (Pro tier)
+
+KMP Shared modules (Android + iOS):
+:shared:network            — Ktor HTTP client, yt-dlp API models, server communication
+:shared:data               — Room KMP DB, DAOs, platform abstractions (FileStorage, DownloadManager, Clipboard)
+:shared:feature-download   — SharedDownloadViewModel: state machine, format selection, retry logic
+:shared:feature-history    — SharedHistoryViewModel: history list, cloud backup controls
+:shared:feature-library    — SharedLibraryViewModel: offline library, file access
+
+iOS-only:
+iosApp/                    — SwiftUI app: Download, History, Library, Cloud Backup, Share Extension screens
 ```
+
+### KMP Convention Plugins (build-logic)
+- `svd.kmp.library` — multiplatform library with Android + iOS targets, Room KMP, Ktor
+- `svd.kmp.feature` — KMP feature module with shared ViewModel dependencies
+- `svd.android.library` — Android-only library (Compose off by default)
+- `svd.android.feature` — Android feature module (Compose + Hilt)
 
 ## Build commands
 ```bash
-./gradlew assembleDebug          # Debug build
+./gradlew assembleDebug          # Debug build (~138MB APK, ~15s clean build)
 ./gradlew assembleRelease        # Release build
 ./gradlew test                   # Unit tests
 ./gradlew connectedAndroidTest   # Instrumentation tests
-./gradlew ktlintCheck            # Lint
+# ktlint: exclude iOS native compilation due to Koin 4.2.0 / Kotlin 2.2.x ABI mismatch
+./gradlew ktlintCheck -x compileKotlinIosArm64 -x compileKotlinIosSimulatorArm64
 ```
 
 ## Coding standards

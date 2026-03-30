@@ -6,10 +6,12 @@ import com.socialvideodownloader.shared.network.dto.ServerExtractResponse
 import com.socialvideodownloader.shared.network.dto.ServerFormatDto
 
 class ServerResponseMapper {
-
     private val audioOnlyExtensions = setOf("m4a", "mp3", "opus", "ogg", "aac", "flac", "wav")
 
-    fun mapToMetadata(response: ServerExtractResponse, sourceUrl: String): VideoMetadata {
+    fun mapToMetadata(
+        response: ServerExtractResponse,
+        sourceUrl: String,
+    ): VideoMetadata {
         return VideoMetadata(
             sourceUrl = sourceUrl,
             title = response.title,
@@ -25,8 +27,9 @@ class ServerResponseMapper {
         val isAudioOnly = height == null && dto.ext in audioOnlyExtensions
         val label = buildLabel(height, dto.ext, isAudioOnly)
 
-        val isVideoOnly = dto.vcodec != null && dto.vcodec != "none" &&
-            (dto.acodec == null || dto.acodec == "none")
+        val isVideoOnly =
+            dto.vcodec != null && dto.vcodec != "none" &&
+                (dto.acodec == null || dto.acodec == "none")
 
         return VideoFormatOption(
             formatId = dto.formatId,
@@ -51,7 +54,11 @@ class ServerResponseMapper {
         return Regex("""(\d+)p""").find(resolution)?.groupValues?.get(1)?.toIntOrNull()
     }
 
-    private fun buildLabel(height: Int?, ext: String, isAudioOnly: Boolean): String {
+    private fun buildLabel(
+        height: Int?,
+        ext: String,
+        isAudioOnly: Boolean,
+    ): String {
         return if (isAudioOnly) {
             "$ext audio"
         } else if (height != null) {

@@ -24,73 +24,79 @@ import kotlin.test.assertNull
  * a manual fake implementation.
  */
 class DownloadRepositoryImplTest {
-
     private val fakeDao = FakeDownloadDao()
     private val repository = DownloadRepositoryImpl(fakeDao)
 
     @Test
-    fun insertAndGetById() = runTest {
-        val record = createRecord(sourceUrl = "https://youtube.com/watch?v=1")
-        val id = repository.insert(record)
+    fun insertAndGetById() =
+        runTest {
+            val record = createRecord(sourceUrl = "https://youtube.com/watch?v=1")
+            val id = repository.insert(record)
 
-        val retrieved = repository.getById(id)
-        assertNotNull(retrieved)
-        assertEquals("https://youtube.com/watch?v=1", retrieved.sourceUrl)
-    }
-
-    @Test
-    fun getAllReturnsInsertedRecords() = runTest {
-        repository.insert(createRecord(sourceUrl = "https://url1.com"))
-        repository.insert(createRecord(sourceUrl = "https://url2.com"))
-
-        val all = repository.getAll().first()
-        assertEquals(2, all.size)
-    }
+            val retrieved = repository.getById(id)
+            assertNotNull(retrieved)
+            assertEquals("https://youtube.com/watch?v=1", retrieved.sourceUrl)
+        }
 
     @Test
-    fun updateModifiesRecord() = runTest {
-        val id = repository.insert(createRecord(sourceUrl = "https://example.com"))
-        val record = repository.getById(id)!!
+    fun getAllReturnsInsertedRecords() =
+        runTest {
+            repository.insert(createRecord(sourceUrl = "https://url1.com"))
+            repository.insert(createRecord(sourceUrl = "https://url2.com"))
 
-        val updated = record.copy(videoTitle = "Updated Title")
-        repository.update(updated)
-
-        val retrieved = repository.getById(id)
-        assertEquals("Updated Title", retrieved?.videoTitle)
-    }
+            val all = repository.getAll().first()
+            assertEquals(2, all.size)
+        }
 
     @Test
-    fun deleteRemovesRecord() = runTest {
-        val id = repository.insert(createRecord(sourceUrl = "https://delete.me"))
-        val record = repository.getById(id)!!
+    fun updateModifiesRecord() =
+        runTest {
+            val id = repository.insert(createRecord(sourceUrl = "https://example.com"))
+            val record = repository.getById(id)!!
 
-        repository.delete(record)
+            val updated = record.copy(videoTitle = "Updated Title")
+            repository.update(updated)
 
-        assertNull(repository.getById(id))
-    }
-
-    @Test
-    fun deleteAllClearsAllRecords() = runTest {
-        repository.insert(createRecord(sourceUrl = "https://1.com"))
-        repository.insert(createRecord(sourceUrl = "https://2.com"))
-
-        repository.deleteAll()
-
-        val all = repository.getAll().first()
-        assertEquals(0, all.size)
-    }
+            val retrieved = repository.getById(id)
+            assertEquals("Updated Title", retrieved?.videoTitle)
+        }
 
     @Test
-    fun getCompletedDownloadsFiltersCorrectly() = runTest {
-        repository.insert(createRecord(status = DownloadStatus.COMPLETED))
-        repository.insert(createRecord(status = DownloadStatus.FAILED))
-        repository.insert(createRecord(status = DownloadStatus.COMPLETED))
+    fun deleteRemovesRecord() =
+        runTest {
+            val id = repository.insert(createRecord(sourceUrl = "https://delete.me"))
+            val record = repository.getById(id)!!
 
-        val completed = repository.getCompletedDownloads().first()
-        assertEquals(2, completed.size)
-    }
+            repository.delete(record)
+
+            assertNull(repository.getById(id))
+        }
+
+    @Test
+    fun deleteAllClearsAllRecords() =
+        runTest {
+            repository.insert(createRecord(sourceUrl = "https://1.com"))
+            repository.insert(createRecord(sourceUrl = "https://2.com"))
+
+            repository.deleteAll()
+
+            val all = repository.getAll().first()
+            assertEquals(0, all.size)
+        }
+
+    @Test
+    fun getCompletedDownloadsFiltersCorrectly() =
+        runTest {
+            repository.insert(createRecord(status = DownloadStatus.COMPLETED))
+            repository.insert(createRecord(status = DownloadStatus.FAILED))
+            repository.insert(createRecord(status = DownloadStatus.COMPLETED))
+
+            val completed = repository.getCompletedDownloads().first()
+            assertEquals(2, completed.size)
+        }
 
     private var clock = 1000L
+
     private fun now() = clock++
 
     private fun createRecord(
@@ -112,8 +118,7 @@ class DownloadRepositoryImplTest {
 
         override fun getAll(): Flow<List<DownloadEntity>> = flow
 
-        override suspend fun getById(id: Long): DownloadEntity? =
-            entities.find { it.id == id }
+        override suspend fun getById(id: Long): DownloadEntity? = entities.find { it.id == id }
 
         override suspend fun insert(entity: DownloadEntity): Long {
             val id = autoId++
@@ -140,11 +145,8 @@ class DownloadRepositoryImplTest {
             flow.value = emptyList()
         }
 
-        override fun getCompleted(): Flow<List<DownloadEntity>> =
-            flow.map { list -> list.filter { it.status == "COMPLETED" } }
+        override fun getCompleted(): Flow<List<DownloadEntity>> = flow.map { list -> list.filter { it.status == "COMPLETED" } }
 
-        override suspend fun getCompletedSnapshot(): List<DownloadEntity> =
-            entities.filter { it.status == "COMPLETED" }
+        override suspend fun getCompletedSnapshot(): List<DownloadEntity> = entities.filter { it.status == "COMPLETED" }
     }
-
 }

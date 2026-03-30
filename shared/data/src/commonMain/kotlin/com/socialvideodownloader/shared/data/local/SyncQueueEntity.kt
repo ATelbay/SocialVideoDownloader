@@ -11,7 +11,8 @@ import androidx.room.PrimaryKey
 data class SyncQueueEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val downloadId: Long,
-    val operation: String, // "UPLOAD" or "DELETE"
+    // "UPLOAD" or "DELETE"
+    val operation: String,
     val createdAt: Long,
     val retryCount: Int = 0,
     val lastError: String? = null,

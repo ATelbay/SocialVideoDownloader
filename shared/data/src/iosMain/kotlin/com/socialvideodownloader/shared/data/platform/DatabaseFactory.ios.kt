@@ -9,13 +9,14 @@ import platform.Foundation.NSFileManager
 import platform.Foundation.NSUserDomainMask
 
 actual fun createDatabaseBuilder(): RoomDatabase.Builder<AppDatabase> {
-    val documentDirectory = NSFileManager.defaultManager.URLForDirectory(
-        directory = NSDocumentDirectory,
-        inDomain = NSUserDomainMask,
-        appropriateForURL = null,
-        create = false,
-        error = null,
-    )!!
+    val documentDirectory =
+        NSFileManager.defaultManager.URLForDirectory(
+            directory = NSDocumentDirectory,
+            inDomain = NSUserDomainMask,
+            appropriateForURL = null,
+            create = false,
+            error = null,
+        )!!
     val dbFilePath = "${documentDirectory.path}/social-video-downloader-database"
     return Room.databaseBuilder<AppDatabase>(name = dbFilePath)
         .setDriver(BundledSQLiteDriver())

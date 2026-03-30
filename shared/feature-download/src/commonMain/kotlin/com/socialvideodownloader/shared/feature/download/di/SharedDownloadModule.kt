@@ -20,13 +20,14 @@ import org.koin.dsl.module
  * val vm = getKoin().get<SharedDownloadViewModel> { parametersOf(myScope) }
  * ```
  */
-val sharedDownloadModule = module {
-    factory { (scope: CoroutineScope) ->
-        SharedDownloadViewModel(
-            coroutineScope = scope,
-            extractVideoInfo = get<ExtractVideoInfoUseCase>(),
-            findExistingDownload = get<FindExistingDownloadUseCase>(),
-            platformDownloadManager = get<PlatformDownloadManager>(),
-        )
+val sharedDownloadModule =
+    module {
+        factory { (scope: CoroutineScope) ->
+            SharedDownloadViewModel(
+                coroutineScope = scope,
+                extractVideoInfo = get<ExtractVideoInfoUseCase>(),
+                findExistingDownload = get<FindExistingDownloadUseCase>(),
+                platformDownloadManager = get<PlatformDownloadManager>(),
+            )
+        }
     }
-}

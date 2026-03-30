@@ -11,7 +11,6 @@ package com.socialvideodownloader.shared.data.cloud
  * Swift implementation registered at app startup via KoinHelper.registerAuthProvider().
  */
 interface PlatformAuthProvider {
-
     /**
      * Sign in using a Google ID token obtained from the Google Sign-In SDK on iOS.
      * Returns the Firebase UID on success.

@@ -22,7 +22,6 @@ import org.koin.mp.KoinPlatform
  * ```
  */
 object KoinHelper {
-
     /** Create a new [SharedDownloadViewModel] backed by a managed [CoroutineScope]. */
     fun getDownloadViewModel(): SharedDownloadViewModel {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)

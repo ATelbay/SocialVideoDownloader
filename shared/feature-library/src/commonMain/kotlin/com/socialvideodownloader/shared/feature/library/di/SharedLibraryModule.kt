@@ -16,12 +16,13 @@ import org.koin.dsl.module
  * val vm = getKoin().get<SharedLibraryViewModel> { parametersOf(myScope) }
  * ```
  */
-val sharedLibraryModule = module {
-    factory { (scope: CoroutineScope) ->
-        SharedLibraryViewModel(
-            coroutineScope = scope,
-            downloadRepository = get<DownloadRepository>(),
-            fileManager = get<FileAccessManager>(),
-        )
+val sharedLibraryModule =
+    module {
+        factory { (scope: CoroutineScope) ->
+            SharedLibraryViewModel(
+                coroutineScope = scope,
+                downloadRepository = get<DownloadRepository>(),
+                fileManager = get<FileAccessManager>(),
+            )
+        }
     }
-}

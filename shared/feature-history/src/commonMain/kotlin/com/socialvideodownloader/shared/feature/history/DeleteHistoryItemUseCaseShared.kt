@@ -13,7 +13,10 @@ class DeleteHistoryItemUseCaseShared(
     private val repository: DownloadRepository,
     private val fileManager: FileAccessManager,
 ) {
-    suspend operator fun invoke(itemId: Long, deleteFile: Boolean): DeleteResult {
+    suspend operator fun invoke(
+        itemId: Long,
+        deleteFile: Boolean,
+    ): DeleteResult {
         val record = repository.getById(itemId) ?: return DeleteResult(fileDeleteFailed = false)
 
         var fileDeleteFailed = false

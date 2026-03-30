@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.StateFlow
  * iOS: Uses URLSession background download tasks.
  */
 interface PlatformDownloadManager {
-
     /** Start a download for the given request. */
     suspend fun startDownload(request: DownloadRequest)
 
