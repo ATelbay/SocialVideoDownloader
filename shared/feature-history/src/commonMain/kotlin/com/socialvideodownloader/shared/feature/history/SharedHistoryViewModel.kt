@@ -204,8 +204,15 @@ class SharedHistoryViewModel(
             } else if (_isCloudBackupEnabled.value) {
                 disableCloudBackupUseCase()
             } else {
+                val isFirstEnable = !backupPreferences.hasEverEnabled()
                 backupPreferences.setBackupEnabled(true)
                 backupPreferences.setHasEverEnabled(true)
+                if (isFirstEnable) {
+                    val existing = downloadRepository.getCompletedSnapshot()
+                    for (record in existing) {
+                        syncManager.syncNewRecord(record)
+                    }
+                }
                 syncManager.processPendingOperations()
             }
         }
