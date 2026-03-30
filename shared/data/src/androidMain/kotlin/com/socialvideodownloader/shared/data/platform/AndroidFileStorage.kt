@@ -48,13 +48,16 @@ class AndroidFileStorage(
             contentValues.put(MediaStore.Downloads.IS_PENDING, 0)
             resolver.update(uri, contentValues, null, null)
 
+            // Capture size before deleting temp file
+            val fileSize = tempFile.length()
+
             // Clean up temp file
             tempFile.delete()
 
             SaveResult(
-                filePath = tempFilePath,
+                filePath = uri.toString(),
                 platformUri = uri.toString(),
-                fileSizeBytes = tempFile.length(),
+                fileSizeBytes = fileSize,
             )
         }
 
