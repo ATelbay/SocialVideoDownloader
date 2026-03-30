@@ -60,7 +60,7 @@ val MIGRATION_4_5 =
                 )
                 """.trimIndent(),
             )
-            connection.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS idx_sync_queue_download_op ON sync_queue (downloadId, operation)")
+            connection.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_sync_queue_downloadId_operation ON sync_queue (downloadId, operation)")
         }
     }
 
