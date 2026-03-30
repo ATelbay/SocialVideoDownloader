@@ -12,5 +12,8 @@ data class DownloadRecord(
     val createdAt: Long,
     val completedAt: Long? = null,
     val fileSizeBytes: Long? = null,
+    // TODO: Tech debt — syncStatus should be a sealed class or enum (e.g. SyncStatus.NotSynced,
+    //   Synced, Pending) rather than a raw String. Requires updating DownloadEntity,
+    //   DownloadMapper, and all ViewModels that read/write this field.
     val syncStatus: String = "NOT_SYNCED",
 )

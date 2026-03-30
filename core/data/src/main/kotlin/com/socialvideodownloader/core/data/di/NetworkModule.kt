@@ -10,6 +10,12 @@ import dagger.hilt.components.SingletonComponent
 import io.ktor.client.HttpClient
 import javax.inject.Singleton
 
+// NOTE: These Hilt bindings are intentionally separate from the Koin networkModule in
+// :shared:network. FallbackVideoExtractorRepository uses @Inject constructor and receives
+// HttpClient and ServerVideoExtractorApi from the Hilt graph. The KoinBridgeModule does
+// not bridge network types, so removing these would break Android compilation.
+// TODO: Tech debt — consider bridging network types through KoinBridgeModule to eliminate
+//   this duplication, or migrate FallbackVideoExtractorRepository to use Koin directly.
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {

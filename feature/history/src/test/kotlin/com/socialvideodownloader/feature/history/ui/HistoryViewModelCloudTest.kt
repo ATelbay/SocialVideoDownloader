@@ -10,7 +10,7 @@ import com.socialvideodownloader.core.domain.sync.EnableCloudBackupUseCase
 import com.socialvideodownloader.core.domain.sync.ObserveCloudCapacityUseCase
 import com.socialvideodownloader.core.domain.sync.RestoreFromCloudUseCase
 import com.socialvideodownloader.core.domain.sync.SyncManager
-import com.socialvideodownloader.feature.history.domain.DeleteHistoryItemUseCase
+import com.socialvideodownloader.shared.feature.history.DeleteHistoryItemUseCaseShared
 import com.socialvideodownloader.feature.history.domain.ObserveHistoryItemsUseCase
 import com.socialvideodownloader.feature.history.testutil.MainDispatcherRule
 import android.content.Context
@@ -36,7 +36,7 @@ class HistoryViewModelCloudTest {
 
     private val appContext = mockk<Context>(relaxed = true)
     private val observeHistoryItems = mockk<ObserveHistoryItemsUseCase>()
-    private val deleteHistoryItem = mockk<DeleteHistoryItemUseCase>(relaxed = true)
+    private val deleteHistoryItem = mockk<DeleteHistoryItemUseCaseShared>(relaxed = true)
     private val observeCloudCapacity = mockk<ObserveCloudCapacityUseCase>()
     private val billingRepository = mockk<BillingRepository>(relaxed = true)
     private val enableCloudBackupUseCase = mockk<EnableCloudBackupUseCase>(relaxed = true)

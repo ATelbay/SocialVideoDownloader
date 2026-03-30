@@ -20,6 +20,12 @@ import org.koin.mp.KoinPlatform
  * ```swift
  * let vm = KoinHelper.shared.getDownloadViewModel()
  * ```
+ *
+ * TODO: Tech debt — this file lives in :shared:feature-library but depends on all three
+ *   feature modules (feature-download, feature-history, feature-library). It should be
+ *   moved to a dedicated :shared:di or :shared:app-entry module so that feature-library
+ *   does not transitively depend on feature-download and feature-history on iOS.
+ *   Requires updating build.gradle.kts iOS dependencies and the iOS app's framework import.
  */
 object KoinHelper {
     /** Create a new [SharedDownloadViewModel] backed by a managed [CoroutineScope]. */

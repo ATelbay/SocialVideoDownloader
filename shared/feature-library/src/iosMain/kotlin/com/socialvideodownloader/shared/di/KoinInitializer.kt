@@ -17,6 +17,10 @@ import org.koin.core.context.startKoin
  * ```swift
  * KoinInitializerKt.doInitKoin()
  * ```
+ *
+ * TODO: Tech debt — this file lives in :shared:feature-library but aggregates all feature
+ *   modules. It should be moved to a dedicated :shared:di or :shared:app-entry module
+ *   alongside KoinHelper.kt. See KoinHelper.kt for full context.
  */
 fun initKoin() {
     startKoin {
