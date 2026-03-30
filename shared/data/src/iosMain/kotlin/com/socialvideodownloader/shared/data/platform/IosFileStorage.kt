@@ -2,7 +2,6 @@ package com.socialvideodownloader.shared.data.platform
 
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSDocumentDirectory
-import platform.Foundation.NSError
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSURL
 import platform.Foundation.NSUserDomainMask
@@ -38,8 +37,6 @@ class IosFileStorage : PlatformFileStorage {
 
         val sourceUrl = NSURL.fileURLWithPath(tempFilePath)
         val fileManager = NSFileManager.defaultManager
-
-        val error: NSError? = null
 
         @Suppress("UNCHECKED_CAST")
         val moved = fileManager.moveItemAtURL(sourceUrl, toURL = uniqueDestUrl, error = null)

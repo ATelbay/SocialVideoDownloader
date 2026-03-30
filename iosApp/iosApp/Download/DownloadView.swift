@@ -82,15 +82,15 @@ struct DownloadView: View {
             .navigationBarTitleDisplayMode(.inline)
         }
         // React to one-shot events
-        .onChange(of: viewModel.shareFilePath) { path in
-            if let path {
+        .onChange(of: viewModel.shareFilePath) { oldValue, newValue in
+            if let path = newValue {
                 shareFilePath = path
                 showShareSheet = true
                 viewModel.shareFilePath = nil
             }
         }
-        .onChange(of: viewModel.openFileUrl) { path in
-            if let path {
+        .onChange(of: viewModel.openFileUrl) { oldValue, newValue in
+            if let path = newValue {
                 openFilePath = path
                 showOpenFile = true
                 viewModel.openFileUrl = nil
@@ -98,6 +98,11 @@ struct DownloadView: View {
         }
         .sheet(isPresented: $showShareSheet) {
             if let path = shareFilePath {
+                ShareSheet(filePath: path)
+            }
+        }
+        .sheet(isPresented: $showOpenFile) {
+            if let path = openFilePath {
                 ShareSheet(filePath: path)
             }
         }

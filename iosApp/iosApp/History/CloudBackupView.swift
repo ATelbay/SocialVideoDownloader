@@ -142,18 +142,11 @@ struct CloudBackupView: View {
                 }
                 .padding(.vertical, 8)
             } else {
-                VStack(spacing: 8) {
-                    signInButton(
-                        title: "Sign in with Google",
-                        systemImage: "globe",
-                        action: { showSignInSheet = true }
-                    )
-                    signInButton(
-                        title: "Sign in with Apple",
-                        systemImage: "applelogo",
-                        action: { showSignInSheet = true }
-                    )
-                }
+                signInButton(
+                    title: "Sign in",
+                    systemImage: "person.crop.circle",
+                    action: { showSignInSheet = true }
+                )
                 .padding(.horizontal, 16)
             }
 

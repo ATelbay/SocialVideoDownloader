@@ -22,6 +22,7 @@ final class HistoryViewModelWrapper: ObservableObject {
     @Published var retryUrl: String? = nil
     @Published var showUpgradeSheet = false
     @Published var showSignInSheet = false
+    @Published var shareContentUri: String? = nil
 
     init() {
         shared = KoinViewModelFactory.makeHistoryViewModel()
@@ -60,6 +61,10 @@ final class HistoryViewModelWrapper: ObservableObject {
                     self.showUpgradeSheet = true
                 case is HistoryEffectLaunchGoogleSignIn:
                     self.showSignInSheet = true
+                case let openContent as HistoryEffectOpenContent:
+                    self.shareContentUri = openContent.contentUri
+                case let shareContent as HistoryEffectShareContent:
+                    self.shareContentUri = shareContent.contentUri
                 default:
                     break
                 }
@@ -95,6 +100,8 @@ struct HistoryView: View {
     @StateObject private var viewModel = HistoryViewModelWrapper()
     @State private var showToast = false
     @State private var currentToast = ""
+    @State private var showShareSheet = false
+    @State private var shareUri: String? = nil
 
     var body: some View {
         NavigationStack {
@@ -104,24 +111,24 @@ struct HistoryView: View {
             }
             .navigationTitle("History")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                if case let contentState as HistoryUiState.Content = viewModel.state,
-                   !contentState.items.isEmpty {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Delete All") {
-                            // Not supported in current ViewModel — no-op placeholder
-                        }
-                        .font(SVDFont.labelLarge())
-                        .foregroundColor(.svdPrimary)
-                    }
-                }
-            }
         }
         .onChange(of: viewModel.toastMessage) { message in
             if let message {
                 currentToast = message
                 showToast = true
                 viewModel.toastMessage = nil
+            }
+        }
+        .onChange(of: viewModel.shareContentUri) { uri in
+            if let uri {
+                shareUri = uri
+                showShareSheet = true
+                viewModel.shareContentUri = nil
+            }
+        }
+        .sheet(isPresented: $showShareSheet) {
+            if let uri = shareUri {
+                HistoryShareSheet(contentUri: uri)
             }
         }
         .sheet(isPresented: $viewModel.showUpgradeSheet) {
@@ -334,6 +341,19 @@ struct HistoryView: View {
             }
         )
     }
+}
+
+// MARK: - Share Sheet helper
+
+private struct HistoryShareSheet: UIViewControllerRepresentable {
+    let contentUri: String
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let url = URL(string: contentUri) ?? URL(fileURLWithPath: contentUri)
+        return UIActivityViewController(activityItems: [url], applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 // MARK: - Toast Banner

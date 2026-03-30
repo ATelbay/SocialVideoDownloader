@@ -36,8 +36,6 @@ final class NotificationService {
     func postDownloadComplete(videoTitle: String) {
         let content = UNMutableNotificationContent()
         content.title = NSLocalizedString("notification_download_complete_title", comment: "")
-            .replacingOccurrences(of: "%s", with: "")
-            .trimmingCharacters(in: .whitespaces)
         content.body = videoTitle
         content.sound = .default
 

@@ -29,7 +29,7 @@ class ShareViewController: UIViewController {
                 }
                 if provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) {
                     provider.loadItem(forTypeIdentifier: UTType.plainText.identifier) { [weak self] item, _ in
-                        if let text = item as? String, text.hasPrefix("http") {
+                        if let text = item as? String, text.hasPrefix("http"), URL(string: text) != nil {
                             self?.saveSharedUrl(text)
                         }
                     }
