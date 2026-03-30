@@ -73,35 +73,40 @@ class FallbackVideoExtractorRepository @Inject constructor(
         requestId: String,
         onProgress: (Float, Long, String) -> Unit,
     ): String {
-        val response = httpClient.get(url) {
-            header("X-Request-Id", requestId)
-        }
-
-        if (response.status != HttpStatusCode.OK) {
-            throw IllegalStateException("Download failed (${response.status.value})")
-        }
-
-        val contentLength = response.headers["Content-Length"]?.toLongOrNull() ?: -1L
-        val channel = response.bodyAsChannel()
-        var downloadedBytes = 0L
-        val buffer = ByteArray(8192)
-
-        outputFile.outputStream().use { outputStream ->
-            while (!channel.isClosedForRead) {
-                val bytesRead = channel.readAvailable(buffer)
-                if (bytesRead <= 0) break
-                outputStream.write(buffer, 0, bytesRead)
-                downloadedBytes += bytesRead
-                val progress = if (contentLength > 0) {
-                    (downloadedBytes.toFloat() / contentLength * 100f)
-                } else {
-                    -1f
-                }
-                onProgress(progress, 0L, "")
+        try {
+            val response = httpClient.get(url) {
+                header("X-Request-Id", requestId)
             }
-        }
 
-        return outputFile.absolutePath
+            if (response.status != HttpStatusCode.OK) {
+                throw IllegalStateException("Download failed (${response.status.value})")
+            }
+
+            val contentLength = response.headers["Content-Length"]?.toLongOrNull() ?: -1L
+            val channel = response.bodyAsChannel()
+            var downloadedBytes = 0L
+            val buffer = ByteArray(8192)
+
+            outputFile.outputStream().use { outputStream ->
+                while (!channel.isClosedForRead) {
+                    val bytesRead = channel.readAvailable(buffer)
+                    if (bytesRead <= 0) break
+                    outputStream.write(buffer, 0, bytesRead)
+                    downloadedBytes += bytesRead
+                    val progress = if (contentLength > 0) {
+                        (downloadedBytes.toFloat() / contentLength * 100f)
+                    } else {
+                        -1f
+                    }
+                    onProgress(progress, 0L, "")
+                }
+            }
+
+            return outputFile.absolutePath
+        } catch (e: Exception) {
+            outputFile.delete()
+            throw e
+        }
     }
 
     override fun cancelDownload(processId: String) {

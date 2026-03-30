@@ -29,7 +29,7 @@ class ServerVideoExtractorApi(
                 if (!apiKey.isNullOrEmpty()) {
                     header("X-API-Key", apiKey)
                 }
-                setBody(ServerExtractRequest(url = url, apiKey = apiKey))
+                setBody(ServerExtractRequest(url = url))
             }
 
         if (response.status != HttpStatusCode.OK) {
@@ -69,9 +69,14 @@ class ServerVideoExtractorApi(
         var downloadedBytes = 0L
         val buffer = ByteArray(8192)
 
-        // Return the output path to the caller — platform-specific file writing
-        // is handled by the platform implementation that calls this function.
-        // For the shared KMP implementation we stream the bytes and report progress.
+        // TODO: commonMain has no file I/O without an expect/actual abstraction.
+        // Bytes are streamed and progress is reported, but they are NOT written to
+        // outputPath here. Platform callers must provide their own download path:
+        //   - Android: FallbackVideoExtractorRepository.downloadToFile() handles
+        //     file writing directly and does not call this method.
+        //   - iOS: implement a platform-specific downloader that writes to the
+        //     Documents directory, or introduce a PlatformFileWriter expect/actual
+        //     so this shared method can write chunks to disk.
         while (!channel.isClosedForRead) {
             val bytesRead = channel.readAvailable(buffer)
             if (bytesRead <= 0) break

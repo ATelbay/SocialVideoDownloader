@@ -6,7 +6,7 @@ actual object ServerConfig {
     actual val baseUrl: String
         get() =
             NSBundle.mainBundle.objectForInfoDictionaryKey("YTDLP_SERVER_URL") as? String
-                ?: "http://13.50.106.77:8000"
+                ?: ""
     actual val extractApiKey: String?
         get() =
             (NSBundle.mainBundle.objectForInfoDictionaryKey("YTDLP_API_KEY") as? String)

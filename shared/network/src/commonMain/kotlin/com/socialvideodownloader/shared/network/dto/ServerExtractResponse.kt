@@ -6,7 +6,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ServerExtractRequest(
     val url: String,
-    @SerialName("api_key") val apiKey: String? = null,
 )
 
 @Serializable
