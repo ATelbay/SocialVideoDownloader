@@ -1,7 +1,12 @@
 package com.socialvideodownloader.shared.data.di
 
 import com.socialvideodownloader.core.domain.repository.VideoExtractorRepository
+import com.socialvideodownloader.shared.data.platform.IosClipboard
+import com.socialvideodownloader.shared.data.platform.IosDownloadManager
+import com.socialvideodownloader.shared.data.platform.IosFileStorage
+import com.socialvideodownloader.shared.data.platform.IosStringProvider
 import com.socialvideodownloader.shared.data.platform.PlatformClipboard
+import com.socialvideodownloader.shared.data.platform.PlatformDownloadManager
 import com.socialvideodownloader.shared.data.platform.PlatformFileStorage
 import com.socialvideodownloader.shared.data.platform.PlatformStringProvider
 import com.socialvideodownloader.shared.data.repository.ServerOnlyVideoExtractorRepository
@@ -10,9 +15,7 @@ import org.koin.dsl.module
 /**
  * iOS-specific Koin module providing platform implementations.
  *
- * iOS platform implementations (IosDownloadManager, IosFileStorage, etc.)
- * will be created in Phase 6 (iOS app development). For now, this module
- * provides the ServerOnlyVideoExtractorRepository and placeholder bindings.
+ * Binds all platform abstractions to their iOS implementations wired up in Phase 6.
  */
 val iosDataModule = module {
 
@@ -21,10 +24,9 @@ val iosDataModule = module {
         ServerOnlyVideoExtractorRepository(serverApi = get())
     }
 
-    // iOS platform implementations will be added in Phase 6 (T082-T087).
-    // Uncomment and replace with actual implementations when building the iOS app:
-    // single<PlatformDownloadManager> { IosDownloadManager() }
-    // single<PlatformFileStorage> { IosFileStorage() }
-    // single<PlatformClipboard> { IosClipboard() }
-    // single<PlatformStringProvider> { IosStringProvider() }
+    // Phase 6 platform implementations.
+    single<PlatformDownloadManager> { IosDownloadManager() }
+    single<PlatformFileStorage> { IosFileStorage() }
+    single<PlatformClipboard> { IosClipboard() }
+    single<PlatformStringProvider> { IosStringProvider() }
 }

@@ -20,6 +20,38 @@
 	<string>1</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+
+	<!-- Files app integration: downloaded files are visible in Files app -->
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+
+	<!-- Background download support -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+	</array>
+
+	<!-- Notification permission usage description -->
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>Social Video Downloader will notify you when your download is complete.</string>
+
+	<!-- yt-dlp API server URL — override in a Config.xcconfig to use a different server -->
+	<key>YTDLP_SERVER_URL</key>
+	<string>http://13.50.106.77:8000</string>
+
+	<!-- Optional API key — leave empty for open servers -->
+	<key>YTDLP_API_KEY</key>
+	<string></string>
+
+	<!-- Allow HTTP connections to the yt-dlp server (development only) -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -29,7 +61,7 @@
 	<dict/>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
-		<string>armv7</string>
+		<string>arm64</string>
 	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
@@ -42,10 +74,5 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsArbitraryLoads</key>
-		<false/>
-	</dict>
 </dict>
 </plist>
