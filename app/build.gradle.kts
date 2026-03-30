@@ -68,6 +68,9 @@ dependencies {
     implementation(project(":core:billing"))
     implementation(project(":shared:data"))
     implementation(project(":shared:network"))
+    implementation(project(":shared:feature-download"))
+    implementation(project(":shared:feature-history"))
+    implementation(project(":shared:feature-library"))
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)

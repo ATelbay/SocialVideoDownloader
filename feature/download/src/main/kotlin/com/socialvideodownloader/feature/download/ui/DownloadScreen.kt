@@ -97,8 +97,13 @@ fun DownloadScreen(
                     }
                     context.startActivity(Intent.createChooser(intent, null))
                 }
-                is DownloadEvent.ShowSnackbar -> {
+                is DownloadEvent.ShowSnackbarMessage -> {
                     snackbarHostState.showSnackbar(event.message)
+                }
+                is DownloadEvent.ShowError -> {
+                    // ShowError is also rendered via the Error state; show a snackbar
+                    // when it occurs during share mode (not full-screen error).
+                    snackbarHostState.showSnackbar(event.message ?: event.errorType.name)
                 }
                 is DownloadEvent.RequestNotificationPermission -> {
                     permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -284,7 +289,7 @@ private fun DownloadScreenContent(
 
                 is DownloadUiState.Error -> {
                     DownloadErrorContent(
-                        message = targetState.message,
+                        message = targetState.message ?: targetState.errorType.name,
                         onRetryClicked = { onIntent(DownloadIntent.RetryClicked) },
                         onNewDownloadClicked = { onIntent(DownloadIntent.NewDownloadClicked) },
                         modifier = nonIdlePadding,

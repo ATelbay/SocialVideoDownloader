@@ -89,7 +89,15 @@ fun HistoryScreen(
             snackbarHostState.currentSnackbarData?.dismiss()
             when (effect) {
                 is HistoryEffect.ShowMessage -> {
-                    snackbarHostState.showSnackbar(context.getString(effect.messageResId))
+                    val msgRes = when (effect.messageType) {
+                        HistoryMessageType.DELETE_SUCCESS -> R.string.history_deleted
+                        HistoryMessageType.DELETE_ALL_SUCCESS -> R.string.history_all_deleted
+                        HistoryMessageType.COPY_URL_SUCCESS -> R.string.history_link_copied
+                        HistoryMessageType.CLOUD_SYNC_ERROR -> R.string.history_cloud_sync_error
+                        HistoryMessageType.FILE_UNAVAILABLE -> R.string.history_file_unavailable
+                        HistoryMessageType.DELETE_FILE_FAILED -> R.string.history_delete_single_file_failed
+                    }
+                    snackbarHostState.showSnackbar(context.getString(msgRes))
                 }
                 is HistoryEffect.OpenContent -> {
                     try {

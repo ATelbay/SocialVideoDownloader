@@ -62,7 +62,13 @@ fun LibraryScreen(
                     }
                 }
                 is LibraryEffect.ShowMessage -> {
-                    snackbarHostState.showSnackbar(context.getString(effect.messageResId))
+                    val msgRes = when (effect.messageType) {
+                        LibraryMessageType.DELETE_SUCCESS -> R.string.library_deleted
+                        LibraryMessageType.FILE_NOT_FOUND -> R.string.library_open_error
+                        LibraryMessageType.SHARE_ERROR -> R.string.library_share_error
+                        LibraryMessageType.OPEN_ERROR -> R.string.library_open_error
+                    }
+                    snackbarHostState.showSnackbar(context.getString(msgRes))
                 }
             }
         }

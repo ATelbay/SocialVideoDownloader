@@ -1,6 +1,5 @@
 package com.socialvideodownloader.feature.library.ui
 
-sealed interface LibraryIntent {
-    data class ItemClicked(val itemId: Long) : LibraryIntent
-    data class ItemLongPressed(val itemId: Long) : LibraryIntent
-}
+// Re-export shared KMP type so the existing Compose UI layer imports from
+// com.socialvideodownloader.feature.library.ui without any changes.
+typealias LibraryIntent = com.socialvideodownloader.shared.feature.library.LibraryIntent

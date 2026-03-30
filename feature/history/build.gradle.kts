@@ -14,6 +14,8 @@ android {
 }
 
 dependencies {
+    implementation(project(":shared:data"))
+    implementation(project(":shared:feature-history"))
     implementation(project(":core:cloud"))
     implementation(project(":core:billing"))
     implementation(libs.androidx.navigation.compose)
