@@ -1,0 +1,74 @@
+/* ============================================================
+   Social Video Downloader — Localizable.strings (English)
+   ============================================================ */
+
+// MARK: - Download screen
+
+"download_url_placeholder" = "https://…";
+"download_paste_button" = "Paste";
+"download_extract_button" = "Extract";
+"download_back_button" = "Back";
+"download_cancel_button" = "Cancel";
+"download_choose_format" = "Choose format";
+"download_button" = "Download";
+"download_complete_title" = "Download Complete!";
+"download_new_download_button" = "New Download";
+"download_open_button" = "Open";
+"download_share_button" = "Share";
+"download_start_over_button" = "Start Over";
+"download_try_again_button" = "Try Again";
+"download_extracting" = "Extracting video info…";
+
+// MARK: - Existing download banner
+
+"existing_download_title" = "Already downloaded";
+"existing_download_open" = "Open";
+"existing_download_share" = "Share";
+"existing_download_unavailable" = "Previous file no longer available";
+
+// MARK: - Errors (mapped from StringKey)
+
+"error_network" = "Network error. Check your connection and try again.";
+"error_server_unavailable" = "Download server is unavailable. Try again later.";
+"error_extraction_failed" = "Could not extract video info. The video may be private or unavailable.";
+"error_unsupported_url" = "This URL is not supported.";
+"error_storage_full" = "Not enough storage space to save the download.";
+"error_download_failed" = "Download failed. Please try again.";
+"error_unknown" = "Something went wrong. Please try again.";
+
+// MARK: - Error titles (shown in DownloadErrorView)
+
+"error_title_network" = "No Internet Connection";
+"error_title_server_unavailable" = "Server Unavailable";
+"error_title_extraction_failed" = "Could Not Extract Video";
+"error_title_unsupported_url" = "Unsupported URL";
+"error_title_storage_full" = "Storage Full";
+"error_title_download_failed" = "Download Failed";
+"error_title_unknown" = "Something Went Wrong";
+
+// MARK: - History
+
+"history_deleted" = "Download deleted.";
+"history_all_deleted" = "All downloads deleted.";
+"history_restored" = "Download restored.";
+"history_empty" = "Your download history will appear here.";
+
+// MARK: - Library
+
+"library_empty" = "Your downloaded videos will appear here.";
+"library_open_error" = "Could not open file.";
+
+// MARK: - Clipboard
+
+"copy_success" = "URL copied to clipboard.";
+
+// MARK: - Notifications
+
+"notification_download_complete_title" = "Download complete";
+"notification_download_failed_title" = "Download failed";
+
+// MARK: - Tab bar
+
+"tab_download" = "Download";
+"tab_library" = "Library";
+"tab_history" = "History";

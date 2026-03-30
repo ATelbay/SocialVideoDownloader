@@ -2,7 +2,6 @@ package com.socialvideodownloader.feature.download.ui
 
 import android.Manifest
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
@@ -10,413 +9,164 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.socialvideodownloader.core.domain.di.IoDispatcher
-import com.socialvideodownloader.core.domain.model.DownloadProgress
-import com.socialvideodownloader.core.domain.model.DownloadRequest
-import com.socialvideodownloader.core.domain.usecase.ExtractVideoInfoUseCase
-import com.socialvideodownloader.core.domain.usecase.FindExistingDownloadUseCase
-import com.socialvideodownloader.feature.download.R
 import com.socialvideodownloader.feature.download.service.DownloadService
 import com.socialvideodownloader.feature.download.service.DownloadServiceState
 import com.socialvideodownloader.feature.download.service.DownloadServiceStateHolder
+import com.socialvideodownloader.shared.data.platform.AndroidDownloadManager
+import com.socialvideodownloader.shared.data.platform.DownloadServiceState as SharedDownloadServiceState
+import com.socialvideodownloader.core.domain.usecase.ExtractVideoInfoUseCase
+import com.socialvideodownloader.core.domain.usecase.FindExistingDownloadUseCase
+import com.socialvideodownloader.shared.feature.download.DownloadEvent
+import com.socialvideodownloader.shared.feature.download.DownloadIntent
+import com.socialvideodownloader.shared.feature.download.DownloadUiState
+import com.socialvideodownloader.shared.feature.download.SharedDownloadViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import java.util.UUID
 import javax.inject.Inject
 
+/**
+ * Android thin delegate ViewModel for the download screen.
+ *
+ * All business logic lives in [SharedDownloadViewModel]. This class bridges:
+ * - Android notification permission checks (OS-level API)
+ * - [DownloadServiceStateHolder] → [AndroidDownloadManager] state sync
+ * - Hilt DI into the shared KMP ViewModel
+ * - [SavedStateHandle] for URL persistence across process death
+ *
+ * The Compose UI layer continues to observe [uiState] and [events] without
+ * any changes — the public API surface is identical to the old ViewModel.
+ */
 @HiltViewModel
 class DownloadViewModel @Inject constructor(
     private val extractVideoInfo: ExtractVideoInfoUseCase,
     private val findExistingDownload: FindExistingDownloadUseCase,
-    private val errorMessageMapper: ErrorMessageMapper,
     private val serviceStateHolder: DownloadServiceStateHolder,
     @ApplicationContext private val context: Context,
     private val savedStateHandle: SavedStateHandle,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    private val androidDownloadManager: AndroidDownloadManager,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<DownloadUiState>(DownloadUiState.Idle())
-    val uiState: StateFlow<DownloadUiState> = _uiState.asStateFlow()
+    private val shared = SharedDownloadViewModel(
+        coroutineScope = viewModelScope,
+        extractVideoInfo = extractVideoInfo,
+        findExistingDownload = findExistingDownload,
+        platformDownloadManager = androidDownloadManager,
+        initialUrl = savedStateHandle["initialUrl"],
+        savedUrl = savedStateHandle["currentUrl"],
+    )
 
-    private val _events = Channel<DownloadEvent>(Channel.BUFFERED)
-    val events = _events.receiveAsFlow()
-
-    private var currentUrl: String = ""
-    private var backgroundDownload: DownloadUiState.Downloading? = null
-    private var duplicateCheckJob: Job? = null
-    private var pendingShareOnly: Boolean = false
-    private var existingRecordId: Long? = null
+    val uiState: StateFlow<DownloadUiState> = shared.uiState
+    val events: Flow<DownloadEvent> = shared.events
 
     init {
-        collectServiceState()
-        val initialUrl: String? = savedStateHandle["initialUrl"]
-        val savedUrl: String? = savedStateHandle["currentUrl"]
-        val url = initialUrl ?: savedUrl
-        if (url != null) {
-            currentUrl = url
-            _uiState.value = DownloadUiState.Idle()
-        }
-    }
-
-    private fun collectServiceState() {
-        viewModelScope.launch {
-            serviceStateHolder.state.collect { serviceState ->
-                val current = _uiState.value
-                when (serviceState) {
-                    is DownloadServiceState.Downloading -> {
-                        if (current is DownloadUiState.Downloading) {
-                            _uiState.value = current.copy(progress = serviceState.progress)
-                        } else if (current is DownloadUiState.FormatSelection) {
-                            _uiState.value = DownloadUiState.Downloading(
-                                metadata = current.metadata,
-                                progress = serviceState.progress,
-                                selectedFormatId = current.selectedFormatId,
-                            )
-                        }
-                    }
-                    is DownloadServiceState.Completed -> {
-                        val downloading = current as? DownloadUiState.Downloading
-                            ?: backgroundDownload?.takeIf { it.progress.requestId == serviceState.requestId }
-                            ?: return@collect
-                        backgroundDownload = null
-                        if (downloading.progress.requestId != serviceState.requestId) return@collect
-                        if (downloading.isShareMode) {
-                            _events.send(DownloadEvent.ShareFile(serviceState.filePath))
-                            _uiState.value = DownloadUiState.FormatSelection(
-                                metadata = downloading.metadata,
-                                selectedFormatId = downloading.selectedFormatId,
-                            )
-                        } else {
-                            _uiState.value = DownloadUiState.Done(
-                                metadata = downloading.metadata,
-                                filePath = serviceState.filePath,
-                            )
-                        }
-                    }
-                    is DownloadServiceState.Failed -> {
-                        val downloading = current as? DownloadUiState.Downloading
-                            ?: backgroundDownload?.takeIf { it.progress.requestId == serviceState.requestId }
-                            ?: return@collect
-                        backgroundDownload = null
-                        if (downloading.progress.requestId != serviceState.requestId) return@collect
-                        if (downloading.isShareMode) {
-                            _events.send(DownloadEvent.ShowSnackbar(errorMessageMapper.map(Exception(serviceState.error))))
-                            _uiState.value = DownloadUiState.FormatSelection(
-                                metadata = downloading.metadata,
-                                selectedFormatId = downloading.selectedFormatId,
-                            )
-                        } else {
-                            _uiState.value = DownloadUiState.Error(
-                                message = errorMessageMapper.map(Exception(serviceState.error)),
-                                retryAction = RetryAction.RetryExtraction(currentUrl),
-                            )
-                        }
-                    }
-                    is DownloadServiceState.Cancelled -> {
-                        if (current is DownloadUiState.Downloading &&
-                            current.progress.requestId == serviceState.requestId
-                        ) {
-                            _uiState.value = DownloadUiState.FormatSelection(
-                                metadata = current.metadata,
-                                selectedFormatId = current.selectedFormatId,
-                            )
-                        }
-                    }
-                    is DownloadServiceState.Idle -> Unit
-                    is DownloadServiceState.Queued -> {
-                        _events.send(DownloadEvent.ShowSnackbar(context.getString(R.string.download_queued)))
+        // Wire notification permission check back through the Android layer
+        shared.platformDelegate = object : SharedDownloadViewModel.PlatformDelegate {
+            override fun checkNotificationPermission(pendingShareOnly: Boolean) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    val hasPermission = ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.POST_NOTIFICATIONS,
+                    ) == PackageManager.PERMISSION_GRANTED
+                    if (!hasPermission) {
+                        // Ask the shared VM to emit RequestNotificationPermission event.
+                        // The UI will launch the system permission dialog; after the user
+                        // responds, the composable calls viewModel.onNotificationPermissionResult().
+                        shared.emitRequestNotificationPermission()
+                        return
                     }
                 }
+                shared.startDownload(shareOnly = pendingShareOnly)
+            }
+        }
+
+        // Sync DownloadServiceStateHolder → AndroidDownloadManager on every state change.
+        // This bridges the Android foreground service's state into the shared VM.
+        viewModelScope.launch {
+            serviceStateHolder.state.collect { serviceState ->
+                androidDownloadManager.updateState(mapServiceState(serviceState))
             }
         }
     }
 
     fun onIntent(intent: DownloadIntent) {
-        when (intent) {
-            is DownloadIntent.UrlChanged -> handleUrlChanged(intent.url)
-            is DownloadIntent.ExtractClicked -> handleExtract()
-            is DownloadIntent.FormatSelected -> handleFormatSelected(intent.formatId)
-            is DownloadIntent.DownloadClicked -> handleDownload()
-            is DownloadIntent.CancelDownloadClicked -> handleCancel()
-            is DownloadIntent.RetryClicked -> handleRetry()
-            is DownloadIntent.OpenFileClicked -> handleOpenFile()
-            is DownloadIntent.ShareFileClicked -> handleShareFile()
-            is DownloadIntent.NewDownloadClicked -> handleNewDownload()
-            is DownloadIntent.PrefillUrl -> handlePrefillUrl(intent.url, intent.existingRecordId)
-            is DownloadIntent.OpenExistingClicked -> handleOpenExisting()
-            is DownloadIntent.ShareExistingClicked -> handleShareExisting()
-            is DownloadIntent.ShareFormatClicked -> handleShareFormat()
-            is DownloadIntent.DismissExistingBanner -> handleDismissExistingBanner()
-            is DownloadIntent.BackToIdleClicked -> handleBackToIdle()
+        // Persist the URL changes via SavedStateHandle for process-death survival.
+        if (intent is DownloadIntent.UrlChanged) {
+            savedStateHandle["currentUrl"] = intent.url
         }
+        shared.onIntent(intent)
     }
 
-    private fun handleUrlChanged(url: String) {
-        currentUrl = url
-        existingRecordId = null
-        savedStateHandle["currentUrl"] = url
-
-        duplicateCheckJob?.cancel()
-        if (url.isBlank()) {
-            val current = _uiState.value
-            if (current is DownloadUiState.Idle && current.existingDownload != null) {
-                _uiState.value = DownloadUiState.Idle()
-            }
-            return
-        }
-        duplicateCheckJob = viewModelScope.launch {
-            delay(500)
-            val existing = findExistingDownload(url)
-            val current = _uiState.value
-            if (current is DownloadUiState.Idle) {
-                _uiState.value = DownloadUiState.Idle(existingDownload = existing)
-            }
-        }
-    }
-
-    private fun handleExtract() {
-        if (currentUrl.isBlank()) return
-        duplicateCheckJob?.cancel()
-        _uiState.value = DownloadUiState.Extracting(currentUrl)
-
-        viewModelScope.launch {
-            extractVideoInfo(currentUrl)
-                .onSuccess { metadata ->
-                    val bestFormatId = metadata.formats
-                        .firstOrNull { !it.isAudioOnly }?.formatId
-                        ?: metadata.formats.firstOrNull()?.formatId
-                        ?: ""
-                    _uiState.value = DownloadUiState.FormatSelection(
-                        metadata = metadata,
-                        selectedFormatId = bestFormatId,
-                    )
-                }
-                .onFailure { error ->
-                    _uiState.value = DownloadUiState.Error(
-                        message = errorMessageMapper.map(error),
-                        retryAction = RetryAction.RetryExtraction(currentUrl),
-                    )
-                }
-        }
-    }
-
-    private fun handleFormatSelected(formatId: String) {
-        val state = _uiState.value
-        if (state is DownloadUiState.FormatSelection) {
-            _uiState.value = state.copy(selectedFormatId = formatId)
-        }
-    }
-
-    private fun handleDownload() {
-        startDownloadWithPermissionCheck(shareOnly = false)
-    }
-
+    /**
+     * Called by the Activity/composable after the POST_NOTIFICATIONS permission result.
+     * Forwards to the shared VM which decides whether to proceed or show rationale.
+     */
     fun onNotificationPermissionResult(granted: Boolean) {
-        if (!granted) {
-            viewModelScope.launch {
-                _events.send(DownloadEvent.ShowSnackbar(context.getString(R.string.notification_permission_rationale)))
-            }
-        }
-        // Proceed with download regardless of permission result
-        startDownload(pendingShareOnly)
-    }
-
-    private fun handleShareFormat() {
-        startDownloadWithPermissionCheck(shareOnly = true)
-    }
-
-    private fun startDownloadWithPermissionCheck(shareOnly: Boolean) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val hasPermission = ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.POST_NOTIFICATIONS,
-            ) == PackageManager.PERMISSION_GRANTED
-            if (!hasPermission) {
-                pendingShareOnly = shareOnly
-                viewModelScope.launch { _events.send(DownloadEvent.RequestNotificationPermission) }
-                return
-            }
-        }
-        startDownload(shareOnly)
-    }
-
-    private fun startDownload(shareOnly: Boolean = false) {
-        val state = _uiState.value
-        if (state !is DownloadUiState.FormatSelection) return
-
-        val selectedFormat = state.metadata.formats
-            .find { it.formatId == state.selectedFormatId } ?: return
-        val requestId = UUID.randomUUID().toString()
-
-        val request = DownloadRequest(
-            id = requestId,
-            sourceUrl = state.metadata.sourceUrl,
-            videoTitle = state.metadata.title,
-            thumbnailUrl = state.metadata.thumbnailUrl,
-            formatId = selectedFormat.formatId,
-            formatLabel = selectedFormat.label,
-            isVideoOnly = selectedFormat.isVideoOnly,
-            totalBytes = selectedFormat.fileSizeBytes,
-            shareOnly = shareOnly,
-            existingRecordId = existingRecordId,
-            directDownloadUrl = selectedFormat.directDownloadUrl,
-        )
-
-        _uiState.value = DownloadUiState.Downloading(
-            metadata = state.metadata,
-            progress = DownloadProgress(
-                requestId = requestId,
-                progressPercent = 0f,
-                downloadedBytes = 0L,
-                totalBytes = selectedFormat.fileSizeBytes,
-                speedBytesPerSec = 0L,
-                etaSeconds = 0L,
-            ),
-            selectedFormatId = selectedFormat.formatId,
-            isShareMode = shareOnly,
-        )
-
-        val serviceIntent = Intent(context, DownloadService::class.java).apply {
-            action = DownloadService.ACTION_START_DOWNLOAD
-            putExtra(DownloadService.EXTRA_REQUEST_ID, request.id)
-            putExtra(DownloadService.EXTRA_SOURCE_URL, request.sourceUrl)
-            putExtra(DownloadService.EXTRA_VIDEO_TITLE, request.videoTitle)
-            putExtra(DownloadService.EXTRA_THUMBNAIL_URL, request.thumbnailUrl)
-            putExtra(DownloadService.EXTRA_FORMAT_ID, request.formatId)
-            putExtra(DownloadService.EXTRA_FORMAT_LABEL, request.formatLabel)
-            putExtra(DownloadService.EXTRA_IS_VIDEO_ONLY, request.isVideoOnly)
-            putExtra(DownloadService.EXTRA_SHARE_ONLY, request.shareOnly)
-            request.directDownloadUrl?.let { putExtra(DownloadService.EXTRA_DIRECT_DOWNLOAD_URL, it) }
-            request.existingRecordId?.let { putExtra(DownloadService.EXTRA_EXISTING_RECORD_ID, it) }
-        }
-        context.startForegroundService(serviceIntent)
-    }
-
-    private fun handleCancel() {
-        val state = _uiState.value
-        val requestId = (state as? DownloadUiState.Downloading)?.progress?.requestId ?: return
-        val serviceIntent = Intent(context, DownloadService::class.java).apply {
-            action = DownloadService.ACTION_CANCEL_DOWNLOAD
-            putExtra(DownloadService.EXTRA_REQUEST_ID, requestId)
-        }
-        context.startService(serviceIntent)
-    }
-
-    private fun handleRetry() {
-        val state = _uiState.value
-        if (state !is DownloadUiState.Error) return
-        when (val action = state.retryAction) {
-            is RetryAction.RetryExtraction -> {
-                currentUrl = action.url
-                handleExtract()
-            }
-        }
-    }
-
-    private fun handleOpenFile() {
-        val state = _uiState.value
-        if (state is DownloadUiState.Done) {
-            viewModelScope.launch {
-                _events.send(DownloadEvent.OpenFile(state.filePath))
-            }
-        }
-    }
-
-    private fun handleShareFile() {
-        val state = _uiState.value
-        if (state is DownloadUiState.Done) {
-            viewModelScope.launch {
-                _events.send(DownloadEvent.ShareFile(state.filePath))
-            }
-        }
-    }
-
-    private fun handleNewDownload() {
-        val current = _uiState.value
-        if (current is DownloadUiState.Downloading) {
-            backgroundDownload = current
-        }
-        currentUrl = ""
-        existingRecordId = null
-        duplicateCheckJob?.cancel()
-        _uiState.value = DownloadUiState.Idle()
-    }
-
-    private fun handleBackToIdle() {
-        _uiState.value = DownloadUiState.Idle(prefillUrl = currentUrl)
-    }
-
-    private fun handleOpenExisting() {
-        val state = _uiState.value
-        if (state is DownloadUiState.Idle) {
-            val existing = state.existingDownload ?: return
-            viewModelScope.launch {
-                _events.send(DownloadEvent.OpenFile(existing.contentUri))
-            }
-        }
-    }
-
-    private fun handleShareExisting() {
-        val state = _uiState.value
-        if (state is DownloadUiState.Idle) {
-            val existing = state.existingDownload ?: return
-            viewModelScope.launch {
-                _events.send(DownloadEvent.ShareFile(existing.contentUri))
-            }
-        }
-    }
-
-    private fun handleDismissExistingBanner() {
-        val current = _uiState.value
-        if (current is DownloadUiState.Idle) {
-            _uiState.value = DownloadUiState.Idle(prefillUrl = current.prefillUrl)
-        }
+        shared.onNotificationPermissionResult(granted)
     }
 
     override fun onCleared() {
-        super.onCleared()
         // Only sweep leftover share temp files when the service is not active.
-        // Per-file cleanup runs eagerly after each share chooser launches;
-        // this is a backstop for process kills or edge cases.
-        // Note: viewModelScope is cancelled by the time onCleared runs, so use a
-        // standalone scope for fire-and-forget IO work.
         if (serviceStateHolder.state.value is DownloadServiceState.Idle) {
             CoroutineScope(ioDispatcher).launch {
                 java.io.File(context.cacheDir, DownloadService.SHARE_TEMP_DIR).deleteRecursively()
             }
         }
+        // Do NOT call shared.cleanup() — viewModelScope is cancelled by super.onCleared(),
+        // and SharedDownloadViewModel uses the same scope.
+        super.onCleared()
     }
 
-    private fun handlePrefillUrl(url: String, recordId: Long? = null) {
-        duplicateCheckJob?.cancel()
-        currentUrl = url
-        existingRecordId = recordId
-        viewModelScope.launch {
-            val existing = findExistingDownload(url)
-            if (existing != null) {
-                _uiState.value = DownloadUiState.Idle(
-                    existingDownload = existing,
-                    prefillUrl = url,
-                )
-            } else {
-                handleExtract()
-            }
+    private fun mapServiceState(serviceState: DownloadServiceState): SharedDownloadServiceState {
+        return when (serviceState) {
+            is DownloadServiceState.Idle -> SharedDownloadServiceState.Idle
+            is DownloadServiceState.Queued -> SharedDownloadServiceState.Queued(
+                requestId = serviceState.pendingIds.firstOrNull() ?: "",
+                videoTitle = "",
+            )
+            is DownloadServiceState.Downloading -> SharedDownloadServiceState.Downloading(
+                requestId = serviceState.requestId,
+                progress = serviceState.progress,
+            )
+            is DownloadServiceState.Completed -> SharedDownloadServiceState.Completed(
+                requestId = serviceState.requestId,
+                filePath = serviceState.filePath,
+                fileUri = serviceState.filePath,
+            )
+            is DownloadServiceState.Failed -> SharedDownloadServiceState.Failed(
+                requestId = serviceState.requestId,
+                error = parseErrorType(serviceState.error),
+            )
+            is DownloadServiceState.Cancelled -> SharedDownloadServiceState.Cancelled(
+                requestId = serviceState.requestId,
+            )
+        }
+    }
+
+    private fun parseErrorType(error: String): com.socialvideodownloader.shared.data.platform.DownloadErrorType {
+        val lower = error.lowercase()
+        return when {
+            "network" in lower || "connect" in lower || "timeout" in lower ->
+                com.socialvideodownloader.shared.data.platform.DownloadErrorType.NETWORK_ERROR
+            "unsupported" in lower || "not supported" in lower ->
+                com.socialvideodownloader.shared.data.platform.DownloadErrorType.UNSUPPORTED_URL
+            "storage" in lower || "no space" in lower || "disk" in lower ->
+                com.socialvideodownloader.shared.data.platform.DownloadErrorType.STORAGE_FULL
+            "extract" in lower ->
+                com.socialvideodownloader.shared.data.platform.DownloadErrorType.EXTRACTION_FAILED
+            "server" in lower || "503" in lower || "502" in lower ->
+                com.socialvideodownloader.shared.data.platform.DownloadErrorType.SERVER_UNAVAILABLE
+            else ->
+                com.socialvideodownloader.shared.data.platform.DownloadErrorType.DOWNLOAD_FAILED
         }
     }
 }
 
-sealed interface DownloadEvent {
-    data class OpenFile(val filePath: String) : DownloadEvent
-    data class ShareFile(val filePath: String) : DownloadEvent
-    data class ShowSnackbar(val message: String) : DownloadEvent
-    data object RequestNotificationPermission : DownloadEvent
-}
+// Re-export DownloadEvent as a typealias so the existing Compose UI layer
+// can import it from com.socialvideodownloader.feature.download.ui without changes.
+typealias DownloadEvent = com.socialvideodownloader.shared.feature.download.DownloadEvent

@@ -6,7 +6,14 @@ import com.socialvideodownloader.core.domain.di.IoDispatcher
 import com.socialvideodownloader.core.domain.model.DownloadRequest
 import com.socialvideodownloader.core.domain.model.VideoMetadata
 import com.socialvideodownloader.core.domain.repository.VideoExtractorRepository
+import com.socialvideodownloader.shared.network.ServerVideoExtractorApi
 import dagger.hilt.android.qualifiers.ApplicationContext
+import io.ktor.client.HttpClient
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.statement.bodyAsChannel
+import io.ktor.http.HttpStatusCode
+import io.ktor.utils.io.readAvailable
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -16,6 +23,7 @@ import javax.inject.Inject
 class FallbackVideoExtractorRepository @Inject constructor(
     private val local: VideoExtractorRepositoryImpl,
     private val serverApi: ServerVideoExtractorApi,
+    private val httpClient: HttpClient,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     @ApplicationContext private val context: Context,
 ) : VideoExtractorRepository {
@@ -26,9 +34,7 @@ class FallbackVideoExtractorRepository @Inject constructor(
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             Log.w(TAG, "Local extraction failed, trying server", e)
-            withContext(ioDispatcher) {
-                serverApi.extractInfo(url)
-            }
+            serverApi.extractInfo(url)
         }
     }
 
@@ -47,10 +53,11 @@ class FallbackVideoExtractorRepository @Inject constructor(
                 // TODO: add a dedicated `ext` field to DownloadRequest for reliable extension derivation
                 // formatLabel is built as "$ext audio", "${height}p $ext", or "$ext" — ext is the last word
                 val ext = request.formatLabel.trim().substringAfterLast(' ').takeIf { it.isNotEmpty() } ?: "mp4"
-                serverApi.downloadFile(
+                val outputFile = File(outputDir, "$safeTitle.$ext")
+
+                downloadToFile(
                     url = directUrl,
-                    outputDir = outputDir,
-                    fileName = "$safeTitle.$ext",
+                    outputFile = outputFile,
                     requestId = request.id,
                     onProgress = callback,
                 )
@@ -60,9 +67,50 @@ class FallbackVideoExtractorRepository @Inject constructor(
         }
     }
 
+    private suspend fun downloadToFile(
+        url: String,
+        outputFile: File,
+        requestId: String,
+        onProgress: (Float, Long, String) -> Unit,
+    ): String {
+        try {
+            val response = httpClient.get(url) {
+                header("X-Request-Id", requestId)
+            }
+
+            if (response.status != HttpStatusCode.OK) {
+                throw IllegalStateException("Download failed (${response.status.value})")
+            }
+
+            val contentLength = response.headers["Content-Length"]?.toLongOrNull() ?: -1L
+            val channel = response.bodyAsChannel()
+            var downloadedBytes = 0L
+            val buffer = ByteArray(8192)
+
+            outputFile.outputStream().use { outputStream ->
+                while (!channel.isClosedForRead) {
+                    val bytesRead = channel.readAvailable(buffer)
+                    if (bytesRead <= 0) break
+                    outputStream.write(buffer, 0, bytesRead)
+                    downloadedBytes += bytesRead
+                    val progress = if (contentLength > 0) {
+                        (downloadedBytes.toFloat() / contentLength * 100f)
+                    } else {
+                        -1f
+                    }
+                    onProgress(progress, 0L, "")
+                }
+            }
+
+            return outputFile.absolutePath
+        } catch (e: Exception) {
+            outputFile.delete()
+            throw e
+        }
+    }
+
     override fun cancelDownload(processId: String) {
         local.cancelDownload(processId)
-        serverApi.cancelDownload(processId)
     }
 
     companion object {

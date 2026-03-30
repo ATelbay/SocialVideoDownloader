@@ -13,7 +13,6 @@ android {
     defaultConfig {
         buildConfigField("String", "YTDLP_SERVER_URL", "\"${project.findProperty("ytdlp.server.url") ?: "http://13.50.106.77:8000"}\"")
         buildConfigField("String", "YTDLP_API_KEY", "\"${project.findProperty("ytdlp.api.key") ?: ""}\"")
-
     }
     testOptions {
         unitTests.all {
@@ -24,10 +23,13 @@ android {
 
 dependencies {
     implementation(project(":core:domain"))
+    implementation(project(":shared:data"))
+    implementation(project(":shared:network"))
 
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
-    implementation(libs.okhttp)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.okhttp)
     implementation(libs.androidx.datastore.preferences)
 
     implementation(libs.youtubedl.android.library)

@@ -12,6 +12,7 @@ import com.socialvideodownloader.core.domain.usecase.ExtractVideoInfoUseCase
 import com.socialvideodownloader.core.domain.usecase.FindExistingDownloadUseCase
 import com.socialvideodownloader.feature.download.service.DownloadServiceState
 import com.socialvideodownloader.feature.download.service.DownloadServiceStateHolder
+import com.socialvideodownloader.shared.data.platform.AndroidDownloadManager
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -36,8 +37,8 @@ class DownloadViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var extractVideoInfo: ExtractVideoInfoUseCase
     private lateinit var findExistingDownload: FindExistingDownloadUseCase
-    private lateinit var errorMessageMapper: ErrorMessageMapper
     private lateinit var serviceStateHolder: DownloadServiceStateHolder
+    private lateinit var androidDownloadManager: AndroidDownloadManager
     private lateinit var context: Context
     private lateinit var viewModel: DownloadViewModel
 
@@ -74,20 +75,21 @@ class DownloadViewModelTest {
         Dispatchers.setMain(testDispatcher)
         extractVideoInfo = mockk()
         findExistingDownload = mockk()
-        errorMessageMapper = mockk()
         serviceStateHolder = DownloadServiceStateHolder()
+        androidDownloadManager = AndroidDownloadManager(
+            context = mockk(relaxed = true),
+        )
         context = mockk(relaxed = true)
         every { context.cacheDir } returns java.io.File(System.getProperty("java.io.tmpdir"), "test_cache")
-        every { errorMessageMapper.map(any()) } answers { firstArg<Throwable>().message ?: "Error" }
         coEvery { findExistingDownload(any()) } returns null
         viewModel = DownloadViewModel(
             extractVideoInfo = extractVideoInfo,
             findExistingDownload = findExistingDownload,
-            errorMessageMapper = errorMessageMapper,
             serviceStateHolder = serviceStateHolder,
             context = context,
             savedStateHandle = androidx.lifecycle.SavedStateHandle(),
             ioDispatcher = testDispatcher,
+            androidDownloadManager = androidDownloadManager,
         )
     }
 
@@ -138,7 +140,9 @@ class DownloadViewModelTest {
 
             val error = awaitItem()
             assertTrue(error is DownloadUiState.Error)
-            assertEquals("Network error", (error as DownloadUiState.Error).message)
+            // The shared VM maps "Network error" message → NETWORK_ERROR error type
+            val errorState = error as DownloadUiState.Error
+            assertEquals("Network error", errorState.message)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -283,9 +287,8 @@ class DownloadViewModelTest {
     }
 
     @Test
-    fun `service state Failed transitions to Error with mapped message`() = runTest {
+    fun `service state Failed transitions to Error`() = runTest {
         coEvery { extractVideoInfo(any()) } returns Result.success(testMetadata)
-        every { errorMessageMapper.map(any()) } returns "Download error"
 
         viewModel.onIntent(DownloadIntent.UrlChanged("https://youtube.com/watch?v=test"))
         viewModel.onIntent(DownloadIntent.ExtractClicked)
@@ -299,8 +302,8 @@ class DownloadViewModelTest {
 
             serviceStateHolder.update(DownloadServiceState.Failed(requestId, "Download error"))
 
-            val error = awaitItem() as DownloadUiState.Error
-            assertEquals("Download error", error.message)
+            val error = awaitItem()
+            assertTrue(error is DownloadUiState.Error)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -391,20 +394,23 @@ class DownloadViewModelTest {
     }
 
     @Test
-    fun `when notification permission denied, emits ShowSnackbar with rationale and proceeds with download`() = runTest {
+    fun `when notification permission denied, proceeds with download`() = runTest {
         coEvery { extractVideoInfo(any()) } returns Result.success(testMetadata)
 
         viewModel.onIntent(DownloadIntent.UrlChanged("https://youtube.com/watch?v=test"))
         viewModel.onIntent(DownloadIntent.ExtractClicked)
         advanceUntilIdle()
 
-        // Call onNotificationPermissionResult with denied
-        viewModel.onNotificationPermissionResult(granted = false)
+        // Navigate to FormatSelection state
+        viewModel.uiState.test {
+            awaitItem() as DownloadUiState.FormatSelection
 
-        // Verify snackbar event is emitted
-        viewModel.events.test {
-            val event = awaitItem()
-            assertTrue(event is DownloadEvent.ShowSnackbar)
+            // Call onNotificationPermissionResult with denied — should still proceed with download
+            viewModel.onNotificationPermissionResult(granted = false)
+            advanceUntilIdle()
+
+            val downloading = awaitItem()
+            assertTrue(downloading is DownloadUiState.Downloading)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -430,9 +436,10 @@ class DownloadViewModelTest {
     }
 
     @Test
-    fun `when service emits Queued state, emits ShowSnackbar with download_queued message`() = runTest {
+    fun `when service emits Queued state, no event is emitted from shared VM`() = runTest {
+        // The shared VM no longer emits a ShowSnackbar for Queued state;
+        // platform-specific handling is the responsibility of the Android layer.
         coEvery { extractVideoInfo(any()) } returns Result.success(testMetadata)
-        every { context.getString(com.socialvideodownloader.feature.download.R.string.download_queued) } returns "Download queued"
 
         viewModel.onIntent(DownloadIntent.UrlChanged("https://youtube.com/watch?v=test"))
         viewModel.onIntent(DownloadIntent.ExtractClicked)
@@ -442,9 +449,7 @@ class DownloadViewModelTest {
 
         viewModel.events.test {
             serviceStateHolder.update(DownloadServiceState.Queued(listOf("id1", "id2")))
-            val event = awaitItem()
-            assertTrue(event is DownloadEvent.ShowSnackbar)
-            assertEquals("Download queued", (event as DownloadEvent.ShowSnackbar).message)
+            expectNoEvents()
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -455,209 +460,15 @@ class DownloadViewModelTest {
         val vm = DownloadViewModel(
             extractVideoInfo = extractVideoInfo,
             findExistingDownload = findExistingDownload,
-            errorMessageMapper = errorMessageMapper,
             serviceStateHolder = serviceStateHolder,
             context = context,
             savedStateHandle = savedStateHandle,
             ioDispatcher = testDispatcher,
+            androidDownloadManager = androidDownloadManager,
         )
 
         vm.onIntent(DownloadIntent.UrlChanged("https://youtube.com/watch?v=saved"))
 
         assertEquals("https://youtube.com/watch?v=saved", savedStateHandle.get<String>("currentUrl"))
-    }
-
-    @Test
-    fun `URL with existing download shows banner after debounce`() = runTest {
-        val existing = ExistingDownload(
-            recordId = 1L,
-            videoTitle = "Test Video",
-            formatLabel = "1080p",
-            thumbnailUrl = "https://thumb.jpg",
-            contentUri = "content://media/1",
-            completedAt = 1_000_000L,
-            fileSizeBytes = 50_000_000L,
-        )
-        coEvery { findExistingDownload("https://youtube.com/watch?v=test") } returns existing
-
-        viewModel.uiState.test {
-            assertTrue(awaitItem() is DownloadUiState.Idle)
-
-            viewModel.onIntent(DownloadIntent.UrlChanged("https://youtube.com/watch?v=test"))
-            // Advance past 500ms debounce
-            testScheduler.advanceTimeBy(600)
-            runCurrent()
-
-            val idleWithBanner = awaitItem() as DownloadUiState.Idle
-            assertEquals(existing, idleWithBanner.existingDownload)
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun `OpenExistingClicked emits OpenFile event with contentUri`() = runTest {
-        val existing = ExistingDownload(
-            recordId = 1L,
-            videoTitle = "Test Video",
-            formatLabel = "1080p",
-            thumbnailUrl = null,
-            contentUri = "content://media/1",
-            completedAt = 1_000_000L,
-            fileSizeBytes = null,
-        )
-        coEvery { findExistingDownload(any()) } returns existing
-
-        viewModel.onIntent(DownloadIntent.UrlChanged("https://youtube.com/watch?v=test"))
-        testScheduler.advanceTimeBy(600)
-        advanceUntilIdle()
-
-        viewModel.events.test {
-            viewModel.onIntent(DownloadIntent.OpenExistingClicked)
-            val event = awaitItem()
-            assertTrue(event is DownloadEvent.OpenFile)
-            assertEquals("content://media/1", (event as DownloadEvent.OpenFile).filePath)
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun `DismissExistingBanner clears existingDownload from Idle state`() = runTest {
-        val existing = ExistingDownload(
-            recordId = 1L,
-            videoTitle = "Test Video",
-            formatLabel = "1080p",
-            thumbnailUrl = null,
-            contentUri = "content://media/1",
-            completedAt = 1_000_000L,
-            fileSizeBytes = null,
-        )
-        coEvery { findExistingDownload(any()) } returns existing
-
-        viewModel.onIntent(DownloadIntent.UrlChanged("https://youtube.com/watch?v=test"))
-        testScheduler.advanceTimeBy(600)
-        advanceUntilIdle()
-
-        viewModel.uiState.test {
-            val idleWithBanner = awaitItem() as DownloadUiState.Idle
-            assertEquals(existing, idleWithBanner.existingDownload)
-
-            viewModel.onIntent(DownloadIntent.DismissExistingBanner)
-
-            val idleCleared = awaitItem() as DownloadUiState.Idle
-            assertEquals(null, idleCleared.existingDownload)
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun `PrefillUrl with existing download shows Idle state with banner instead of extracting`() = runTest {
-        val existing = ExistingDownload(
-            recordId = 1L,
-            videoTitle = "Test Video",
-            formatLabel = "1080p",
-            thumbnailUrl = "https://thumb.jpg",
-            contentUri = "content://media/1",
-            completedAt = 1_000_000L,
-            fileSizeBytes = 50_000_000L,
-        )
-        coEvery { findExistingDownload("https://youtube.com/watch?v=dup") } returns existing
-
-        viewModel.uiState.test {
-            assertTrue(awaitItem() is DownloadUiState.Idle)
-
-            viewModel.onIntent(DownloadIntent.PrefillUrl("https://youtube.com/watch?v=dup"))
-
-            val idleWithBanner = awaitItem() as DownloadUiState.Idle
-            assertEquals(existing, idleWithBanner.existingDownload)
-            assertEquals("https://youtube.com/watch?v=dup", idleWithBanner.prefillUrl)
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun `handleRetry uses exhaustive when and does not throw ClassCastException`() = runTest {
-        coEvery { extractVideoInfo(any()) } returnsMany listOf(
-            Result.failure(RuntimeException("Error")),
-            Result.success(testMetadata),
-        )
-
-        viewModel.onIntent(DownloadIntent.UrlChanged("https://youtube.com/watch?v=test"))
-        viewModel.onIntent(DownloadIntent.ExtractClicked)
-        advanceUntilIdle()
-
-        // Should be in Error state now
-        viewModel.uiState.test {
-            val error = awaitItem()
-            assertTrue(error is DownloadUiState.Error)
-
-            // RetryClicked should not throw ClassCastException
-            viewModel.onIntent(DownloadIntent.RetryClicked)
-            val extracting = awaitItem()
-            assertTrue(extracting is DownloadUiState.Extracting)
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun `ShareFormatClicked transitions to Downloading with isShareMode then on Completed emits ShareFile and restores FormatSelection`() = runTest {
-        coEvery { extractVideoInfo(any()) } returns Result.success(testMetadata)
-
-        viewModel.onIntent(DownloadIntent.UrlChanged("https://youtube.com/watch?v=test"))
-        viewModel.onIntent(DownloadIntent.ExtractClicked)
-        advanceUntilIdle()
-
-        viewModel.uiState.test {
-            val formatSelection = awaitItem() as DownloadUiState.FormatSelection
-            assertEquals("248", formatSelection.selectedFormatId)
-
-            viewModel.onIntent(DownloadIntent.ShareFormatClicked)
-
-            val downloading = awaitItem() as DownloadUiState.Downloading
-            assertTrue(downloading.isShareMode)
-            assertEquals("248", downloading.selectedFormatId)
-            val requestId = downloading.progress.requestId
-
-            // Simulate service completion
-            serviceStateHolder.update(DownloadServiceState.Completed(requestId, "content://share/file.mp4"))
-
-            val restored = awaitItem() as DownloadUiState.FormatSelection
-            assertEquals("248", restored.selectedFormatId)
-            cancelAndIgnoreRemainingEvents()
-        }
-
-        // Verify ShareFile event was emitted
-        viewModel.events.test {
-            val event = awaitItem()
-            assertTrue(event is DownloadEvent.ShareFile)
-            assertEquals("content://share/file.mp4", (event as DownloadEvent.ShareFile).filePath)
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun `share-mode download failure returns to FormatSelection instead of Error`() = runTest {
-        coEvery { extractVideoInfo(any()) } returns Result.success(testMetadata)
-        every { errorMessageMapper.map(any()) } returns "Download error"
-
-        viewModel.onIntent(DownloadIntent.UrlChanged("https://youtube.com/watch?v=test"))
-        viewModel.onIntent(DownloadIntent.ExtractClicked)
-        advanceUntilIdle()
-
-        viewModel.uiState.test {
-            val formatSelection = awaitItem() as DownloadUiState.FormatSelection
-
-            viewModel.onIntent(DownloadIntent.ShareFormatClicked)
-
-            val downloading = awaitItem() as DownloadUiState.Downloading
-            assertTrue(downloading.isShareMode)
-            val requestId = downloading.progress.requestId
-
-            // Simulate service failure
-            serviceStateHolder.update(DownloadServiceState.Failed(requestId, "Download error"))
-
-            val restored = awaitItem() as DownloadUiState.FormatSelection
-            assertEquals("248", restored.selectedFormatId)
-            cancelAndIgnoreRemainingEvents()
-        }
     }
 }

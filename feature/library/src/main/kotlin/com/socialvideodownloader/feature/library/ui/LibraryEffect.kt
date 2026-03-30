@@ -1,9 +1,6 @@
 package com.socialvideodownloader.feature.library.ui
 
-import androidx.annotation.StringRes
-
-sealed interface LibraryEffect {
-    data class OpenContent(val contentUri: String) : LibraryEffect
-    data class ShareContent(val contentUri: String) : LibraryEffect
-    data class ShowMessage(@StringRes val messageResId: Int) : LibraryEffect
-}
+// Re-export shared KMP types so the existing Compose UI layer imports from
+// com.socialvideodownloader.feature.library.ui without any changes.
+typealias LibraryEffect = com.socialvideodownloader.shared.feature.library.LibraryEffect
+typealias LibraryMessageType = com.socialvideodownloader.shared.feature.library.LibraryMessageType

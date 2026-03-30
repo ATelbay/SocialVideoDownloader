@@ -14,6 +14,8 @@ android {
 }
 
 dependencies {
+    implementation(project(":shared:data"))
+    implementation(project(":shared:feature-library"))
     implementation(libs.androidx.navigation.compose)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.kotlinx.serialization.json)

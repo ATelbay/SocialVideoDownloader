@@ -13,6 +13,7 @@ import com.socialvideodownloader.core.domain.repository.BillingRepository
 import com.socialvideodownloader.core.domain.repository.CloudBackupRepository
 import com.socialvideodownloader.core.domain.sync.BackupPreferences
 import com.socialvideodownloader.core.domain.sync.CloudAuthService
+import com.socialvideodownloader.di.KoinInitializer
 import com.socialvideodownloader.feature.download.service.DownloadNotificationManager
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
@@ -42,6 +43,11 @@ class SocialVideoDownloaderApp : Application() {
     private val applicationScope = CoroutineScope(SupervisorJob())
 
     override fun onCreate() {
+        // T063/T137: Initialize Koin BEFORE super.onCreate() completes Hilt setup.
+        // Koin must be ready before any Hilt @Provides methods in KoinBridgeModule
+        // attempt to retrieve shared dependencies from Koin.
+        KoinInitializer.init(this)
+
         super.onCreate()
         FirebaseApp.initializeApp(this)
         createNotificationChannels()

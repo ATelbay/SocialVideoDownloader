@@ -17,21 +17,42 @@ Built on yt-dlp via youtubedl-android. Personal tool.
 
 ## Module structure
 ```
-:app                    — Activity, navigation, DI setup
-:feature:download       — Main screen (URL input, format selection, progress)
-:feature:history        — Download history screen
-:core:domain            — Use cases, domain models, repository interfaces
-:core:data              — Repository implementations, Room DB, yt-dlp wrapper
-:core:ui                — Shared composables, theme, design tokens
+Android-only modules:
+:app                       — Activity, navigation, Hilt DI setup, KMP bridge
+:feature:download          — Download screen (Compose, delegates to :shared:feature-download VM)
+:feature:history           — History screen (Compose, delegates to :shared:feature-history VM)
+:feature:library           — Library/file browser screen (Compose)
+:core:domain               — KMP: use cases, domain models, repository interfaces (commonMain + androidMain/iosMain)
+:core:data                 — Android: Room DB impl, yt-dlp wrapper, MediaStore, server client
+:core:ui                   — Android: shared Compose components, theme, design tokens
+:core:cloud                — Android: Firebase Auth + Firestore cloud backup
+:core:billing              — Android: Play Billing (Pro tier)
+
+KMP Shared modules (Android + iOS):
+:shared:network            — Ktor HTTP client, yt-dlp API models, server communication
+:shared:data               — Room KMP DB, DAOs, platform abstractions (FileStorage, DownloadManager, Clipboard)
+:shared:feature-download   — SharedDownloadViewModel: state machine, format selection, retry logic
+:shared:feature-history    — SharedHistoryViewModel: history list, cloud backup controls
+:shared:feature-library    — SharedLibraryViewModel: offline library, file access
+
+iOS-only:
+iosApp/                    — SwiftUI app: Download, History, Library, Cloud Backup, Share Extension screens
 ```
+
+### KMP Convention Plugins (build-logic)
+- `svd.kmp.library` — multiplatform library with Android + iOS targets, Room KMP, Ktor
+- `svd.kmp.feature` — KMP feature module with shared ViewModel dependencies
+- `svd.android.library` — Android-only library (Compose off by default)
+- `svd.android.feature` — Android feature module (Compose + Hilt)
 
 ## Build commands
 ```bash
-./gradlew assembleDebug          # Debug build
+./gradlew assembleDebug          # Debug build (~138MB APK, ~15s clean build)
 ./gradlew assembleRelease        # Release build
 ./gradlew test                   # Unit tests
 ./gradlew connectedAndroidTest   # Instrumentation tests
-./gradlew ktlintCheck            # Lint
+# ktlint: exclude iOS native compilation due to Koin 4.2.0 / Kotlin 2.2.x ABI mismatch
+./gradlew ktlintCheck -x compileKotlinIosArm64 -x compileKotlinIosSimulatorArm64
 ```
 
 ## Coding standards
@@ -102,6 +123,8 @@ io.github.junkfood02.youtubedl-android:aria2c:0.18.+
 - Kotlin 2.2.10 + Jetpack Compose (BOM 2026.03.00), Hilt 2.59.2, Room 2.8.4, Navigation Compose 2.9.7, Coil 2.7.0, Firebase BOM 33.15.0 (Auth + Firestore), Play Billing 7.1.1 (009-cloud-history-backup)
 - Room (download history + sync queue), Firestore (encrypted cloud records), DataStore Preferences (backup settings) (009-cloud-history-backup)
 - Kotlin 2.2.10 + Jetpack Compose (BOM 2026.03.00), Hilt (KSP), Room (KSP), Navigation Compose 2.9.7, Coil 2.7.0, youtubedl-android 0.18.x (library + ffmpeg + aria2c), Firebase BOM 33.15.0 (Auth + Firestore), Play Billing 7.1.1 (010-apk-size-optimization)
+- Kotlin 2.2.10, Swift 6.x (iOS) + Room KMP 2.8.4, Ktor 3.4.1, Koin 4.2.0, SKIE 0.10.10, Multiplatform Settings 1.3.0. Android retains: Jetpack Compose (BOM 2026.03.00), Hilt 2.59.2, Navigation Compose 2.9.7, Coil 2.7.0, Firebase BOM 33.15.0, Play Billing 7.1.1. (011-kmp-ios-migration)
+- Room KMP (shared DB schema in commonMain, platform builders), MediaStore (Android), Documents directory (iOS), Multiplatform Settings (preferences) (011-kmp-ios-migration)
 
 ## Recent Changes
 - 005-ui-redesign-dark-theme: Added Kotlin 2.2.10 + Jetpack Compose (BOM 2026.03.00), Material 3, Hilt (KSP), Navigation Compose 2.9.7, Coil

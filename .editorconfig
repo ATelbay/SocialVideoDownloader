@@ -1,0 +1,5 @@
+[*.{kt,kts}]
+ktlint_standard_property-naming = disabled
+
+[{**/build/generated/**,**/build/generated-sources/**}]
+ktlint = disabled

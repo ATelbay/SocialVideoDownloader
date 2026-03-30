@@ -17,6 +17,11 @@ import com.socialvideodownloader.core.ui.theme.SvdPrimary
 import com.socialvideodownloader.core.ui.tokens.Spacing
 import com.socialvideodownloader.feature.history.R
 import com.socialvideodownloader.feature.history.components.HistoryEmptyState
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.HistoryItemClicked
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.HistoryItemLongPressed
+import com.socialvideodownloader.shared.feature.history.HistoryUiState.Content
+import com.socialvideodownloader.shared.feature.history.HistoryUiState.Empty
+import com.socialvideodownloader.shared.feature.history.HistoryUiState.Loading
 
 @Composable
 fun HistoryContent(
@@ -26,7 +31,7 @@ fun HistoryContent(
     modifier: Modifier = Modifier,
 ) {
     when (uiState) {
-        is HistoryUiState.Loading -> {
+        is Loading -> {
             Box(
                 modifier = modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
@@ -35,7 +40,7 @@ fun HistoryContent(
             }
         }
 
-        is HistoryUiState.Empty -> {
+        is Empty -> {
             Box(
                 modifier = modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
@@ -47,7 +52,7 @@ fun HistoryContent(
             }
         }
 
-        is HistoryUiState.Content -> {
+        is Content -> {
             LazyColumn(
                 modifier = modifier.fillMaxSize(),
                 contentPadding = PaddingValues(
@@ -61,8 +66,8 @@ fun HistoryContent(
                 items(uiState.items, key = { it.id }) { item ->
                     HistoryListItemRow(
                         item = item,
-                        onClick = { onIntent(HistoryIntent.HistoryItemClicked(item.id)) },
-                        onLongClick = { onIntent(HistoryIntent.HistoryItemLongPressed(item.id)) },
+                        onClick = { onIntent(HistoryItemClicked(item.id)) },
+                        onLongClick = { onIntent(HistoryItemLongPressed(item.id)) },
                     )
                 }
                 item {

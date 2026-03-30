@@ -8,6 +8,7 @@ dependencies {
     compileOnly(libs.compose.gradlePlugin)
     compileOnly(libs.ksp.gradlePlugin)
     compileOnly(libs.room.gradlePlugin)
+    compileOnly(libs.skie.gradlePlugin)
 }
 
 gradlePlugin {
@@ -35,6 +36,14 @@ gradlePlugin {
         register("androidRoom") {
             id = "svd.android.room"
             implementationClass = "AndroidRoomConventionPlugin"
+        }
+        register("kmpLibrary") {
+            id = "svd.kmp.library"
+            implementationClass = "KmpLibraryConventionPlugin"
+        }
+        register("kmpFeature") {
+            id = "svd.kmp.feature"
+            implementationClass = "KmpFeatureConventionPlugin"
         }
     }
 }

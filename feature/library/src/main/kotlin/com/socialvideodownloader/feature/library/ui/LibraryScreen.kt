@@ -32,6 +32,10 @@ import com.socialvideodownloader.core.ui.tokens.Spacing
 import com.socialvideodownloader.feature.library.R
 import com.socialvideodownloader.feature.library.ui.components.LibraryEmptyState
 import com.socialvideodownloader.feature.library.ui.components.LibraryListItemRow
+import com.socialvideodownloader.shared.feature.library.LibraryEffect
+import com.socialvideodownloader.shared.feature.library.LibraryIntent
+import com.socialvideodownloader.shared.feature.library.LibraryMessageType
+import com.socialvideodownloader.shared.feature.library.LibraryUiState
 
 @Composable
 fun LibraryScreen(
@@ -62,7 +66,13 @@ fun LibraryScreen(
                     }
                 }
                 is LibraryEffect.ShowMessage -> {
-                    snackbarHostState.showSnackbar(context.getString(effect.messageResId))
+                    val msgRes = when (effect.messageType) {
+                        LibraryMessageType.DELETE_SUCCESS -> R.string.library_deleted
+                        LibraryMessageType.FILE_NOT_FOUND -> R.string.library_open_error
+                        LibraryMessageType.SHARE_ERROR -> R.string.library_share_error
+                        LibraryMessageType.OPEN_ERROR -> R.string.library_open_error
+                    }
+                    snackbarHostState.showSnackbar(context.getString(msgRes))
                 }
             }
         }

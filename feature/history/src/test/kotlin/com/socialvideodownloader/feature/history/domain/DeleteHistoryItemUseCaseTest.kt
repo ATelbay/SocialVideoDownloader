@@ -5,6 +5,7 @@ import com.socialvideodownloader.core.domain.model.DownloadStatus
 import com.socialvideodownloader.feature.history.testdouble.FakeDownloadRepository
 import com.socialvideodownloader.feature.history.testdouble.FakeHistoryFileManager
 import com.socialvideodownloader.feature.history.testutil.MainDispatcherRule
+import com.socialvideodownloader.shared.feature.history.DeleteHistoryItemUseCaseShared
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -18,13 +19,13 @@ class DeleteHistoryItemUseCaseTest {
 
     private lateinit var repository: FakeDownloadRepository
     private lateinit var fileManager: FakeHistoryFileManager
-    private lateinit var useCase: DeleteHistoryItemUseCase
+    private lateinit var useCase: DeleteHistoryItemUseCaseShared
 
     @BeforeEach
     fun setUp() {
         repository = FakeDownloadRepository()
         fileManager = FakeHistoryFileManager()
-        useCase = DeleteHistoryItemUseCase(repository, fileManager)
+        useCase = DeleteHistoryItemUseCaseShared(repository, fileManager)
     }
 
     private fun record(

@@ -25,6 +25,9 @@
     <string name="history_bottom_sheet_share">Share</string>
     <string name="history_bottom_sheet_delete">Delete</string>
     <string name="history_link_copied">Link copied to clipboard</string>
+    <string name="history_deleted">Download deleted</string>
+    <string name="history_all_deleted">All downloads deleted</string>
+    <string name="history_cloud_sync_error">Cloud sync error</string>
 
     <!-- Delete dialog -->
     <string name="history_delete_checkbox_label">Also delete file from storage</string>
