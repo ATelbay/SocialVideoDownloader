@@ -62,7 +62,7 @@ class IosDownloadManager : PlatformDownloadManager {
     }
 
     init {
-        delegate.onProgress = { taskId, bytesWritten, totalWritten, totalExpected ->
+        delegate.onProgress = onProgress@{ taskId, bytesWritten, totalWritten, totalExpected ->
             val request = taskRequests[taskId] ?: return@onProgress
             val progress =
                 if (totalExpected > 0) {
@@ -91,7 +91,7 @@ class IosDownloadManager : PlatformDownloadManager {
                 )
         }
 
-        delegate.onCompleted = { taskId, tempUrl ->
+        delegate.onCompleted = onCompleted@{ taskId, tempUrl ->
             val request = taskRequests.remove(taskId) ?: return@onCompleted
             activeTasks.remove(request.id)
             activeRequestId = null
@@ -115,7 +115,7 @@ class IosDownloadManager : PlatformDownloadManager {
             }
         }
 
-        delegate.onFailed = { taskId, error ->
+        delegate.onFailed = onFailed@{ taskId, error ->
             val request = taskRequests.remove(taskId) ?: return@onFailed
             activeTasks.remove(request.id)
             if (activeRequestId == request.id) activeRequestId = null

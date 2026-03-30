@@ -1,7 +1,6 @@
 package com.socialvideodownloader.shared.data.platform
 
 import platform.Foundation.NSBundle
-import platform.Foundation.NSLocalizedString
 
 /**
  * iOS implementation of [PlatformStringProvider].
@@ -12,8 +11,8 @@ import platform.Foundation.NSLocalizedString
 class IosStringProvider : PlatformStringProvider {
     override fun getString(key: StringKey): String {
         val locKey = key.toLocalizableKey()
-        val resolved = NSLocalizedString(locKey, bundle = NSBundle.mainBundle, value = "", comment = "")
-        // If NSLocalizedString returns the key itself, the string is missing — use fallback.
+        val resolved = NSBundle.mainBundle.localizedStringForKey(locKey, value = "", table = null)
+        // If the bundle returns the key itself, the string is missing — use fallback.
         return if (resolved == locKey) key.defaultEnglish() else resolved
     }
 

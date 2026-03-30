@@ -1,5 +1,7 @@
-package com.socialvideodownloader.shared.data.di
+package com.socialvideodownloader.shared.di
 
+import com.socialvideodownloader.shared.data.di.iosDataModule
+import com.socialvideodownloader.shared.data.di.sharedDataModule
 import com.socialvideodownloader.shared.feature.download.di.sharedDownloadModule
 import com.socialvideodownloader.shared.feature.history.di.sharedHistoryModule
 import com.socialvideodownloader.shared.feature.library.di.sharedLibraryModule

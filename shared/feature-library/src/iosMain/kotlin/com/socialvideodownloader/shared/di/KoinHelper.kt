@@ -1,4 +1,4 @@
-package com.socialvideodownloader.shared.data.di
+package com.socialvideodownloader.shared.di
 
 import com.socialvideodownloader.shared.feature.download.SharedDownloadViewModel
 import com.socialvideodownloader.shared.feature.history.SharedHistoryViewModel

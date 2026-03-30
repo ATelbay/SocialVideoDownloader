@@ -1,5 +1,6 @@
 package com.socialvideodownloader.shared.data.platform
 
+import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSError
 import platform.Foundation.NSFileManager
@@ -17,6 +18,7 @@ private const val SVD_DIRECTORY = "SocialVideoDownloader"
  *
  * [platformUri] is always null on iOS — sharing is done via file:// URLs.
  */
+@OptIn(ExperimentalForeignApi::class)
 class IosFileStorage : PlatformFileStorage {
     /**
      * Move a downloaded file from its temp location into the permanent

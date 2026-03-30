@@ -29,22 +29,22 @@
 
 **Purpose**: Establish KMP build system, convention plugins, version catalog updates, and iOS project shell
 
-- [ ] T001 Add KMP dependencies to version catalog: Ktor 3.4.1, Koin BOM 4.2.0, SKIE 0.10.10, Multiplatform Settings 1.3.0, kotlin-multiplatform plugin in `gradle/libs.versions.toml`
-- [ ] T002 Create `KmpLibraryConventionPlugin` (id: `svd.kmp.library`) applying kotlin-multiplatform, configuring Android target + iOS targets (iosArm64, iosSimulatorArm64), setting up source sets in `build-logic/convention/src/main/kotlin/KmpLibraryConventionPlugin.kt`
-- [ ] T003 Create `KmpFeatureConventionPlugin` (id: `svd.kmp.feature`) extending svd.kmp.library with Koin dependencies and :core:domain dependency in `build-logic/convention/src/main/kotlin/KmpFeatureConventionPlugin.kt`
-- [ ] T004 Register new convention plugins in `build-logic/convention/build.gradle.kts` gradlePlugin block
-- [ ] T005 [P] Add `:shared:network`, `:shared:data`, `:shared:feature-download`, `:shared:feature-history`, `:shared:feature-library` module includes in `settings.gradle.kts`
-- [ ] T006 [P] Create scaffold `shared/network/build.gradle.kts` applying svd.kmp.library with Ktor + kotlinx-serialization dependencies
-- [ ] T007 [P] Create scaffold `shared/data/build.gradle.kts` applying svd.kmp.library with Room KMP + Koin dependencies
-- [ ] T008 [P] Create scaffold `shared/feature-download/build.gradle.kts` applying svd.kmp.feature with :shared:data and :shared:network dependencies
-- [ ] T009 [P] Create scaffold `shared/feature-history/build.gradle.kts` applying svd.kmp.feature with :shared:data dependency
-- [ ] T010 [P] Create scaffold `shared/feature-library/build.gradle.kts` applying svd.kmp.feature with :shared:data dependency
-- [ ] T011 Create iOS Xcode project shell at `iosApp/` with SwiftUI App struct linking the shared KMP framework (Hello World verifying framework linkage)
-- [ ] T081 [US6] Configure SKIE Gradle plugin in the shared framework build — add `id("co.touchlab.skie")` to the appropriate build.gradle.kts, verify StateFlow→AsyncSequence generation *(moved from Phase 6 — SKIE must be configured when the shared framework is first built)*
-- [ ] T128 Amend constitution to v4.0.0 in `.specify/memory/constitution.md` — update Principles II, III, IV, VIII per plan.md Complexity Tracking justifications *(moved from Phase 11 — must be ratified before implementing against amended architecture)*
-- [ ] T135 [US2] Record Android build baseline: capture `./gradlew assembleDebug` time and APK size before any migration changes (FR-015 baseline)
-- [ ] T012 Verify Android app still builds and all tests pass after Gradle restructuring: `./gradlew assembleDebug test`
-- [ ] T141 Verify iOS project shell builds: `xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp -sdk iphonesimulator build`
+- [x] T001 Add KMP dependencies to version catalog: Ktor 3.4.1, Koin BOM 4.2.0, SKIE 0.10.10, Multiplatform Settings 1.3.0, kotlin-multiplatform plugin in `gradle/libs.versions.toml`
+- [x] T002 Create `KmpLibraryConventionPlugin` (id: `svd.kmp.library`) applying kotlin-multiplatform, configuring Android target + iOS targets (iosArm64, iosSimulatorArm64), setting up source sets in `build-logic/convention/src/main/kotlin/KmpLibraryConventionPlugin.kt`
+- [x] T003 Create `KmpFeatureConventionPlugin` (id: `svd.kmp.feature`) extending svd.kmp.library with Koin dependencies and :core:domain dependency in `build-logic/convention/src/main/kotlin/KmpFeatureConventionPlugin.kt`
+- [x] T004 Register new convention plugins in `build-logic/convention/build.gradle.kts` gradlePlugin block
+- [x] T005 [P] Add `:shared:network`, `:shared:data`, `:shared:feature-download`, `:shared:feature-history`, `:shared:feature-library` module includes in `settings.gradle.kts`
+- [x] T006 [P] Create scaffold `shared/network/build.gradle.kts` applying svd.kmp.library with Ktor + kotlinx-serialization dependencies
+- [x] T007 [P] Create scaffold `shared/data/build.gradle.kts` applying svd.kmp.library with Room KMP + Koin dependencies
+- [x] T008 [P] Create scaffold `shared/feature-download/build.gradle.kts` applying svd.kmp.feature with :shared:data and :shared:network dependencies
+- [x] T009 [P] Create scaffold `shared/feature-history/build.gradle.kts` applying svd.kmp.feature with :shared:data dependency
+- [x] T010 [P] Create scaffold `shared/feature-library/build.gradle.kts` applying svd.kmp.feature with :shared:data dependency
+- [x] T011 Create iOS Xcode project shell at `iosApp/` with SwiftUI App struct linking the shared KMP framework (Hello World verifying framework linkage)
+- [x] T081 [US6] Configure SKIE Gradle plugin in the shared framework build — add `id("co.touchlab.skie")` to the appropriate build.gradle.kts, verify StateFlow→AsyncSequence generation *(moved from Phase 6 — SKIE must be configured when the shared framework is first built)*
+- [x] T128 Amend constitution to v4.0.0 in `.specify/memory/constitution.md` — update Principles II, III, IV, VIII per plan.md Complexity Tracking justifications *(moved from Phase 11 — must be ratified before implementing against amended architecture)*
+- [x] T135 [US2] Record Android build baseline: capture `./gradlew assembleDebug` time and APK size before any migration changes (FR-015 baseline)
+- [x] T012 Verify Android app still builds and all tests pass after Gradle restructuring: `./gradlew assembleDebug test`
+- [x] T141 Verify iOS project shell builds: `xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp -sdk iphonesimulator build`
 
 **Checkpoint**: KMP build infrastructure ready. Constitution amended. Empty shared modules compile. iOS project links shared framework and builds. Android unchanged.
 
@@ -56,13 +56,13 @@
 
 **⚠️ CRITICAL**: No shared module work can begin until this phase is complete
 
-- [ ] T013 [US6] Change `core/domain/build.gradle.kts` from `kotlin("jvm")` to `svd.kmp.library` plugin, configure commonMain dependencies (kotlinx-coroutines-core, kotlinx-serialization-json) replacing JVM-only deps
-- [ ] T014 [US6] Move all source files from `core/domain/src/main/kotlin/` to `core/domain/src/commonMain/kotlin/` preserving package structure
-- [ ] T015 [US6] Remove `javax.inject.Inject` annotations from all use case constructors in `core/domain/src/commonMain/kotlin/.../usecase/` (10 use cases). Use plain constructors — Koin will handle injection.
-- [ ] T016 [US6] Replace `@IoDispatcher` qualifier annotation with a Koin-compatible approach: define `IoDispatcher` as a named Koin qualifier in `core/domain/src/commonMain/kotlin/.../di/IoDispatcher.kt`
-- [ ] T017 [US6] Move test sources from `core/domain/src/test/` to `core/domain/src/commonTest/kotlin/` and convert JUnit5 assertions to `kotlin.test` assertions, replace MockK with manual fake implementations (commonMain-compatible — no mocking library supports all KMP targets reliably)
-- [ ] T018 [US2] Update all Android modules that depend on :core:domain to use the new KMP artifact — verify import paths still resolve in `:core:data`, `:feature:download`, `:feature:history`, `:feature:library`, `:core:cloud`, `:core:billing`
-- [ ] T019 [US2] Verify Android app builds and all tests pass after domain KMP conversion: `./gradlew assembleDebug test`
+- [x] T013 [US6] Change `core/domain/build.gradle.kts` from `kotlin("jvm")` to `svd.kmp.library` plugin, configure commonMain dependencies (kotlinx-coroutines-core, kotlinx-serialization-json) replacing JVM-only deps
+- [x] T014 [US6] Move all source files from `core/domain/src/main/kotlin/` to `core/domain/src/commonMain/kotlin/` preserving package structure
+- [x] T015 [US6] Remove `javax.inject.Inject` annotations from all use case constructors in `core/domain/src/commonMain/kotlin/.../usecase/` (10 use cases). Use plain constructors — Koin will handle injection.
+- [x] T016 [US6] Replace `@IoDispatcher` qualifier annotation with a Koin-compatible approach: define `IoDispatcher` as a named Koin qualifier in `core/domain/src/commonMain/kotlin/.../di/IoDispatcher.kt`
+- [x] T017 [US6] Move test sources from `core/domain/src/test/` to `core/domain/src/commonTest/kotlin/` and convert JUnit5 assertions to `kotlin.test` assertions, replace MockK with manual fake implementations (commonMain-compatible — no mocking library supports all KMP targets reliably)
+- [x] T018 [US2] Update all Android modules that depend on :core:domain to use the new KMP artifact — verify import paths still resolve in `:core:data`, `:feature:download`, `:feature:history`, `:feature:library`, `:core:cloud`, `:core:billing`
+- [x] T019 [US2] Verify Android app builds and all tests pass after domain KMP conversion: `./gradlew assembleDebug test`
 
 **Checkpoint**: :core:domain is KMP. All domain models, interfaces, and use cases compile for both JVM and iOS Native. Android still builds and passes tests.
 
@@ -76,25 +76,25 @@
 
 ### Tests for Shared Network
 
-- [ ] T020 [P] [US6] Create `ServerVideoExtractorApiTest` in `shared/network/src/commonTest/kotlin/.../ServerVideoExtractorApiTest.kt` testing extractInfo mapping logic with mock HTTP responses
-- [ ] T021 [P] [US6] Create `ServerResponseMapperTest` in `shared/network/src/commonTest/kotlin/.../ServerResponseMapperTest.kt` testing DTO→domain model mapping
+- [x] T020 [P] [US6] Create `ServerVideoExtractorApiTest` in `shared/network/src/commonTest/kotlin/.../ServerVideoExtractorApiTest.kt` testing extractInfo mapping logic with mock HTTP responses
+- [x] T021 [P] [US6] Create `ServerResponseMapperTest` in `shared/network/src/commonTest/kotlin/.../ServerResponseMapperTest.kt` testing DTO→domain model mapping
 
 ### Implementation for Shared Network
 
-- [ ] T022 [P] [US6] Move `ServerExtractRequest`, `ServerExtractResponse`, `ServerFormatDto` DTOs to `shared/network/src/commonMain/kotlin/.../dto/ServerExtractResponse.kt`
-- [ ] T023 [P] [US6] Move `ServerResponseMapper` to `shared/network/src/commonMain/kotlin/.../ServerResponseMapper.kt` (pure Kotlin, no changes needed)
-- [ ] T024 [P] [US6] Move `VideoInfoMapper` to `shared/network/src/commonMain/kotlin/.../VideoInfoMapper.kt` if no Android dependencies, otherwise leave in core/data
-- [ ] T025 [US6] Create `expect object ServerConfig` in `shared/network/src/commonMain/kotlin/.../ServerConfig.kt` with baseUrl, extractApiKey, extractPath, timeouts
-- [ ] T026 [P] [US6] Create `actual object ServerConfig` for Android in `shared/network/src/androidMain/kotlin/.../ServerConfig.android.kt` reading BuildConfig values
-- [ ] T027 [P] [US6] Create `actual object ServerConfig` for iOS in `shared/network/src/iosMain/kotlin/.../ServerConfig.ios.kt` reading Info.plist or using defaults
-- [ ] T028 [US6] Create `expect fun createHttpClient(): HttpClient` in `shared/network/src/commonMain/kotlin/.../KtorEngineFactory.kt`
-- [ ] T029 [P] [US6] Create `actual fun createHttpClient()` with OkHttp engine in `shared/network/src/androidMain/kotlin/.../KtorEngineFactory.android.kt`
-- [ ] T030 [P] [US6] Create `actual fun createHttpClient()` with Darwin engine in `shared/network/src/iosMain/kotlin/.../KtorEngineFactory.ios.kt`
-- [ ] T031 [US6] Implement `ServerVideoExtractorApi` using Ktor HttpClient in `shared/network/src/commonMain/kotlin/.../ServerVideoExtractorApi.kt` — port extractInfo() from OkHttp to Ktor, implement downloadFile() with streaming response
-- [ ] T032 [US6] Create Koin module for shared:network in `shared/network/src/commonMain/kotlin/.../di/NetworkModule.kt` providing HttpClient and ServerVideoExtractorApi
-- [ ] T033 [US2] Update `FallbackVideoExtractorRepository` in `core/data/src/main/kotlin/.../remote/FallbackVideoExtractorRepository.kt` to use :shared:network's ServerVideoExtractorApi instead of the local OkHttp-based one
-- [ ] T034 [US2] Remove old `ServerVideoExtractorApi`, `ServerConfig`, `ServerResponseMapper`, DTOs from `core/data/src/main/kotlin/.../remote/` (replaced by shared:network)
-- [ ] T035 [US2] Verify Android app builds and all tests pass after shared:network integration: `./gradlew assembleDebug test`
+- [x] T022 [P] [US6] Move `ServerExtractRequest`, `ServerExtractResponse`, `ServerFormatDto` DTOs to `shared/network/src/commonMain/kotlin/.../dto/ServerExtractResponse.kt`
+- [x] T023 [P] [US6] Move `ServerResponseMapper` to `shared/network/src/commonMain/kotlin/.../ServerResponseMapper.kt` (pure Kotlin, no changes needed)
+- [x] T024 [P] [US6] Move `VideoInfoMapper` to `shared/network/src/commonMain/kotlin/.../VideoInfoMapper.kt` if no Android dependencies, otherwise leave in core/data
+- [x] T025 [US6] Create `expect object ServerConfig` in `shared/network/src/commonMain/kotlin/.../ServerConfig.kt` with baseUrl, extractApiKey, extractPath, timeouts
+- [x] T026 [P] [US6] Create `actual object ServerConfig` for Android in `shared/network/src/androidMain/kotlin/.../ServerConfig.android.kt` reading BuildConfig values
+- [x] T027 [P] [US6] Create `actual object ServerConfig` for iOS in `shared/network/src/iosMain/kotlin/.../ServerConfig.ios.kt` reading Info.plist or using defaults
+- [x] T028 [US6] Create `expect fun createHttpClient(): HttpClient` in `shared/network/src/commonMain/kotlin/.../KtorEngineFactory.kt`
+- [x] T029 [P] [US6] Create `actual fun createHttpClient()` with OkHttp engine in `shared/network/src/androidMain/kotlin/.../KtorEngineFactory.android.kt`
+- [x] T030 [P] [US6] Create `actual fun createHttpClient()` with Darwin engine in `shared/network/src/iosMain/kotlin/.../KtorEngineFactory.ios.kt`
+- [x] T031 [US6] Implement `ServerVideoExtractorApi` using Ktor HttpClient in `shared/network/src/commonMain/kotlin/.../ServerVideoExtractorApi.kt` — port extractInfo() from OkHttp to Ktor, implement downloadFile() with streaming response
+- [x] T032 [US6] Create Koin module for shared:network in `shared/network/src/commonMain/kotlin/.../di/NetworkModule.kt` providing HttpClient and ServerVideoExtractorApi
+- [x] T033 [US2] Update `FallbackVideoExtractorRepository` in `core/data/src/main/kotlin/.../remote/FallbackVideoExtractorRepository.kt` to use :shared:network's ServerVideoExtractorApi instead of the local OkHttp-based one
+- [x] T034 [US2] Remove old `ServerVideoExtractorApi`, `ServerConfig`, `ServerResponseMapper`, DTOs from `core/data/src/main/kotlin/.../remote/` (replaced by shared:network)
+- [x] T035 [US2] Verify Android app builds and all tests pass after shared:network integration: `./gradlew assembleDebug test`
 
 **Checkpoint**: Server API client is shared KMP code. Android uses it via FallbackVideoExtractorRepository. iOS can use it directly.
 
@@ -108,50 +108,50 @@
 
 ### Tests for Shared Data
 
-- [ ] T036 [P] [US6] Create `DownloadRepositoryImplTest` in `shared/data/src/commonTest/kotlin/.../DownloadRepositoryImplTest.kt` testing CRUD operations with in-memory Room database
-- [ ] T037 [P] [US6] Create `DownloadMapperTest` in `shared/data/src/commonTest/kotlin/.../DownloadMapperTest.kt` testing entity↔domain model mapping
+- [x] T036 [P] [US6] Create `DownloadRepositoryImplTest` in `shared/data/src/commonTest/kotlin/.../DownloadRepositoryImplTest.kt` testing CRUD operations with in-memory Room database
+- [x] T037 [P] [US6] Create `DownloadMapperTest` in `shared/data/src/commonTest/kotlin/.../DownloadMapperTest.kt` testing entity↔domain model mapping
 
 ### Implementation for Shared Data — Room KMP
 
-- [ ] T038 [P] [US6] Move `DownloadEntity` to `shared/data/src/commonMain/kotlin/.../local/DownloadEntity.kt` (unchanged)
-- [ ] T039 [P] [US6] Move `SyncQueueEntity` to `shared/data/src/commonMain/kotlin/.../local/SyncQueueEntity.kt` (unchanged)
-- [ ] T040 [P] [US6] Move `DownloadDao` to `shared/data/src/commonMain/kotlin/.../local/DownloadDao.kt` — verify all methods are `suspend` or return `Flow` (Room KMP requirement)
-- [ ] T041 [P] [US6] Move `SyncQueueDao` to `shared/data/src/commonMain/kotlin/.../local/SyncQueueDao.kt` — verify all methods are `suspend` or return `Flow`
-- [ ] T042 [US6] Move `DownloadMapper` to `shared/data/src/commonMain/kotlin/.../local/DownloadMapper.kt` (pure Kotlin, no changes)
-- [ ] T043 [US6] Create `AppDatabase` in `shared/data/src/commonMain/kotlin/.../local/AppDatabase.kt` with `@ConstructedBy(AppDatabaseConstructor::class)` and `expect object AppDatabaseConstructor`
-- [ ] T044 [US6] Rewrite migrations 1→5 in `shared/data/src/commonMain/kotlin/.../local/Migrations.kt` using `SQLiteConnection.execSQL()` instead of `SupportSQLiteDatabase.execSQL()` — SQL statements remain identical
-- [ ] T045 [US6] Create `expect fun createDatabaseBuilder(): RoomDatabase.Builder<AppDatabase>` in `shared/data/src/commonMain/kotlin/.../platform/DatabaseFactory.kt`
-- [ ] T046 [P] [US6] Create Android `actual fun createDatabaseBuilder()` in `shared/data/src/androidMain/kotlin/.../platform/DatabaseFactory.android.kt` using `Room.databaseBuilder(context, ...)`
-- [ ] T047 [P] [US6] Create iOS `actual fun createDatabaseBuilder()` in `shared/data/src/iosMain/kotlin/.../platform/DatabaseFactory.ios.kt` using NSDocumentDirectory path
+- [x] T038 [P] [US6] Move `DownloadEntity` to `shared/data/src/commonMain/kotlin/.../local/DownloadEntity.kt` (unchanged)
+- [x] T039 [P] [US6] Move `SyncQueueEntity` to `shared/data/src/commonMain/kotlin/.../local/SyncQueueEntity.kt` (unchanged)
+- [x] T040 [P] [US6] Move `DownloadDao` to `shared/data/src/commonMain/kotlin/.../local/DownloadDao.kt` — verify all methods are `suspend` or return `Flow` (Room KMP requirement)
+- [x] T041 [P] [US6] Move `SyncQueueDao` to `shared/data/src/commonMain/kotlin/.../local/SyncQueueDao.kt` — verify all methods are `suspend` or return `Flow`
+- [x] T042 [US6] Move `DownloadMapper` to `shared/data/src/commonMain/kotlin/.../local/DownloadMapper.kt` (pure Kotlin, no changes)
+- [x] T043 [US6] Create `AppDatabase` in `shared/data/src/commonMain/kotlin/.../local/AppDatabase.kt` with `@ConstructedBy(AppDatabaseConstructor::class)` and `expect object AppDatabaseConstructor`
+- [x] T044 [US6] Rewrite migrations 1→5 in `shared/data/src/commonMain/kotlin/.../local/Migrations.kt` using `SQLiteConnection.execSQL()` instead of `SupportSQLiteDatabase.execSQL()` — SQL statements remain identical
+- [x] T045 [US6] Create `expect fun createDatabaseBuilder(): RoomDatabase.Builder<AppDatabase>` in `shared/data/src/commonMain/kotlin/.../platform/DatabaseFactory.kt`
+- [x] T046 [P] [US6] Create Android `actual fun createDatabaseBuilder()` in `shared/data/src/androidMain/kotlin/.../platform/DatabaseFactory.android.kt` using `Room.databaseBuilder(context, ...)`
+- [x] T047 [P] [US6] Create iOS `actual fun createDatabaseBuilder()` in `shared/data/src/iosMain/kotlin/.../platform/DatabaseFactory.ios.kt` using NSDocumentDirectory path
 
 ### Implementation for Shared Data — Platform Abstractions
 
-- [ ] T048 [P] [US6] Define `PlatformDownloadManager` interface in `shared/data/src/commonMain/kotlin/.../platform/PlatformDownloadManager.kt` per contract: startDownload, cancelDownload, downloadState StateFlow
-- [ ] T049 [P] [US6] Define `PlatformFileStorage` interface in `shared/data/src/commonMain/kotlin/.../platform/PlatformFileStorage.kt` per contract: saveToDownloads, isFileAccessible, deleteFile, getShareableUri
-- [ ] T050 [P] [US6] Define `PlatformClipboard` interface in `shared/data/src/commonMain/kotlin/.../platform/PlatformClipboard.kt` per contract: copyToClipboard
-- [ ] T051 [P] [US6] Define `PlatformStringProvider` interface and `StringKey` enum in `shared/data/src/commonMain/kotlin/.../platform/PlatformStringProvider.kt` per contract
-- [ ] T052 [P] [US6] Implement `AndroidDownloadManager` in `shared/data/src/androidMain/kotlin/.../platform/AndroidDownloadManager.kt` wrapping DownloadServiceStateHolder + startForegroundService
-- [ ] T053 [P] [US6] Implement `AndroidFileStorage` in `shared/data/src/androidMain/kotlin/.../platform/AndroidFileStorage.kt` wrapping MediaStoreRepositoryImpl + AndroidFileAccessManager
-- [ ] T054 [P] [US6] Implement `AndroidClipboard` in `shared/data/src/androidMain/kotlin/.../platform/AndroidClipboard.kt` using ClipboardManager
-- [ ] T055 [P] [US6] Implement `AndroidStringProvider` in `shared/data/src/androidMain/kotlin/.../platform/AndroidStringProvider.kt` mapping StringKey→R.string.*
-- [ ] T056 [US6] Move `DownloadRepositoryImpl` to `shared/data/src/commonMain/kotlin/.../repository/DownloadRepositoryImpl.kt` — adapt to use shared DAO (may need minor changes for platform-specific file paths)
-- [ ] T057 [US6] Create `ServerOnlyVideoExtractorRepository` in `shared/data/src/iosMain/kotlin/.../repository/ServerOnlyVideoExtractorRepository.kt` — always uses server API, no local yt-dlp fallback
+- [x] T048 [P] [US6] Define `PlatformDownloadManager` interface in `shared/data/src/commonMain/kotlin/.../platform/PlatformDownloadManager.kt` per contract: startDownload, cancelDownload, downloadState StateFlow
+- [x] T049 [P] [US6] Define `PlatformFileStorage` interface in `shared/data/src/commonMain/kotlin/.../platform/PlatformFileStorage.kt` per contract: saveToDownloads, isFileAccessible, deleteFile, getShareableUri
+- [x] T050 [P] [US6] Define `PlatformClipboard` interface in `shared/data/src/commonMain/kotlin/.../platform/PlatformClipboard.kt` per contract: copyToClipboard
+- [x] T051 [P] [US6] Define `PlatformStringProvider` interface and `StringKey` enum in `shared/data/src/commonMain/kotlin/.../platform/PlatformStringProvider.kt` per contract
+- [x] T052 [P] [US6] Implement `AndroidDownloadManager` in `shared/data/src/androidMain/kotlin/.../platform/AndroidDownloadManager.kt` wrapping DownloadServiceStateHolder + startForegroundService
+- [x] T053 [P] [US6] Implement `AndroidFileStorage` in `shared/data/src/androidMain/kotlin/.../platform/AndroidFileStorage.kt` wrapping MediaStoreRepositoryImpl + AndroidFileAccessManager
+- [x] T054 [P] [US6] Implement `AndroidClipboard` in `shared/data/src/androidMain/kotlin/.../platform/AndroidClipboard.kt` using ClipboardManager
+- [x] T055 [P] [US6] Implement `AndroidStringProvider` in `shared/data/src/androidMain/kotlin/.../platform/AndroidStringProvider.kt` mapping StringKey→R.string.*
+- [x] T056 [US6] Move `DownloadRepositoryImpl` to `shared/data/src/commonMain/kotlin/.../repository/DownloadRepositoryImpl.kt` — adapt to use shared DAO (may need minor changes for platform-specific file paths)
+- [x] T057 [US6] Create `ServerOnlyVideoExtractorRepository` in `shared/data/src/iosMain/kotlin/.../repository/ServerOnlyVideoExtractorRepository.kt` — always uses server API, no local yt-dlp fallback
 
 ### Implementation for Shared Data — Koin DI
 
-- [ ] T058 [US6] Create shared Koin module in `shared/data/src/commonMain/kotlin/.../di/SharedDataModule.kt` providing AppDatabase, DAOs, DownloadRepositoryImpl, shared use cases
-- [ ] T059 [P] [US6] Create Android Koin module in `shared/data/src/androidMain/kotlin/.../di/AndroidDataModule.kt` providing AndroidDownloadManager, AndroidFileStorage, AndroidClipboard, AndroidStringProvider, database builder
-- [ ] T060 [P] [US6] Create iOS Koin module in `shared/data/src/iosMain/kotlin/.../di/IosDataModule.kt` providing iOS platform implementations and ServerOnlyVideoExtractorRepository
+- [x] T058 [US6] Create shared Koin module in `shared/data/src/commonMain/kotlin/.../di/SharedDataModule.kt` providing AppDatabase, DAOs, DownloadRepositoryImpl, shared use cases
+- [x] T059 [P] [US6] Create Android Koin module in `shared/data/src/androidMain/kotlin/.../di/AndroidDataModule.kt` providing AndroidDownloadManager, AndroidFileStorage, AndroidClipboard, AndroidStringProvider, database builder
+- [x] T060 [P] [US6] Create iOS Koin module in `shared/data/src/iosMain/kotlin/.../di/IosDataModule.kt` providing iOS platform implementations and ServerOnlyVideoExtractorRepository
 
 ### Android Integration
 
-- [ ] T061 [US2] Create Koin initialization in `app/src/main/kotlin/.../di/KoinInitializer.kt` — call `startKoin {}` with androidContext and shared + android Koin modules
-- [ ] T062 [US2] Create Hilt bridge module `app/src/main/kotlin/.../di/KoinBridgeModule.kt` — `@Provides` methods calling `KoinPlatform.getKoin().get<T>()` for each shared dependency consumed by Hilt-managed Android components
-- [ ] T063 [US2] Update `SocialVideoDownloaderApp.onCreate()` in `app/src/main/kotlin/.../SocialVideoDownloaderApp.kt` to init Koin before Hilt
-- [ ] T064 [US2] Update `core/data/build.gradle.kts` to depend on `:shared:data` and `:shared:network`, remove migrated Room entities/DAOs/mapper source files
-- [ ] T065 [US2] Verify Android app builds and all tests pass after shared:data integration: `./gradlew assembleDebug test`
-- [ ] T136 [US2] Room backwards-compatibility test: copy an existing Android Room v5 database file, open it with the new KMP Room builder, verify all records load without data loss or migration errors
-- [ ] T137 [US2] Hilt+Koin coexistence smoke test: verify `./gradlew assembleDebug` succeeds with both DI systems active, run app on emulator, confirm no runtime DI conflicts (duplicate bindings, missing providers)
+- [x] T061 [US2] Create Koin initialization in `app/src/main/kotlin/.../di/KoinInitializer.kt` — call `startKoin {}` with androidContext and shared + android Koin modules
+- [x] T062 [US2] Create Hilt bridge module `app/src/main/kotlin/.../di/KoinBridgeModule.kt` — `@Provides` methods calling `KoinPlatform.getKoin().get<T>()` for each shared dependency consumed by Hilt-managed Android components
+- [x] T063 [US2] Update `SocialVideoDownloaderApp.onCreate()` in `app/src/main/kotlin/.../SocialVideoDownloaderApp.kt` to init Koin before Hilt
+- [x] T064 [US2] Update `core/data/build.gradle.kts` to depend on `:shared:data` and `:shared:network`, remove migrated Room entities/DAOs/mapper source files
+- [x] T065 [US2] Verify Android app builds and all tests pass after shared:data integration: `./gradlew assembleDebug test`
+- [x] T136 [US2] Room backwards-compatibility test: copy an existing Android Room v5 database file, open it with the new KMP Room builder, verify all records load without data loss or migration errors
+- [x] T137 [US2] Hilt+Koin coexistence smoke test: verify `./gradlew assembleDebug` succeeds with both DI systems active, run app on emulator, confirm no runtime DI conflicts (duplicate bindings, missing providers)
 
 **Checkpoint**: Room KMP database shared. Platform abstractions defined. Android uses shared DB via Koin bridge. iOS has ServerOnlyVideoExtractorRepository. Backwards-compat and DI coexistence verified.
 
@@ -165,27 +165,27 @@
 
 ### Tests for Shared Feature ViewModels
 
-- [ ] T066 [P] [US6] Create `SharedDownloadViewModelTest` in `shared/feature-download/src/commonTest/kotlin/.../SharedDownloadViewModelTest.kt` testing state transitions: Idle→Extracting→FormatSelection→Downloading→Done→Error
-- [ ] T067 [P] [US6] Create `SharedHistoryViewModelTest` in `shared/feature-history/src/commonTest/kotlin/.../SharedHistoryViewModelTest.kt` testing search, delete, cloud backup state
-- [ ] T068 [P] [US6] Create `SharedLibraryViewModelTest` in `shared/feature-library/src/commonTest/kotlin/.../SharedLibraryViewModelTest.kt` testing observe+map flow
+- [x] T066 [P] [US6] Create `SharedDownloadViewModelTest` in `shared/feature-download/src/commonTest/kotlin/.../SharedDownloadViewModelTest.kt` testing state transitions: Idle→Extracting→FormatSelection→Downloading→Done→Error
+- [x] T067 [P] [US6] Create `SharedHistoryViewModelTest` in `shared/feature-history/src/commonTest/kotlin/.../SharedHistoryViewModelTest.kt` testing search, delete, cloud backup state
+- [x] T068 [P] [US6] Create `SharedLibraryViewModelTest` in `shared/feature-library/src/commonTest/kotlin/.../SharedLibraryViewModelTest.kt` testing observe+map flow
 
 ### Implementation for Shared Feature ViewModels
 
-- [ ] T069 [P] [US6] Extract `DownloadUiState`, `DownloadIntent`, `DownloadEvent` sealed interfaces to `shared/feature-download/src/commonMain/kotlin/.../DownloadUiState.kt` — replace `@StringRes` with `DownloadErrorType` enum and `StringKey`
-- [ ] T070 [US6] Extract `SharedDownloadViewModel` state machine to `shared/feature-download/src/commonMain/kotlin/.../SharedDownloadViewModel.kt` — move all state transition logic from DownloadViewModel, use PlatformDownloadManager/PlatformStringProvider interfaces for platform actions
-- [ ] T071 [P] [US6] Extract `HistoryUiState`, `HistoryEffect`, `CloudBackupState` to `shared/feature-history/src/commonMain/kotlin/.../HistoryUiState.kt` — replace `@StringRes` with `HistoryMessageType` enum
-- [ ] T072 [US6] Extract `SharedHistoryViewModel` to `shared/feature-history/src/commonMain/kotlin/.../SharedHistoryViewModel.kt` — move combine logic, use PlatformClipboard interface
-- [ ] T073 [P] [US6] Extract `LibraryUiState`, `LibraryIntent`, `LibraryEffect` to `shared/feature-library/src/commonMain/kotlin/.../LibraryUiState.kt` — replace `@StringRes` with `StringKey`
-- [ ] T074 [US6] Extract `SharedLibraryViewModel` to `shared/feature-library/src/commonMain/kotlin/.../SharedLibraryViewModel.kt`
-- [ ] T075 [US6] Create Koin modules for shared feature modules in each `shared/feature-*/src/commonMain/kotlin/.../di/` directory
+- [x] T069 [P] [US6] Extract `DownloadUiState`, `DownloadIntent`, `DownloadEvent` sealed interfaces to `shared/feature-download/src/commonMain/kotlin/.../DownloadUiState.kt` — replace `@StringRes` with `DownloadErrorType` enum and `StringKey`
+- [x] T070 [US6] Extract `SharedDownloadViewModel` state machine to `shared/feature-download/src/commonMain/kotlin/.../SharedDownloadViewModel.kt` — move all state transition logic from DownloadViewModel, use PlatformDownloadManager/PlatformStringProvider interfaces for platform actions
+- [x] T071 [P] [US6] Extract `HistoryUiState`, `HistoryEffect`, `CloudBackupState` to `shared/feature-history/src/commonMain/kotlin/.../HistoryUiState.kt` — replace `@StringRes` with `HistoryMessageType` enum
+- [x] T072 [US6] Extract `SharedHistoryViewModel` to `shared/feature-history/src/commonMain/kotlin/.../SharedHistoryViewModel.kt` — move combine logic, use PlatformClipboard interface
+- [x] T073 [P] [US6] Extract `LibraryUiState`, `LibraryIntent`, `LibraryEffect` to `shared/feature-library/src/commonMain/kotlin/.../LibraryUiState.kt` — replace `@StringRes` with `StringKey`
+- [x] T074 [US6] Extract `SharedLibraryViewModel` to `shared/feature-library/src/commonMain/kotlin/.../SharedLibraryViewModel.kt`
+- [x] T075 [US6] Create Koin modules for shared feature modules in each `shared/feature-*/src/commonMain/kotlin/.../di/` directory
 
 ### Android ViewModel Delegation
 
-- [ ] T076 [US2] Refactor `DownloadViewModel` in `feature/download/src/main/kotlin/.../ui/DownloadViewModel.kt` to delegate to SharedDownloadViewModel — keep @HiltViewModel, inject shared VM via Koin bridge, handle Android-specific concerns (SavedStateHandle, notification permissions)
-- [ ] T077 [US2] Refactor `HistoryViewModel` in `feature/history/src/main/kotlin/.../ui/HistoryViewModel.kt` to delegate to SharedHistoryViewModel
-- [ ] T078 [US2] Refactor `LibraryViewModel` in `feature/library/src/main/kotlin/.../ui/LibraryViewModel.kt` to delegate to SharedLibraryViewModel
-- [ ] T079 [US2] Update Koin bridge module in `app/src/main/kotlin/.../di/KoinBridgeModule.kt` to provide shared feature ViewModels
-- [ ] T080 [US2] Verify Android app builds and all tests pass after shared ViewModel extraction: `./gradlew assembleDebug test`
+- [x] T076 [US2] Refactor `DownloadViewModel` in `feature/download/src/main/kotlin/.../ui/DownloadViewModel.kt` to delegate to SharedDownloadViewModel — keep @HiltViewModel, inject shared VM via Koin bridge, handle Android-specific concerns (SavedStateHandle, notification permissions)
+- [x] T077 [US2] Refactor `HistoryViewModel` in `feature/history/src/main/kotlin/.../ui/HistoryViewModel.kt` to delegate to SharedHistoryViewModel
+- [x] T078 [US2] Refactor `LibraryViewModel` in `feature/library/src/main/kotlin/.../ui/LibraryViewModel.kt` to delegate to SharedLibraryViewModel
+- [x] T079 [US2] Update Koin bridge module in `app/src/main/kotlin/.../di/KoinBridgeModule.kt` to provide shared feature ViewModels
+- [x] T080 [US2] Verify Android app builds and all tests pass after shared ViewModel extraction: `./gradlew assembleDebug test`
 
 **Checkpoint**: All ViewModel state machines are shared KMP code. Android VMs are thin Hilt delegates. US6 (Shared Business Logic) is complete. US2 (Android Preservation) verified.
 
@@ -199,24 +199,24 @@
 
 ### Implementation for iOS Download
 
-- [ ] T082 [US1] Implement iOS Koin initialization in `iosApp/iosApp/App.swift` — call `KoinKt.doInitKoin()` with iOS platform modules
-- [ ] T083 [US1] Create SwiftUI design system: `iosApp/iosApp/Theme/Colors.swift` (SvdBg #F6F3EC, SvdPrimary #F26B3A, SvdWarning #F2B84B, SvdAccent #1E8C7A), `Typography.swift` (SpaceGrotesk + Inter), `Shapes.swift` (card 22, control 18, pill 999)
-- [ ] T084 [US1] Create `ContentView.swift` in `iosApp/iosApp/ContentView.swift` with TabView (3 tabs: Download, Library, History) using warm editorial tab bar styling
-- [ ] T085 [US1] Implement `IosDownloadManager` in `shared/data/src/iosMain/kotlin/.../platform/IosDownloadManager.kt` — URLSessionDownloadTask with background configuration, progress tracking, file move on completion
-- [ ] T086 [US1] Implement `IosFileStorage` in `shared/data/src/iosMain/kotlin/.../platform/IosFileStorage.kt` — Documents/SocialVideoDownloader/ directory, FileManager operations
-- [ ] T087 [P] [US1] Implement `IosClipboard` in `shared/data/src/iosMain/kotlin/.../platform/IosClipboard.kt` — UIPasteboard.generalPasteboard
-- [ ] T088 [P] [US1] Implement `IosStringProvider` in `shared/data/src/iosMain/kotlin/.../platform/IosStringProvider.kt` — NSLocalizedString mapping from StringKey
-- [ ] T089 [US1] Create `DownloadView.swift` in `iosApp/iosApp/Download/DownloadView.swift` — main download screen observing SharedDownloadViewModel.uiState via SKIE AsyncSequence, renders state-appropriate subviews
-- [ ] T090 [P] [US1] Create `UrlInputView.swift` in `iosApp/iosApp/Download/UrlInputView.swift` — URL text field with paste button, extract action
-- [ ] T091 [P] [US1] Create `FormatSelectionView.swift` in `iosApp/iosApp/Download/FormatSelectionView.swift` — video info card + format chips grid + download button
-- [ ] T092 [P] [US1] Create `DownloadProgressView.swift` in `iosApp/iosApp/Download/DownloadProgressView.swift` — progress bar, speed/ETA text, cancel button
-- [ ] T093 [P] [US1] Create `DownloadCompleteView.swift` in `iosApp/iosApp/Download/DownloadCompleteView.swift` — success state with open/share actions
-- [ ] T094 [P] [US1] Create `DownloadErrorView.swift` in `iosApp/iosApp/Download/DownloadErrorView.swift` — error message with retry action
-- [ ] T095 [US1] Add download completion notification via UNUserNotificationCenter in `iosApp/iosApp/Services/NotificationService.swift`
-- [ ] T096 [US1] Add `Localizable.strings` in `iosApp/iosApp/` with all StringKey string values for error messages and UI text
-- [ ] T097 [US1] Configure `Info.plist` — set `UIFileSharingEnabled`, `LSSupportsOpeningDocumentsInPlace`, `YTDLP_SERVER_URL`, and `NSUserNotificationUsageDescription`
-- [ ] T098 [US1] End-to-end test: build iOS app on simulator, paste URL, extract, select format, download, verify file in Documents directory
-- [ ] T138 [US1] Terminated-state background download test: start a download, terminate the app (not just background), relaunch — verify the file was saved and the download record appears in history
+- [x] T082 [US1] Implement iOS Koin initialization in `iosApp/iosApp/App.swift` — call `KoinKt.doInitKoin()` with iOS platform modules
+- [x] T083 [US1] Create SwiftUI design system: `iosApp/iosApp/Theme/Colors.swift` (SvdBg #F6F3EC, SvdPrimary #F26B3A, SvdWarning #F2B84B, SvdAccent #1E8C7A), `Typography.swift` (SpaceGrotesk + Inter), `Shapes.swift` (card 22, control 18, pill 999)
+- [x] T084 [US1] Create `ContentView.swift` in `iosApp/iosApp/ContentView.swift` with TabView (3 tabs: Download, Library, History) using warm editorial tab bar styling
+- [x] T085 [US1] Implement `IosDownloadManager` in `shared/data/src/iosMain/kotlin/.../platform/IosDownloadManager.kt` — URLSessionDownloadTask with background configuration, progress tracking, file move on completion
+- [x] T086 [US1] Implement `IosFileStorage` in `shared/data/src/iosMain/kotlin/.../platform/IosFileStorage.kt` — Documents/SocialVideoDownloader/ directory, FileManager operations
+- [x] T087 [P] [US1] Implement `IosClipboard` in `shared/data/src/iosMain/kotlin/.../platform/IosClipboard.kt` — UIPasteboard.generalPasteboard
+- [x] T088 [P] [US1] Implement `IosStringProvider` in `shared/data/src/iosMain/kotlin/.../platform/IosStringProvider.kt` — NSLocalizedString mapping from StringKey
+- [x] T089 [US1] Create `DownloadView.swift` in `iosApp/iosApp/Download/DownloadView.swift` — main download screen observing SharedDownloadViewModel.uiState via SKIE AsyncSequence, renders state-appropriate subviews
+- [x] T090 [P] [US1] Create `UrlInputView.swift` in `iosApp/iosApp/Download/UrlInputView.swift` — URL text field with paste button, extract action
+- [x] T091 [P] [US1] Create `FormatSelectionView.swift` in `iosApp/iosApp/Download/FormatSelectionView.swift` — video info card + format chips grid + download button
+- [x] T092 [P] [US1] Create `DownloadProgressView.swift` in `iosApp/iosApp/Download/DownloadProgressView.swift` — progress bar, speed/ETA text, cancel button
+- [x] T093 [P] [US1] Create `DownloadCompleteView.swift` in `iosApp/iosApp/Download/DownloadCompleteView.swift` — success state with open/share actions
+- [x] T094 [P] [US1] Create `DownloadErrorView.swift` in `iosApp/iosApp/Download/DownloadErrorView.swift` — error message with retry action
+- [x] T095 [US1] Add download completion notification via UNUserNotificationCenter in `iosApp/iosApp/Services/NotificationService.swift`
+- [x] T096 [US1] Add `Localizable.strings` in `iosApp/iosApp/` with all StringKey string values for error messages and UI text
+- [x] T097 [US1] Configure `Info.plist` — set `UIFileSharingEnabled`, `LSSupportsOpeningDocumentsInPlace`, `YTDLP_SERVER_URL`, and `NSUserNotificationUsageDescription`
+- [x] T098 [US1] End-to-end test: build iOS app on simulator, paste URL, extract, select format, download, verify file in Documents directory
+- [x] T138 [US1] Terminated-state background download test: start a download, terminate the app (not just background), relaunch — verify the file was saved and the download record appears in history
 
 **Checkpoint**: iOS download flow works end-to-end including background/terminated scenarios. US1 (iOS Download) is the MVP — app is functional for its core purpose.
 
@@ -228,11 +228,11 @@
 
 **Independent Test**: After downloading a video, navigate to History tab → see the download → search by title → delete it.
 
-- [ ] T099 [US3] Create `HistoryView.swift` in `iosApp/iosApp/History/HistoryView.swift` — list of history items observing SharedHistoryViewModel, search bar, empty state
-- [ ] T100 [P] [US3] Create `HistoryItemRow.swift` in `iosApp/iosApp/History/HistoryItemRow.swift` — thumbnail, title, platform badge, date, swipe-to-delete
-- [ ] T101 [P] [US3] Create `HistoryDeleteDialog.swift` in `iosApp/iosApp/History/HistoryDeleteDialog.swift` — confirmation alert for single/all delete
-- [ ] T102 [US3] Wire History tab in `ContentView.swift` to navigate to HistoryView with SharedHistoryViewModel
-- [ ] T103 [US3] Verify history persistence: download a video, force-quit app, reopen → history entry persists
+- [x] T099 [US3] Create `HistoryView.swift` in `iosApp/iosApp/History/HistoryView.swift` — list of history items observing SharedHistoryViewModel, search bar, empty state
+- [x] T100 [P] [US3] Create `HistoryItemRow.swift` in `iosApp/iosApp/History/HistoryItemRow.swift` — thumbnail, title, platform badge, date, swipe-to-delete
+- [x] T101 [P] [US3] Create `HistoryDeleteDialog.swift` in `iosApp/iosApp/History/HistoryDeleteDialog.swift` — confirmation alert for single/all delete
+- [x] T102 [US3] Wire History tab in `ContentView.swift` to navigate to HistoryView with SharedHistoryViewModel
+- [x] T103 [US3] Verify history persistence: download a video, force-quit app, reopen → history entry persists
 
 **Checkpoint**: History screen complete. Past downloads visible, searchable, deletable.
 
@@ -244,11 +244,11 @@
 
 **Independent Test**: Download a video → Library tab shows it → tap to play → share sheet works.
 
-- [ ] T104 [US4] Create `LibraryView.swift` in `iosApp/iosApp/Library/LibraryView.swift` — grid/list of downloaded files observing SharedLibraryViewModel, empty state
-- [ ] T105 [P] [US4] Create `LibraryItemRow.swift` in `iosApp/iosApp/Library/LibraryItemRow.swift` — thumbnail, title, file size, platform name, date
-- [ ] T106 [US4] Implement file open action in LibraryView — use system video player via `UIApplication.shared.open()` or QuickLook
-- [ ] T107 [US4] Implement share action in LibraryView — present `UIActivityViewController` (share sheet) with file URL
-- [ ] T108 [US4] Wire Library tab in `ContentView.swift` to navigate to LibraryView with SharedLibraryViewModel
+- [x] T104 [US4] Create `LibraryView.swift` in `iosApp/iosApp/Library/LibraryView.swift` — grid/list of downloaded files observing SharedLibraryViewModel, empty state
+- [x] T105 [P] [US4] Create `LibraryItemRow.swift` in `iosApp/iosApp/Library/LibraryItemRow.swift` — thumbnail, title, file size, platform name, date
+- [x] T106 [US4] Implement file open action in LibraryView — use system video player via `UIApplication.shared.open()` or QuickLook
+- [x] T107 [US4] Implement share action in LibraryView — present `UIActivityViewController` (share sheet) with file URL
+- [x] T108 [US4] Wire Library tab in `ContentView.swift` to navigate to LibraryView with SharedLibraryViewModel
 
 **Checkpoint**: Library screen complete. Files browsable, playable, shareable.
 
@@ -260,10 +260,10 @@
 
 **Independent Test**: In Safari, share a video URL → select SocialVideoDownloader → app opens with URL in input field.
 
-- [ ] T109 [US5] Create Share Extension target in Xcode project at `iosApp/ShareExtension/` with `ShareViewController.swift` that extracts URL from `NSExtensionItem`
-- [ ] T110 [US5] Configure App Group shared container between main app and Share Extension for URL passing
-- [ ] T111 [US5] Update `App.swift` to check for shared URL on launch/resume and pass to SharedDownloadViewModel
-- [ ] T112 [US5] Add Share Extension entitlements and Info.plist configuration for URL content types
+- [x] T109 [US5] Create Share Extension target in Xcode project at `iosApp/ShareExtension/` with `ShareViewController.swift` that extracts URL from `NSExtensionItem`
+- [x] T110 [US5] Configure App Group shared container between main app and Share Extension for URL passing
+- [x] T111 [US5] Update `App.swift` to check for shared URL on launch/resume and pass to SharedDownloadViewModel
+- [x] T112 [US5] Add Share Extension entitlements and Info.plist configuration for URL content types
 
 **Checkpoint**: Share sheet integration complete. URLs from other apps flow into the download screen.
 
@@ -277,26 +277,26 @@
 
 ### iOS Cloud Infrastructure
 
-- [ ] T113 [US7] Add Firebase iOS SDK (Auth + Firestore) via Swift Package Manager to the Xcode project
-- [ ] T114 [US7] Create `IosCloudAuthService` in `shared/data/src/iosMain/kotlin/.../cloud/IosCloudAuthService.kt` implementing CloudAuthService — Firebase Auth with Google Sign-In + Sign in with Apple
-- [ ] T115 [US7] Create `IosCloudBackupRepository` in `shared/data/src/iosMain/kotlin/.../cloud/IosCloudBackupRepository.kt` implementing CloudBackupRepository — Firestore document CRUD
-- [ ] T116 [US7] Create `IosEncryptionService` in `shared/data/src/iosMain/kotlin/.../cloud/IosEncryptionService.kt` implementing EncryptionService — iOS Keychain + CryptoKit for zero-knowledge encryption
-- [ ] T117 [US7] Create `IosConnectivityObserver` in `shared/data/src/iosMain/kotlin/.../cloud/IosConnectivityObserver.kt` — NWPathMonitor for network status
-- [ ] T118 [US7] Create `IosSyncManager` in `shared/data/src/iosMain/kotlin/.../cloud/IosSyncManager.kt` implementing SyncManager — background sync queue processing
+- [x] T113 [US7] Add Firebase iOS SDK (Auth + Firestore) via Swift Package Manager to the Xcode project
+- [x] T114 [US7] Create `IosCloudAuthService` in `shared/data/src/iosMain/kotlin/.../cloud/IosCloudAuthService.kt` implementing CloudAuthService — Firebase Auth with Google Sign-In + Sign in with Apple
+- [x] T115 [US7] Create `IosCloudBackupRepository` in `shared/data/src/iosMain/kotlin/.../cloud/IosCloudBackupRepository.kt` implementing CloudBackupRepository — Firestore document CRUD
+- [x] T116 [US7] Create `IosEncryptionService` in `shared/data/src/iosMain/kotlin/.../cloud/IosEncryptionService.kt` implementing EncryptionService — iOS Keychain + CryptoKit for zero-knowledge encryption
+- [x] T117 [US7] Create `IosConnectivityObserver` in `shared/data/src/iosMain/kotlin/.../cloud/IosConnectivityObserver.kt` — NWPathMonitor for network status
+- [x] T118 [US7] Create `IosSyncManager` in `shared/data/src/iosMain/kotlin/.../cloud/IosSyncManager.kt` implementing SyncManager — background sync queue processing
 
 ### iOS Billing
 
-- [ ] T119 [US7] Create `StoreKitBillingRepository` in `shared/data/src/iosMain/kotlin/.../billing/StoreKitBillingRepository.kt` implementing BillingRepository — StoreKit 2 for product listing, purchase, and entitlement verification
-- [ ] T120 [US7] Configure StoreKit products in App Store Connect (or StoreKit Configuration file for testing)
+- [x] T119 [US7] Create `StoreKitBillingRepository` in `shared/data/src/iosMain/kotlin/.../billing/StoreKitBillingRepository.kt` implementing BillingRepository — StoreKit 2 for product listing, purchase, and entitlement verification
+- [x] T120 [US7] Configure StoreKit products in App Store Connect (or StoreKit Configuration file for testing)
 
 ### iOS Cloud UI
 
-- [ ] T121 [US7] Create `CloudBackupView.swift` in `iosApp/iosApp/History/CloudBackupView.swift` — sign-in button, backup toggle, capacity indicator, restore button
-- [ ] T122 [US7] Create `UpgradeView.swift` in `iosApp/iosApp/History/UpgradeView.swift` — tier comparison, purchase buttons using StoreKit 2 API
-- [ ] T123 [US7] Integrate cloud backup UI into HistoryView — add CloudBackupSection at top of history list
-- [ ] T124 [US7] Update iOS Koin module in `shared/data/src/iosMain/kotlin/.../di/IosDataModule.kt` to provide cloud and billing implementations
-- [ ] T125 [US7] Test sign-in flow: Google Sign-In + Sign in with Apple → verify Firebase Auth creates user
-- [ ] T126 [US7] Test billing flow: sandbox purchase → verify entitlement → verify capacity increase
+- [x] T121 [US7] Create `CloudBackupView.swift` in `iosApp/iosApp/History/CloudBackupView.swift` — sign-in button, backup toggle, capacity indicator, restore button
+- [x] T122 [US7] Create `UpgradeView.swift` in `iosApp/iosApp/History/UpgradeView.swift` — tier comparison, purchase buttons using StoreKit 2 API
+- [x] T123 [US7] Integrate cloud backup UI into HistoryView — add CloudBackupSection at top of history list
+- [x] T124 [US7] Update iOS Koin module in `shared/data/src/iosMain/kotlin/.../di/IosDataModule.kt` to provide cloud and billing implementations
+- [x] T125 [US7] Test sign-in flow: Google Sign-In + Sign in with Apple → verify Firebase Auth creates user
+- [x] T126 [US7] Test billing flow: sandbox purchase → verify entitlement → verify capacity increase
 
 **Checkpoint**: Cloud backup and billing work on iOS. Full feature parity with Android cloud features.
 
@@ -306,15 +306,15 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T127 [P] Update `specs/011-kmp-ios-migration/quickstart.md` with final build commands, actual framework paths, and verified troubleshooting steps
-- [ ] T129 [P] Update `CLAUDE.md` module structure section to reflect new `:shared:*` modules and KMP convention plugins
-- [ ] T130 [P] Add iOS-specific error handling: server unavailable indicator, retry with exponential backoff in SharedDownloadViewModel
-- [ ] T131 Run full Android test suite one final time: `./gradlew assembleDebug test ktlintCheck` — verify zero regressions
-- [ ] T132 Run shared module tests on all targets: `./gradlew allTests` — verify commonTest passes on JVM and iOS Native
-- [ ] T133 Build and run iOS app on physical device — verify downloads, background downloads, file access, notifications
-- [ ] T134 Side-by-side design comparison: iOS app screenshots vs Android app screenshots — verify visual consistency (matching hex colors, font names SpaceGrotesk/Inter, corner radii 22/18/999, spacing conventions)
-- [ ] T139 Measure shared code percentage: run `cloc` on `shared/` and `core/domain/src/commonMain/` vs platform-specific directories, verify ≥80% of non-UI business logic is shared (SC-004)
-- [ ] T140 [US2] Compare Android build time and APK size against T135 baseline — verify no significant degradation (FR-015). Flag if build time increased >20% or APK size increased >10%.
+- [x] T127 [P] Update `specs/011-kmp-ios-migration/quickstart.md` with final build commands, actual framework paths, and verified troubleshooting steps
+- [x] T129 [P] Update `CLAUDE.md` module structure section to reflect new `:shared:*` modules and KMP convention plugins
+- [x] T130 [P] Add iOS-specific error handling: server unavailable indicator, retry with exponential backoff in SharedDownloadViewModel
+- [x] T131 Run full Android test suite one final time: `./gradlew assembleDebug test ktlintCheck` — verify zero regressions
+- [x] T132 Run shared module tests on all targets: `./gradlew allTests` — verify commonTest passes on JVM and iOS Native
+- [x] T133 Build and run iOS app on physical device — verify downloads, background downloads, file access, notifications
+- [x] T134 Side-by-side design comparison: iOS app screenshots vs Android app screenshots — verify visual consistency (matching hex colors, font names SpaceGrotesk/Inter, corner radii 22/18/999, spacing conventions)
+- [x] T139 Measure shared code percentage: run `cloc` on `shared/` and `core/domain/src/commonMain/` vs platform-specific directories, verify ≥80% of non-UI business logic is shared (SC-004)
+- [x] T140 [US2] Compare Android build time and APK size against T135 baseline — verify no significant degradation (FR-015). Flag if build time increased >20% or APK size increased >10%.
 
 ---
 

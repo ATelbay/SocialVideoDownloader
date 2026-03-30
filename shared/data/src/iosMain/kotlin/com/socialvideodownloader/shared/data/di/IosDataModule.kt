@@ -24,6 +24,7 @@ import com.socialvideodownloader.shared.data.cloud.IosEncryptionService
 import com.socialvideodownloader.shared.data.cloud.IosSyncManager
 import com.socialvideodownloader.shared.data.cloud.StubAuthProvider
 import com.socialvideodownloader.shared.data.cloud.StubConnectivityProvider
+import com.socialvideodownloader.shared.data.cloud.StubFirestoreProvider
 import com.socialvideodownloader.shared.data.platform.IosClipboard
 import com.socialvideodownloader.shared.data.platform.IosDownloadManager
 import com.socialvideodownloader.shared.data.platform.IosFileStorage

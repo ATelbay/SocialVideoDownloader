@@ -128,13 +128,13 @@ class IosCloudBackupRepository(
             append("\"videoTitle\":\"${record.videoTitle.escapeJson()}\",")
             append("\"thumbnailUrl\":${record.thumbnailUrl?.let { "\"${it.escapeJson()}\"" } ?: "null"},")
             append("\"formatLabel\":\"${record.formatLabel.escapeJson()}\",")
-            append("\"filePath\":\"${record.filePath.escapeJson()}\",")
+            append("\"filePath\":\"${record.filePath?.escapeJson() ?: ""}\",")
             append("\"mediaStoreUri\":${record.mediaStoreUri?.let { "\"${it.escapeJson()}\"" } ?: "null"},")
             append("\"status\":\"${record.status.name}\",")
             append("\"createdAt\":${record.createdAt},")
             append("\"completedAt\":${record.completedAt ?: "null"},")
             append("\"fileSizeBytes\":${record.fileSizeBytes ?: "null"},")
-            append("\"syncStatus\":\"${record.syncStatus.name}\"")
+            append("\"syncStatus\":\"${record.syncStatus}\"")
             append("}")
         }
 

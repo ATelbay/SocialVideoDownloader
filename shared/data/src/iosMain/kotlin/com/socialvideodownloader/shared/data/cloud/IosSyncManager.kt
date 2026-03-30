@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import platform.Foundation.NSDate
+import platform.Foundation.NSTimeIntervalSince1970
 
 /**
  * iOS implementation of [SyncManager].
@@ -110,7 +111,7 @@ class IosSyncManager(
                         "DELETE" -> processDelete(item)
                         else -> {
                             // Unknown operation — remove from queue to prevent infinite loops
-                            syncQueueDao.delete(item)
+                            syncQueueDao.deleteById(item.id)
                             true
                         }
                     }
@@ -218,4 +219,4 @@ class IosSyncManager(
 }
 
 /** iOS-compatible replacement for JVM System.currentTimeMillis(). */
-private fun currentTimeMillis(): Long = (NSDate().timeIntervalSince1970 * 1000).toLong()
+private fun currentTimeMillis(): Long = ((NSDate().timeIntervalSinceReferenceDate + NSTimeIntervalSince1970) * 1000).toLong()
