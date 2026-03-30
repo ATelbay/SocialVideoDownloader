@@ -33,6 +33,7 @@ class IosEncryptionService : EncryptionService {
      * ```
      */
     override fun encrypt(record: DownloadRecord): ByteArray {
+        println("WARNING: IosEncryptionService is using stub encryption — data is NOT encrypted")
         // TODO: Encrypt via CryptoKit AES-GCM using Keychain-stored key.
         // For now, encode as UTF-8 JSON — safe for development but not for production.
         val json = serializeToJson(record)

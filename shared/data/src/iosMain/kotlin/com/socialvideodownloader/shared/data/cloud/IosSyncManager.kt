@@ -200,17 +200,28 @@ class IosSyncManager(
     // ---------------------------------------------------------------------------
 
     private suspend fun processUpload(item: SyncQueueEntity): Boolean {
-        // TODO: Load the DownloadRecord from the database and upload.
-        // Requires access to DownloadDao — inject it in a future iteration.
-        // For now, this is a no-op that returns true to drain the queue cleanly.
-        return true
+        // TODO: Load the DownloadRecord from the database and upload via cloudBackupRepository.uploadRecord().
+        // Requires DownloadDao to be injected — wire this in a future iteration.
+        // Return false so the item stays in the queue rather than being silently discarded.
+        return false
     }
 
     private suspend fun processDelete(item: SyncQueueEntity): Boolean {
-        // TODO: Derive the sourceUrlHash for this downloadId and delete from Firestore.
-        // Requires access to DownloadDao to retrieve the sourceUrl.
-        val sourceUrlHash = item.downloadId.toString()
-        return cloudBackupRepository.deleteRecord(sourceUrlHash)
+        // TODO: Load the DownloadRecord from DownloadDao by item.downloadId to get the actual sourceUrl,
+        // then call documentIdFor(sourceUrl) to compute the correct document ID.
+        // Requires DownloadDao to be injected — wire this in a future iteration.
+        //
+        // If the record no longer exists locally (already deleted), return true to remove the stale queue item.
+        //
+        // For now, use a placeholder that mirrors IosCloudBackupRepository.documentIdFor() so that at
+        // least the hashing formula is consistent even though sourceUrl is unavailable here.
+        // WARNING: This will NOT produce the correct document ID — the downloadId is not the sourceUrl.
+        // This stub must be replaced once DownloadDao is injected.
+        val placeholderHash =
+            item.downloadId.toString().let { s ->
+                s.hashCode().toLong().and(0xFFFFFFFFL).toString(16) + "_${s.length}"
+            }
+        return cloudBackupRepository.deleteRecord(placeholderHash)
     }
 
     companion object {

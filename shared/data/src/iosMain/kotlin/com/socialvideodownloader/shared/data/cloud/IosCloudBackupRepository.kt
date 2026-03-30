@@ -34,6 +34,22 @@ class IosCloudBackupRepository(
         private const val DEFAULT_TIER_LIMIT = 1000
     }
 
+    /**
+     * Returns a deterministic document ID for a given sourceUrl.
+     *
+     * Uses a stable unsigned-hex representation of the 32-bit hashCode combined with
+     * string length to reduce (but not eliminate) collisions. All three call sites —
+     * uploadRecord, deleteRecord, and IosSyncManager.processDelete — must call this
+     * function so they always agree on the document ID.
+     *
+     * TODO: Replace with a full SHA-256 hex digest once a crypto utility is available
+     *       in commonMain (e.g. via kotlinx-crypto or a Swift bridge).
+     */
+    internal fun documentIdFor(sourceUrl: String): String {
+        val hash = sourceUrl.hashCode().toLong().and(0xFFFFFFFFL)
+        return "${hash.toString(16)}_${sourceUrl.length}"
+    }
+
     private fun downloadsPath(): String {
         val uid =
             firestoreProvider.currentUid()
@@ -64,16 +80,18 @@ class IosCloudBackupRepository(
         //   val base64 = encrypted.toBase64String()
         //   val documentId = record.sourceUrl.sha256()
         //   firestoreProvider.setDocument(downloadsPath(), documentId, base64)
-        val documentId = record.sourceUrl.hashCode().toString()
+        val documentId = documentIdFor(record.sourceUrl)
         val stubJson = buildRecordJson(record)
         return firestoreProvider.setDocument(downloadsPath(), documentId, stubJson)
     }
 
     /**
-     * Delete a single record from Firestore by its sourceUrlHash.
+     * Delete a single record from Firestore by its document ID.
+     *
+     * Callers must pass the result of [documentIdFor](sourceUrl) — the same function
+     * used by [uploadRecord] — so the document ID is consistent.
      */
     override suspend fun deleteRecord(sourceUrlHash: String): Boolean {
-        // TODO: documentId should be a deterministic hash of the sourceUrl, matching uploadRecord.
         return firestoreProvider.deleteDocument(downloadsPath(), sourceUrlHash)
     }
 
