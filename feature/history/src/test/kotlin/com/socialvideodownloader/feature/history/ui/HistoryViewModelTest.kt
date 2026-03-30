@@ -16,6 +16,24 @@ import com.socialvideodownloader.feature.history.testdouble.FakeDownloadReposito
 import com.socialvideodownloader.feature.history.testdouble.FakeHistoryFileManager
 import com.socialvideodownloader.feature.history.testutil.MainDispatcherRule
 import com.socialvideodownloader.shared.data.platform.PlatformClipboard
+import com.socialvideodownloader.shared.feature.history.DeleteTarget.Single
+import com.socialvideodownloader.shared.feature.history.HistoryEffect.OpenContent
+import com.socialvideodownloader.shared.feature.history.HistoryEffect.RetryDownload
+import com.socialvideodownloader.shared.feature.history.HistoryEffect.ShareContent
+import com.socialvideodownloader.shared.feature.history.HistoryEffect.ShowMessage
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.ConfirmDeletion
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.CopyLinkClicked
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.DeleteFilesSelectionChanged
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.DeleteItemClicked
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.DismissDeletionDialog
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.DismissItemMenu
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.HistoryItemClicked
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.HistoryItemLongPressed
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.SearchQueryChanged
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.ShareClicked
+import com.socialvideodownloader.shared.feature.history.HistoryUiState.Content
+import com.socialvideodownloader.shared.feature.history.HistoryUiState.Empty
+import com.socialvideodownloader.shared.feature.history.HistoryUiState.Loading
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
@@ -83,7 +101,7 @@ class HistoryViewModelTest {
     @Test
     fun `initial state is Loading before repository emits`() = runTest {
         val vm = createViewModel()
-        assertEquals(HistoryUiState.Loading, vm.uiState.value)
+        assertEquals(Loading, vm.uiState.value)
     }
 
     @Test
@@ -92,8 +110,8 @@ class HistoryViewModelTest {
             awaitItem() // Loading
             emitRecords(testRecords)
             val state = awaitItem()
-            assertTrue(state is HistoryUiState.Content)
-            assertEquals(testRecords.size, (state as HistoryUiState.Content).items.size)
+            assertTrue(state is Content)
+            assertEquals(testRecords.size, (state as Content).items.size)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -104,8 +122,8 @@ class HistoryViewModelTest {
             awaitItem() // Loading
             emitRecords(emptyList())
             val state = awaitItem()
-            assertTrue(state is HistoryUiState.Empty)
-            state as HistoryUiState.Empty
+            assertTrue(state is Empty)
+            state as Empty
             assertEquals("", state.query)
             assertFalse(state.isFiltering)
             cancelAndIgnoreRemainingEvents()
@@ -119,11 +137,11 @@ class HistoryViewModelTest {
             emitRecords(testRecords)
             awaitItem() // Content with all items
 
-            viewModel.onIntent(HistoryIntent.SearchQueryChanged("kotlin"))
+            viewModel.onIntent(SearchQueryChanged("kotlin"))
 
             val filtered = awaitItem()
-            assertTrue(filtered is HistoryUiState.Content)
-            filtered as HistoryUiState.Content
+            assertTrue(filtered is Content)
+            filtered as Content
             assertEquals("kotlin", filtered.query)
             assertEquals(2, filtered.items.size)
             assertTrue(filtered.items.all { it.title.contains("kotlin", ignoreCase = true) })
@@ -138,11 +156,11 @@ class HistoryViewModelTest {
             emitRecords(testRecords)
             awaitItem() // Content
 
-            viewModel.onIntent(HistoryIntent.SearchQueryChanged("zzz-no-match"))
+            viewModel.onIntent(SearchQueryChanged("zzz-no-match"))
 
             val state = awaitItem()
-            assertTrue(state is HistoryUiState.Empty)
-            state as HistoryUiState.Empty
+            assertTrue(state is Empty)
+            state as Empty
             assertEquals("zzz-no-match", state.query)
             assertTrue(state.isFiltering)
             cancelAndIgnoreRemainingEvents()
@@ -156,13 +174,13 @@ class HistoryViewModelTest {
             emitRecords(testRecords)
             awaitItem() // Content
 
-            viewModel.onIntent(HistoryIntent.SearchQueryChanged("kotlin"))
+            viewModel.onIntent(SearchQueryChanged("kotlin"))
             awaitItem() // filtered Content
 
-            viewModel.onIntent(HistoryIntent.SearchQueryChanged(""))
+            viewModel.onIntent(SearchQueryChanged(""))
             val state = awaitItem()
-            assertTrue(state is HistoryUiState.Content)
-            assertEquals(testRecords.size, (state as HistoryUiState.Content).items.size)
+            assertTrue(state is Content)
+            assertEquals(testRecords.size, (state as Content).items.size)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -174,11 +192,11 @@ class HistoryViewModelTest {
             emitRecords(testRecords)
             awaitItem() // Content
 
-            viewModel.onIntent(HistoryIntent.SearchQueryChanged("KOTLIN"))
+            viewModel.onIntent(SearchQueryChanged("KOTLIN"))
 
             val state = awaitItem()
-            assertTrue(state is HistoryUiState.Content)
-            state as HistoryUiState.Content
+            assertTrue(state is Content)
+            state as Content
             assertEquals(2, state.items.size)
             assertTrue(state.items.any { it.title == "Kotlin Tutorial" })
             assertTrue(state.items.any { it.title == "kotlin advanced" })
@@ -204,12 +222,12 @@ class HistoryViewModelTest {
             emitRecords(listOf(record))
             awaitItem() // Content — items populated
             viewModel.effect.test {
-                viewModel.onIntent(HistoryIntent.HistoryItemClicked(10L))
+                viewModel.onIntent(HistoryItemClicked(10L))
                 val effect = awaitItem()
-                assertTrue(effect is HistoryEffect.OpenContent)
+                assertTrue(effect is OpenContent)
                 assertEquals(
                     "content://media/external/video/10",
-                    (effect as HistoryEffect.OpenContent).contentUri,
+                    (effect as OpenContent).contentUri,
                 )
                 cancelAndIgnoreRemainingEvents()
             }
@@ -227,9 +245,9 @@ class HistoryViewModelTest {
             emitRecords(listOf(record))
             awaitItem() // Content
             viewModel.effect.test {
-                viewModel.onIntent(HistoryIntent.HistoryItemClicked(11L))
+                viewModel.onIntent(HistoryItemClicked(11L))
                 val effect = awaitItem()
-                assertTrue(effect is HistoryEffect.RetryDownload)
+                assertTrue(effect is RetryDownload)
                 cancelAndIgnoreRemainingEvents()
             }
             cancelAndIgnoreRemainingEvents()
@@ -245,10 +263,10 @@ class HistoryViewModelTest {
             emitRecords(listOf(record))
             awaitItem() // Content
             viewModel.effect.test {
-                viewModel.onIntent(HistoryIntent.HistoryItemClicked(12L))
+                viewModel.onIntent(HistoryItemClicked(12L))
                 val effect = awaitItem()
-                assertTrue(effect is HistoryEffect.RetryDownload)
-                assertEquals("https://example.com/video", (effect as HistoryEffect.RetryDownload).sourceUrl)
+                assertTrue(effect is RetryDownload)
+                assertEquals("https://example.com/video", (effect as RetryDownload).sourceUrl)
                 cancelAndIgnoreRemainingEvents()
             }
             cancelAndIgnoreRemainingEvents()
@@ -271,12 +289,12 @@ class HistoryViewModelTest {
             emitRecords(listOf(record))
             awaitItem() // Content
             viewModel.effect.test {
-                viewModel.onIntent(HistoryIntent.ShareClicked(20L))
+                viewModel.onIntent(ShareClicked(20L))
                 val effect = awaitItem()
-                assertTrue(effect is HistoryEffect.ShareContent)
+                assertTrue(effect is ShareContent)
                 assertEquals(
                     "content://media/external/video/20",
-                    (effect as HistoryEffect.ShareContent).contentUri,
+                    (effect as ShareContent).contentUri,
                 )
                 cancelAndIgnoreRemainingEvents()
             }
@@ -298,9 +316,9 @@ class HistoryViewModelTest {
             emitRecords(listOf(record))
             awaitItem() // Content
             viewModel.effect.test {
-                viewModel.onIntent(HistoryIntent.ShareClicked(21L))
+                viewModel.onIntent(ShareClicked(21L))
                 val effect = awaitItem()
-                assertTrue(effect is HistoryEffect.ShowMessage)
+                assertTrue(effect is ShowMessage)
                 cancelAndIgnoreRemainingEvents()
             }
             cancelAndIgnoreRemainingEvents()
@@ -314,11 +332,11 @@ class HistoryViewModelTest {
             emitRecords(testRecords)
             awaitItem() // Content
 
-            viewModel.onIntent(HistoryIntent.HistoryItemLongPressed(1L))
+            viewModel.onIntent(HistoryItemLongPressed(1L))
 
             val state = awaitItem()
-            assertTrue(state is HistoryUiState.Content)
-            assertEquals(1L, (state as HistoryUiState.Content).openMenuItemId)
+            assertTrue(state is Content)
+            assertEquals(1L, (state as Content).openMenuItemId)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -330,13 +348,13 @@ class HistoryViewModelTest {
             emitRecords(testRecords)
             awaitItem() // Content
 
-            viewModel.onIntent(HistoryIntent.HistoryItemLongPressed(1L))
+            viewModel.onIntent(HistoryItemLongPressed(1L))
             awaitItem() // state with openMenuItemId = 1
 
-            viewModel.onIntent(HistoryIntent.DismissItemMenu)
+            viewModel.onIntent(DismissItemMenu)
             val state = awaitItem()
-            assertTrue(state is HistoryUiState.Content)
-            assertNull((state as HistoryUiState.Content).openMenuItemId)
+            assertTrue(state is Content)
+            assertNull((state as Content).openMenuItemId)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -350,15 +368,15 @@ class HistoryViewModelTest {
             emitRecords(testRecords)
             awaitItem() // Content
 
-            viewModel.onIntent(HistoryIntent.DeleteItemClicked(1L))
+            viewModel.onIntent(DeleteItemClicked(1L))
 
             val state = awaitItem()
-            assertTrue(state is HistoryUiState.Content)
-            state as HistoryUiState.Content
+            assertTrue(state is Content)
+            state as Content
             assertNotNull(state.deleteConfirmation)
             val confirmation = state.deleteConfirmation!!
-            assertTrue(confirmation.target is DeleteTarget.Single)
-            assertEquals(1L, (confirmation.target as DeleteTarget.Single).itemId)
+            assertTrue(confirmation.target is Single)
+            assertEquals(1L, (confirmation.target as Single).itemId)
             assertEquals(1, confirmation.affectedCount)
             cancelAndIgnoreRemainingEvents()
         }
@@ -377,16 +395,16 @@ class HistoryViewModelTest {
             awaitItem() // Content
 
             // item 1 is accessible
-            viewModel.onIntent(HistoryIntent.DeleteItemClicked(1L))
-            val withAccessible = awaitItem() as HistoryUiState.Content
+            viewModel.onIntent(DeleteItemClicked(1L))
+            val withAccessible = awaitItem() as Content
             assertTrue(withAccessible.deleteConfirmation!!.hasAnyAccessibleFile)
 
-            viewModel.onIntent(HistoryIntent.DismissDeletionDialog)
+            viewModel.onIntent(DismissDeletionDialog)
             awaitItem() // dismissed
 
             // item 2 is not accessible
-            viewModel.onIntent(HistoryIntent.DeleteItemClicked(2L))
-            val withInaccessible = awaitItem() as HistoryUiState.Content
+            viewModel.onIntent(DeleteItemClicked(2L))
+            val withInaccessible = awaitItem() as Content
             assertFalse(withInaccessible.deleteConfirmation!!.hasAnyAccessibleFile)
 
             cancelAndIgnoreRemainingEvents()
@@ -400,12 +418,12 @@ class HistoryViewModelTest {
             emitRecords(testRecords)
             awaitItem() // Content
 
-            viewModel.onIntent(HistoryIntent.DeleteItemClicked(1L))
+            viewModel.onIntent(DeleteItemClicked(1L))
             awaitItem() // confirmation shown
 
-            viewModel.onIntent(HistoryIntent.DismissDeletionDialog)
+            viewModel.onIntent(DismissDeletionDialog)
 
-            val state = awaitItem() as HistoryUiState.Content
+            val state = awaitItem() as Content
             assertNull(state.deleteConfirmation)
             cancelAndIgnoreRemainingEvents()
         }
@@ -418,16 +436,16 @@ class HistoryViewModelTest {
             emitRecords(testRecords)
             awaitItem() // Content
 
-            viewModel.onIntent(HistoryIntent.DeleteItemClicked(1L))
-            val initial = awaitItem() as HistoryUiState.Content
+            viewModel.onIntent(DeleteItemClicked(1L))
+            val initial = awaitItem() as Content
             assertFalse(initial.deleteConfirmation!!.deleteFilesSelected)
 
-            viewModel.onIntent(HistoryIntent.DeleteFilesSelectionChanged(true))
-            val toggled = awaitItem() as HistoryUiState.Content
+            viewModel.onIntent(DeleteFilesSelectionChanged(true))
+            val toggled = awaitItem() as Content
             assertTrue(toggled.deleteConfirmation!!.deleteFilesSelected)
 
-            viewModel.onIntent(HistoryIntent.DeleteFilesSelectionChanged(false))
-            val untoggled = awaitItem() as HistoryUiState.Content
+            viewModel.onIntent(DeleteFilesSelectionChanged(false))
+            val untoggled = awaitItem() as Content
             assertFalse(untoggled.deleteConfirmation!!.deleteFilesSelected)
 
             cancelAndIgnoreRemainingEvents()
@@ -441,10 +459,10 @@ class HistoryViewModelTest {
             emitRecords(testRecords)
             awaitItem() // Content
 
-            viewModel.onIntent(HistoryIntent.DeleteItemClicked(1L))
+            viewModel.onIntent(DeleteItemClicked(1L))
             awaitItem() // confirmation shown
 
-            viewModel.onIntent(HistoryIntent.ConfirmDeletion)
+            viewModel.onIntent(ConfirmDeletion)
 
             cancelAndIgnoreRemainingEvents()
         }
@@ -459,14 +477,14 @@ class HistoryViewModelTest {
             emitRecords(testRecords)
             awaitItem() // Content
 
-            viewModel.onIntent(HistoryIntent.DeleteItemClicked(1L))
+            viewModel.onIntent(DeleteItemClicked(1L))
             awaitItem() // confirmation shown
 
-            viewModel.onIntent(HistoryIntent.ConfirmDeletion)
+            viewModel.onIntent(ConfirmDeletion)
 
             val finalState = awaitItem()
-            assertTrue(finalState is HistoryUiState.Content)
-            assertNull((finalState as HistoryUiState.Content).deleteConfirmation)
+            assertTrue(finalState is Content)
+            assertNull((finalState as Content).deleteConfirmation)
             cancelAndIgnoreRemainingEvents()
         }
     }

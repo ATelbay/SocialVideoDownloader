@@ -14,6 +14,11 @@ import com.socialvideodownloader.feature.history.testdouble.FakeDownloadReposito
 import com.socialvideodownloader.feature.history.testdouble.FakeHistoryFileManager
 import com.socialvideodownloader.feature.history.testutil.MainDispatcherRule
 import com.socialvideodownloader.shared.data.platform.PlatformClipboard
+import com.socialvideodownloader.shared.feature.history.HistoryEffect.LaunchGoogleSignIn
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.DismissSignInError
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.SignInWithGoogle
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.SignOutCloud
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.ToggleCloudBackup
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -100,8 +105,8 @@ class HistoryViewModelCloudTest {
         val vm = createViewModel()
 
         vm.effect.test {
-            vm.onIntent(HistoryIntent.ToggleCloudBackup)
-            assertEquals(HistoryEffect.LaunchGoogleSignIn, awaitItem())
+            vm.onIntent(ToggleCloudBackup)
+            assertEquals(LaunchGoogleSignIn, awaitItem())
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -112,7 +117,7 @@ class HistoryViewModelCloudTest {
         isBackupEnabledFlow.value = true
         val vm = createViewModel()
 
-        vm.onIntent(HistoryIntent.ToggleCloudBackup)
+        vm.onIntent(ToggleCloudBackup)
 
         coVerify { disableCloudBackupUseCase() }
     }
@@ -125,7 +130,7 @@ class HistoryViewModelCloudTest {
         }
         val vm = createViewModel()
 
-        vm.onIntent(HistoryIntent.SignInWithGoogle("test-token"))
+        vm.onIntent(SignInWithGoogle("test-token"))
 
         coVerify { enableCloudBackupUseCase("test-token") }
     }
@@ -136,7 +141,7 @@ class HistoryViewModelCloudTest {
         coEvery { enableCloudBackupUseCase(any()) } throws RuntimeException("auth failed")
         val vm = createViewModel()
 
-        vm.onIntent(HistoryIntent.SignInWithGoogle("bad-token"))
+        vm.onIntent(SignInWithGoogle("bad-token"))
 
         vm.cloudBackupState.test {
             val state = awaitItem()
@@ -155,7 +160,7 @@ class HistoryViewModelCloudTest {
             every { cloudAuthService.isAuthenticated() } returns false
         }
 
-        vm.onIntent(HistoryIntent.SignOutCloud)
+        vm.onIntent(SignOutCloud)
 
         coVerify { disableCloudBackupUseCase() }
     }
@@ -166,8 +171,8 @@ class HistoryViewModelCloudTest {
         coEvery { enableCloudBackupUseCase(any()) } throws RuntimeException("auth failed")
         val vm = createViewModel()
 
-        vm.onIntent(HistoryIntent.SignInWithGoogle("bad-token"))
-        vm.onIntent(HistoryIntent.DismissSignInError)
+        vm.onIntent(SignInWithGoogle("bad-token"))
+        vm.onIntent(DismissSignInError)
 
         vm.cloudBackupState.test {
             val state = awaitItem()

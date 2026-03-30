@@ -34,7 +34,7 @@ import com.socialvideodownloader.core.ui.theme.SvdSubtleForeground
 import com.socialvideodownloader.core.ui.theme.SvdSurface
 import com.socialvideodownloader.core.ui.theme.SvdSurfaceStrong
 import com.socialvideodownloader.core.ui.tokens.Spacing
-import com.socialvideodownloader.feature.library.ui.LibraryListItem
+import com.socialvideodownloader.shared.feature.library.LibraryListItem
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -95,9 +95,10 @@ fun LibraryListItemRow(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    if (item.formatLabel != null) {
+                    val formatLabel = item.formatLabel
+                    if (formatLabel != null) {
                         Text(
-                            text = item.formatLabel,
+                            text = formatLabel,
                             style = MaterialTheme.typography.bodySmall,
                             color = SvdSubtleForeground,
                         )

@@ -7,6 +7,7 @@ import org.gradle.api.tasks.testing.Test
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
 
 class AndroidApplicationConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -15,6 +16,7 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
 
             with(pluginManager) {
                 apply("com.android.application")
+                apply("org.jetbrains.kotlin.android")
             }
 
             extensions.configure<ApplicationExtension> {
@@ -28,6 +30,16 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
                 compileOptions {
                     sourceCompatibility = JavaVersion.toVersion(libs.findVersion("javaVersion").get().toString().toInt())
                     targetCompatibility = JavaVersion.toVersion(libs.findVersion("javaVersion").get().toString().toInt())
+                }
+            }
+
+            extensions.configure<KotlinAndroidProjectExtension> {
+                compilerOptions {
+                    jvmTarget.set(
+                        org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(
+                            libs.findVersion("javaVersion").get().toString()
+                        )
+                    )
                 }
             }
 

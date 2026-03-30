@@ -13,6 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.socialvideodownloader.feature.history.R
+import com.socialvideodownloader.shared.feature.history.RestoreState.Completed
+import com.socialvideodownloader.shared.feature.history.RestoreState.Error
+import com.socialvideodownloader.shared.feature.history.RestoreState.Idle
+import com.socialvideodownloader.shared.feature.history.RestoreState.InProgress
 
 @Composable
 fun RestoreDialog(
@@ -20,8 +24,8 @@ fun RestoreDialog(
     onDismiss: () -> Unit,
 ) {
     when (restoreState) {
-        is RestoreState.Idle -> Unit
-        is RestoreState.InProgress -> {
+        is Idle -> Unit
+        is InProgress -> {
             AlertDialog(
                 onDismissRequest = { /* not dismissible during progress */ },
                 text = {
@@ -46,7 +50,7 @@ fun RestoreDialog(
                 confirmButton = {},
             )
         }
-        is RestoreState.Completed -> {
+        is Completed -> {
             AlertDialog(
                 onDismissRequest = onDismiss,
                 text = {
@@ -65,7 +69,7 @@ fun RestoreDialog(
                 },
             )
         }
-        is RestoreState.Error -> {
+        is Error -> {
             AlertDialog(
                 onDismissRequest = onDismiss,
                 text = {

@@ -13,7 +13,6 @@ import com.socialvideodownloader.shared.data.local.AppDatabase
  * existing users retain their download history after the KMP migration.
  */
 lateinit var androidContext: Context
-    internal set
 
 actual fun createDatabaseBuilder(): RoomDatabase.Builder<AppDatabase> {
     return Room.databaseBuilder<AppDatabase>(

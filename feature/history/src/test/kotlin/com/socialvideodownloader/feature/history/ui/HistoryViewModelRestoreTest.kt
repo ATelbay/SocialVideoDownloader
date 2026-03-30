@@ -15,6 +15,11 @@ import com.socialvideodownloader.feature.history.testdouble.FakeDownloadReposito
 import com.socialvideodownloader.feature.history.testdouble.FakeHistoryFileManager
 import com.socialvideodownloader.feature.history.testutil.MainDispatcherRule
 import com.socialvideodownloader.shared.data.platform.PlatformClipboard
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.DismissRestoreDialog
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.RestoreFromCloud
+import com.socialvideodownloader.shared.feature.history.RestoreState.Completed
+import com.socialvideodownloader.shared.feature.history.RestoreState.Error
+import com.socialvideodownloader.shared.feature.history.RestoreState.Idle
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -76,7 +81,7 @@ class HistoryViewModelRestoreTest {
         coEvery { restoreFromCloudUseCase(any()) } returns RestoreResult(restored = 3, skipped = 1, failed = 0)
         val vm = createViewModel()
 
-        vm.onIntent(HistoryIntent.RestoreFromCloud)
+        vm.onIntent(RestoreFromCloud)
 
         coVerify { restoreFromCloudUseCase(any()) }
     }
@@ -89,17 +94,17 @@ class HistoryViewModelRestoreTest {
         vm.cloudBackupState.test {
             awaitItem() // initial state
 
-            vm.onIntent(HistoryIntent.RestoreFromCloud)
+            vm.onIntent(RestoreFromCloud)
 
             val states = mutableListOf<RestoreState>()
             // Collect until Completed
             for (i in 0..10) {
                 val state = awaitItem().restoreState
                 states.add(state)
-                if (state is RestoreState.Completed) break
+                if (state is Completed) break
             }
 
-            val completed = states.filterIsInstance<RestoreState.Completed>().firstOrNull()
+            val completed = states.filterIsInstance<Completed>().firstOrNull()
             assertTrue(completed != null, "Expected a Completed state")
             assertEquals(5, completed!!.restored)
             assertEquals(2, completed.skipped)
@@ -121,16 +126,16 @@ class HistoryViewModelRestoreTest {
         vm.cloudBackupState.test {
             awaitItem() // initial state
 
-            vm.onIntent(HistoryIntent.RestoreFromCloud)
+            vm.onIntent(RestoreFromCloud)
 
             val states = mutableListOf<RestoreState>()
             for (i in 0..10) {
                 val state = awaitItem().restoreState
                 states.add(state)
-                if (state is RestoreState.Error) break
+                if (state is Error) break
             }
 
-            val error = states.filterIsInstance<RestoreState.Error>().firstOrNull()
+            val error = states.filterIsInstance<Error>().firstOrNull()
             assertTrue(error != null, "Expected an Error state")
             assertTrue(error!!.message.contains("key", ignoreCase = true))
 
@@ -143,10 +148,10 @@ class HistoryViewModelRestoreTest {
         coEvery { restoreFromCloudUseCase(any()) } returns RestoreResult(restored = 1, skipped = 0, failed = 0)
         val vm = createViewModel()
 
-        vm.onIntent(HistoryIntent.RestoreFromCloud)
-        vm.onIntent(HistoryIntent.DismissRestoreDialog)
+        vm.onIntent(RestoreFromCloud)
+        vm.onIntent(DismissRestoreDialog)
 
         val state = vm.cloudBackupState.value.restoreState
-        assertEquals(RestoreState.Idle, state)
+        assertEquals(Idle, state)
     }
 }

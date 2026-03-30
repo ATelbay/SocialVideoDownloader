@@ -53,6 +53,9 @@ import com.socialvideodownloader.feature.download.ui.components.DownloadProgress
 import com.socialvideodownloader.feature.download.ui.components.ExtractingContent
 import com.socialvideodownloader.feature.download.ui.components.FormatChipsContent
 import com.socialvideodownloader.feature.download.ui.components.IdleContent
+import com.socialvideodownloader.shared.feature.download.DownloadEvent
+import com.socialvideodownloader.shared.feature.download.DownloadIntent
+import com.socialvideodownloader.shared.feature.download.DownloadUiState
 
 @Composable
 fun DownloadScreen(

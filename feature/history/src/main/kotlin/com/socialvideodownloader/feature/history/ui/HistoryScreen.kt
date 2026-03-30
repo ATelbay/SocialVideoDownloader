@@ -63,6 +63,29 @@ import com.socialvideodownloader.core.ui.tokens.Spacing
 import com.socialvideodownloader.feature.history.R
 import com.socialvideodownloader.feature.history.components.HistoryBottomSheet
 import com.socialvideodownloader.feature.history.components.HistoryDeleteDialog
+import com.socialvideodownloader.shared.feature.history.HistoryEffect.LaunchGoogleSignIn
+import com.socialvideodownloader.shared.feature.history.HistoryEffect.LaunchUpgradeFlow
+import com.socialvideodownloader.shared.feature.history.HistoryEffect.OpenContent
+import com.socialvideodownloader.shared.feature.history.HistoryEffect.RetryDownload
+import com.socialvideodownloader.shared.feature.history.HistoryEffect.ShareContent
+import com.socialvideodownloader.shared.feature.history.HistoryEffect.ShowMessage
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.ConfirmDeletion
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.CopyLinkClicked
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.DeleteFilesSelectionChanged
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.DeleteItemClicked
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.DismissDeletionDialog
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.DismissItemMenu
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.DismissRestoreDialog
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.RestoreFromCloud
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.SearchQueryChanged
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.ShareClicked
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.SignInWithGoogle
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.SignOutCloud
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.TapUpgrade
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.ToggleCloudBackup
+import com.socialvideodownloader.shared.feature.history.HistoryMessageType
+import com.socialvideodownloader.shared.feature.history.HistoryUiState.Content
+import com.socialvideodownloader.shared.feature.history.RestoreState.Idle
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -88,7 +111,7 @@ fun HistoryScreen(
         viewModel.effect.collect { effect ->
             snackbarHostState.currentSnackbarData?.dismiss()
             when (effect) {
-                is HistoryEffect.ShowMessage -> {
+                is ShowMessage -> {
                     val msgRes = when (effect.messageType) {
                         HistoryMessageType.DELETE_SUCCESS -> R.string.history_deleted
                         HistoryMessageType.DELETE_ALL_SUCCESS -> R.string.history_all_deleted
@@ -99,7 +122,7 @@ fun HistoryScreen(
                     }
                     snackbarHostState.showSnackbar(context.getString(msgRes))
                 }
-                is HistoryEffect.OpenContent -> {
+                is OpenContent -> {
                     try {
                         context.openVideo(effect.contentUri)
                     } catch (e: Exception) {
@@ -108,7 +131,7 @@ fun HistoryScreen(
                         )
                     }
                 }
-                is HistoryEffect.ShareContent -> {
+                is ShareContent -> {
                     try {
                         context.shareVideo(effect.contentUri)
                     } catch (e: Exception) {
@@ -117,15 +140,15 @@ fun HistoryScreen(
                         )
                     }
                 }
-                is HistoryEffect.RetryDownload -> {
+                is RetryDownload -> {
                     onNavigateToDownload(effect.sourceUrl, effect.existingRecordId)
                 }
                 // US3: Billing — show upgrade dialog
-                is HistoryEffect.LaunchUpgradeFlow -> {
+                is LaunchUpgradeFlow -> {
                     showUpgradeDialog = true
                 }
                 // Google Sign-In — launch Credential Manager
-                is HistoryEffect.LaunchGoogleSignIn -> {
+                is LaunchGoogleSignIn -> {
                     val activity = context as? Activity
                     if (activity == null) {
                         Log.e("HistoryScreen", "No Activity context for Credential Manager")
@@ -149,7 +172,7 @@ fun HistoryScreen(
                             val googleIdTokenCredential =
                                 GoogleIdTokenCredential.createFrom(result.credential.data)
                             viewModel.onIntent(
-                                HistoryIntent.SignInWithGoogle(googleIdTokenCredential.idToken),
+                                SignInWithGoogle(googleIdTokenCredential.idToken),
                             )
                         } catch (e: GetCredentialCancellationException) {
                             // User cancelled — no-op
@@ -184,7 +207,7 @@ fun HistoryScreen(
                             value = searchQuery,
                             onValueChange = { query ->
                                 searchQuery = query
-                                viewModel.onIntent(HistoryIntent.SearchQueryChanged(query))
+                                viewModel.onIntent(SearchQueryChanged(query))
                             },
                             placeholder = {
                                 Text(
@@ -219,7 +242,7 @@ fun HistoryScreen(
                                 onClick = {
                                     searchQuery = ""
                                     isSearchActive = false
-                                    viewModel.onIntent(HistoryIntent.SearchQueryChanged(""))
+                                    viewModel.onIntent(SearchQueryChanged(""))
                                 },
                             ) {
                                 Icon(
@@ -243,7 +266,7 @@ fun HistoryScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { innerPadding ->
         // US3: Billing — show capacity banner when near limit
-        val contentState = uiState as? HistoryUiState.Content
+        val contentState = uiState as? Content
         // US1: Cloud backup state
         val cloudBackupState by viewModel.cloudBackupState.collectAsStateWithLifecycle()
         Column(
@@ -253,28 +276,29 @@ fun HistoryScreen(
         ) {
             CloudBackupSection(
                 state = cloudBackupState,
-                onToggleBackup = { viewModel.onIntent(HistoryIntent.ToggleCloudBackup) },
-                onSignOut = { viewModel.onIntent(HistoryIntent.SignOutCloud) },
+                onToggleBackup = { viewModel.onIntent(ToggleCloudBackup) },
+                onSignOut = { viewModel.onIntent(SignOutCloud) },
             )
             if (cloudBackupState.isCloudBackupEnabled) {
                 TextButton(
-                    onClick = { viewModel.onIntent(HistoryIntent.RestoreFromCloud) },
+                    onClick = { viewModel.onIntent(RestoreFromCloud) },
                     modifier = Modifier.padding(horizontal = 8.dp),
                 ) {
                     Text(text = stringResource(R.string.cloud_restore_button))
                 }
             }
             // US2: Restore dialog
-            if (cloudBackupState.restoreState != RestoreState.Idle) {
+            if (cloudBackupState.restoreState != Idle) {
                 RestoreDialog(
                     restoreState = cloudBackupState.restoreState,
-                    onDismiss = { viewModel.onIntent(HistoryIntent.DismissRestoreDialog) },
+                    onDismiss = { viewModel.onIntent(DismissRestoreDialog) },
                 )
             }
-            if (contentState?.cloudCapacity?.isNearLimit == true) {
+            val capacity = contentState?.cloudCapacity
+            if (capacity?.isNearLimit == true) {
                 CapacityBanner(
-                    capacity = contentState.cloudCapacity,
-                    onUpgradeClick = { viewModel.onIntent(HistoryIntent.TapUpgrade) },
+                    capacity = capacity,
+                    onUpgradeClick = { viewModel.onIntent(TapUpgrade) },
                 )
             }
             HistoryContent(
@@ -294,18 +318,18 @@ fun HistoryScreen(
                     title = selectedItem.title,
                     showShare = selectedItem.status == DownloadStatus.COMPLETED && selectedItem.isFileAccessible,
                     onCopyLink = {
-                        viewModel.onIntent(HistoryIntent.CopyLinkClicked(openItemId))
-                        viewModel.onIntent(HistoryIntent.DismissItemMenu)
+                        viewModel.onIntent(CopyLinkClicked(openItemId))
+                        viewModel.onIntent(DismissItemMenu)
                     },
                     onShare = {
-                        viewModel.onIntent(HistoryIntent.ShareClicked(openItemId))
-                        viewModel.onIntent(HistoryIntent.DismissItemMenu)
+                        viewModel.onIntent(ShareClicked(openItemId))
+                        viewModel.onIntent(DismissItemMenu)
                     },
                     onDelete = {
-                        viewModel.onIntent(HistoryIntent.DeleteItemClicked(openItemId))
-                        viewModel.onIntent(HistoryIntent.DismissItemMenu)
+                        viewModel.onIntent(DeleteItemClicked(openItemId))
+                        viewModel.onIntent(DismissItemMenu)
                     },
-                    onDismiss = { viewModel.onIntent(HistoryIntent.DismissItemMenu) },
+                    onDismiss = { viewModel.onIntent(DismissItemMenu) },
                 )
             }
         }
@@ -314,13 +338,13 @@ fun HistoryScreen(
             HistoryDeleteDialog(
                 state = confirmation,
                 onDeleteFilesSelectionChanged = { selected ->
-                    viewModel.onIntent(HistoryIntent.DeleteFilesSelectionChanged(selected))
+                    viewModel.onIntent(DeleteFilesSelectionChanged(selected))
                 },
                 onConfirm = {
-                    viewModel.onIntent(HistoryIntent.ConfirmDeletion)
+                    viewModel.onIntent(ConfirmDeletion)
                 },
                 onDismiss = {
-                    viewModel.onIntent(HistoryIntent.DismissDeletionDialog)
+                    viewModel.onIntent(DismissDeletionDialog)
                 },
             )
         }
