@@ -52,6 +52,19 @@
 		<true/>
 	</dict>
 
+	<!-- URL scheme for receiving shared URLs from the Share Extension -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>socialvideodownloader</string>
+			</array>
+			<key>CFBundleURLName</key>
+			<string>com.socialvideodownloader</string>
+		</dict>
+	</array>
+
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
