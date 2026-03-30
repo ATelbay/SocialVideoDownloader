@@ -136,14 +136,33 @@ class DownloadViewModel @Inject constructor(
             is DownloadServiceState.Completed -> SharedDownloadServiceState.Completed(
                 requestId = serviceState.requestId,
                 filePath = serviceState.filePath,
+                fileUri = serviceState.filePath,
             )
             is DownloadServiceState.Failed -> SharedDownloadServiceState.Failed(
                 requestId = serviceState.requestId,
-                error = com.socialvideodownloader.shared.data.platform.DownloadErrorType.DOWNLOAD_FAILED,
+                error = parseErrorType(serviceState.error),
             )
             is DownloadServiceState.Cancelled -> SharedDownloadServiceState.Cancelled(
                 requestId = serviceState.requestId,
             )
+        }
+    }
+
+    private fun parseErrorType(error: String): com.socialvideodownloader.shared.data.platform.DownloadErrorType {
+        val lower = error.lowercase()
+        return when {
+            "network" in lower || "connect" in lower || "timeout" in lower ->
+                com.socialvideodownloader.shared.data.platform.DownloadErrorType.NETWORK_ERROR
+            "unsupported" in lower || "not supported" in lower ->
+                com.socialvideodownloader.shared.data.platform.DownloadErrorType.UNSUPPORTED_URL
+            "storage" in lower || "no space" in lower || "disk" in lower ->
+                com.socialvideodownloader.shared.data.platform.DownloadErrorType.STORAGE_FULL
+            "extract" in lower ->
+                com.socialvideodownloader.shared.data.platform.DownloadErrorType.EXTRACTION_FAILED
+            "server" in lower || "503" in lower || "502" in lower ->
+                com.socialvideodownloader.shared.data.platform.DownloadErrorType.SERVER_UNAVAILABLE
+            else ->
+                com.socialvideodownloader.shared.data.platform.DownloadErrorType.DOWNLOAD_FAILED
         }
     }
 }
