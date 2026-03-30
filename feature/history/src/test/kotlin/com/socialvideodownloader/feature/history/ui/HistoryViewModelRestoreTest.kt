@@ -4,17 +4,17 @@ import app.cash.turbine.test
 import com.socialvideodownloader.core.domain.model.SyncStatus
 import com.socialvideodownloader.core.domain.repository.BillingRepository
 import com.socialvideodownloader.core.domain.sync.BackupPreferences
+import com.socialvideodownloader.core.domain.sync.CloudAuthService
 import com.socialvideodownloader.core.domain.sync.DisableCloudBackupUseCase
 import com.socialvideodownloader.core.domain.sync.EnableCloudBackupUseCase
 import com.socialvideodownloader.core.domain.sync.ObserveCloudCapacityUseCase
-import com.socialvideodownloader.core.domain.sync.CloudAuthService
 import com.socialvideodownloader.core.domain.sync.RestoreFromCloudUseCase
 import com.socialvideodownloader.core.domain.sync.RestoreResult
 import com.socialvideodownloader.core.domain.sync.SyncManager
-import com.socialvideodownloader.shared.feature.history.DeleteHistoryItemUseCaseShared
-import com.socialvideodownloader.feature.history.domain.ObserveHistoryItemsUseCase
+import com.socialvideodownloader.feature.history.testdouble.FakeDownloadRepository
+import com.socialvideodownloader.feature.history.testdouble.FakeHistoryFileManager
 import com.socialvideodownloader.feature.history.testutil.MainDispatcherRule
-import android.content.Context
+import com.socialvideodownloader.shared.data.platform.PlatformClipboard
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -35,9 +35,8 @@ class HistoryViewModelRestoreTest {
     @RegisterExtension
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val appContext = mockk<Context>(relaxed = true)
-    private val observeHistoryItems = mockk<ObserveHistoryItemsUseCase>()
-    private val deleteHistoryItem = mockk<DeleteHistoryItemUseCaseShared>(relaxed = true)
+    private val repository = FakeDownloadRepository()
+    private val fileManager = FakeHistoryFileManager()
     private val observeCloudCapacity = mockk<ObserveCloudCapacityUseCase>()
     private val billingRepository = mockk<BillingRepository>(relaxed = true)
     private val enableCloudBackupUseCase = mockk<EnableCloudBackupUseCase>(relaxed = true)
@@ -46,22 +45,21 @@ class HistoryViewModelRestoreTest {
     private val backupPreferences = mockk<BackupPreferences>(relaxed = true)
     private val restoreFromCloudUseCase = mockk<RestoreFromCloudUseCase>()
     private val cloudAuthService = mockk<CloudAuthService>(relaxed = true)
+    private val clipboard = mockk<PlatformClipboard>(relaxed = true)
 
     private val isBackupEnabledFlow = MutableStateFlow(false)
     private val syncStatusFlow = MutableStateFlow<SyncStatus>(SyncStatus.Idle)
 
     @BeforeEach
     fun setup() {
-        every { observeHistoryItems() } returns flowOf(emptyList())
         every { observeCloudCapacity() } returns flowOf()
         every { backupPreferences.observeIsBackupEnabled() } returns isBackupEnabledFlow
         every { syncManager.observeSyncStatus() } returns syncStatusFlow
     }
 
     private fun createViewModel() = HistoryViewModel(
-        appContext = appContext,
-        observeHistoryItems = observeHistoryItems,
-        deleteHistoryItem = deleteHistoryItem,
+        downloadRepository = repository,
+        fileManager = fileManager,
         observeCloudCapacity = observeCloudCapacity,
         billingRepository = billingRepository,
         enableCloudBackupUseCase = enableCloudBackupUseCase,
@@ -70,6 +68,7 @@ class HistoryViewModelRestoreTest {
         backupPreferences = backupPreferences,
         restoreFromCloudUseCase = restoreFromCloudUseCase,
         cloudAuthService = cloudAuthService,
+        clipboard = clipboard,
     )
 
     @Test
