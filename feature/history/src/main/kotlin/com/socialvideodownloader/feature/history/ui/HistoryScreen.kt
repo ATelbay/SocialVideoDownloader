@@ -106,38 +106,46 @@ fun HistoryScreen(
     // Credential Manager for Google Sign-In
     val credentialManager = remember { CredentialManager.create(context) }
 
+    // Pre-resolve strings for use inside LaunchedEffect (avoids LocalContext lint)
+    val msgDeleted = stringResource(R.string.history_deleted)
+    val msgAllDeleted = stringResource(R.string.history_all_deleted)
+    val msgLinkCopied = stringResource(R.string.history_link_copied)
+    val msgCloudSyncError = stringResource(R.string.history_cloud_sync_error)
+    val msgFileUnavailable = stringResource(R.string.history_file_unavailable)
+    val msgDeleteFileFailed = stringResource(R.string.history_delete_single_file_failed)
+    val msgOpenError = stringResource(R.string.history_open_error)
+    val msgShareError = stringResource(R.string.history_share_error)
+    val googleWebClientId = stringResource(R.string.google_web_client_id)
+    val msgSignInFailed = stringResource(R.string.cloud_sign_in_failed)
+
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             snackbarHostState.currentSnackbarData?.dismiss()
             when (effect) {
                 is ShowMessage -> {
-                    val msgRes =
+                    val msg =
                         when (effect.messageType) {
-                            HistoryMessageType.DELETE_SUCCESS -> R.string.history_deleted
-                            HistoryMessageType.DELETE_ALL_SUCCESS -> R.string.history_all_deleted
-                            HistoryMessageType.COPY_URL_SUCCESS -> R.string.history_link_copied
-                            HistoryMessageType.CLOUD_SYNC_ERROR -> R.string.history_cloud_sync_error
-                            HistoryMessageType.FILE_UNAVAILABLE -> R.string.history_file_unavailable
-                            HistoryMessageType.DELETE_FILE_FAILED -> R.string.history_delete_single_file_failed
+                            HistoryMessageType.DELETE_SUCCESS -> msgDeleted
+                            HistoryMessageType.DELETE_ALL_SUCCESS -> msgAllDeleted
+                            HistoryMessageType.COPY_URL_SUCCESS -> msgLinkCopied
+                            HistoryMessageType.CLOUD_SYNC_ERROR -> msgCloudSyncError
+                            HistoryMessageType.FILE_UNAVAILABLE -> msgFileUnavailable
+                            HistoryMessageType.DELETE_FILE_FAILED -> msgDeleteFileFailed
                         }
-                    snackbarHostState.showSnackbar(context.getString(msgRes))
+                    snackbarHostState.showSnackbar(msg)
                 }
                 is OpenContent -> {
                     try {
                         context.openVideo(effect.contentUri)
                     } catch (e: Exception) {
-                        snackbarHostState.showSnackbar(
-                            context.getString(R.string.history_open_error),
-                        )
+                        snackbarHostState.showSnackbar(msgOpenError)
                     }
                 }
                 is ShareContent -> {
                     try {
                         context.shareVideo(effect.contentUri)
                     } catch (e: Exception) {
-                        snackbarHostState.showSnackbar(
-                            context.getString(R.string.history_share_error),
-                        )
+                        snackbarHostState.showSnackbar(msgShareError)
                     }
                 }
                 is RetryDownload -> {
@@ -159,9 +167,7 @@ fun HistoryScreen(
                             val googleIdOption =
                                 GetGoogleIdOption.Builder()
                                     .setFilterByAuthorizedAccounts(false)
-                                    .setServerClientId(
-                                        context.getString(R.string.google_web_client_id),
-                                    )
+                                    .setServerClientId(googleWebClientId)
                                     .build()
                             val request =
                                 GetCredentialRequest.Builder()
@@ -181,9 +187,7 @@ fun HistoryScreen(
                             // User cancelled — no-op
                         } catch (e: Exception) {
                             Log.e("HistoryScreen", "Google sign-in failed", e)
-                            snackbarHostState.showSnackbar(
-                                context.getString(R.string.cloud_sign_in_failed),
-                            )
+                            snackbarHostState.showSnackbar(msgSignInFailed)
                         }
                     }
                 }

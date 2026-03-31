@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import androidx.annotation.RequiresApi
 import com.socialvideodownloader.core.domain.di.IoDispatcher
 import com.socialvideodownloader.core.domain.repository.MediaStoreRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -44,6 +45,7 @@ class MediaStoreRepositoryImpl
             return sanitized
         }
 
+        @RequiresApi(Build.VERSION_CODES.Q)
         private fun saveWithMediaStore(
             tempFile: File,
             title: String,

@@ -46,6 +46,9 @@ fun LibraryScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    val openErrorMsg = stringResource(R.string.library_open_error)
+    val shareErrorMsg = stringResource(R.string.library_share_error)
+    val deletedMsg = stringResource(R.string.library_deleted)
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
@@ -55,25 +58,25 @@ fun LibraryScreen(
                     try {
                         context.openVideo(effect.contentUri)
                     } catch (e: Exception) {
-                        snackbarHostState.showSnackbar(context.getString(R.string.library_open_error))
+                        snackbarHostState.showSnackbar(openErrorMsg)
                     }
                 }
                 is LibraryEffect.ShareContent -> {
                     try {
                         context.shareVideo(effect.contentUri)
                     } catch (e: Exception) {
-                        snackbarHostState.showSnackbar(context.getString(R.string.library_share_error))
+                        snackbarHostState.showSnackbar(shareErrorMsg)
                     }
                 }
                 is LibraryEffect.ShowMessage -> {
-                    val msgRes =
+                    val msg =
                         when (effect.messageType) {
-                            LibraryMessageType.DELETE_SUCCESS -> R.string.library_deleted
-                            LibraryMessageType.FILE_NOT_FOUND -> R.string.library_open_error
-                            LibraryMessageType.SHARE_ERROR -> R.string.library_share_error
-                            LibraryMessageType.OPEN_ERROR -> R.string.library_open_error
+                            LibraryMessageType.DELETE_SUCCESS -> deletedMsg
+                            LibraryMessageType.FILE_NOT_FOUND -> openErrorMsg
+                            LibraryMessageType.SHARE_ERROR -> shareErrorMsg
+                            LibraryMessageType.OPEN_ERROR -> openErrorMsg
                         }
-                    snackbarHostState.showSnackbar(context.getString(msgRes))
+                    snackbarHostState.showSnackbar(msg)
                 }
             }
         }
