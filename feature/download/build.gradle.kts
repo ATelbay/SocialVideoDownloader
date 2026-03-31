@@ -17,7 +17,7 @@ dependencies {
     implementation(project(":core:domain"))
     implementation(project(":shared:data"))
     implementation(project(":shared:feature-download"))
-    implementation(libs.coil.compose)
+    implementation(libs.coil3.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
