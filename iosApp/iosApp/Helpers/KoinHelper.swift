@@ -1,5 +1,5 @@
 import Foundation
-@preconcurrency import shared_feature_library
+@preconcurrency import shared_di
 
 // Bridges the feature-library exported Swift names back to the simpler
 // download/history type names the iOS UI was already written against.

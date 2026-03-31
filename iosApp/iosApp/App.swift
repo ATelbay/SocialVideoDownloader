@@ -1,5 +1,5 @@
 import SwiftUI
-import shared_feature_library
+import shared_di
 
 // Shared state for the URL received via the Share Extension or URL scheme.
 // ContentView injects this as an EnvironmentObject so DownloadView can observe it.

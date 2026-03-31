@@ -7,11 +7,6 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":shared:data"))
         }
-        iosMain.dependencies {
-            implementation(project(":shared:feature-download"))
-            implementation(project(":shared:feature-history"))
-            implementation(project(":shared:network"))
-        }
     }
 }
 
