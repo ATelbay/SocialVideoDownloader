@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.socialvideodownloader.shared.ui.theme.LocalAppShapes
 import com.socialvideodownloader.shared.ui.theme.Spacing
+import com.socialvideodownloader.shared.ui.theme.SvdBg
 import com.socialvideodownloader.shared.ui.theme.SvdBorder
 import com.socialvideodownloader.shared.ui.theme.SvdPrimarySoft
 import com.socialvideodownloader.shared.ui.theme.SvdPrimaryStrong
@@ -52,53 +54,60 @@ fun PillNavigationBar(
             TabData(label = "History", icon = Icons.Outlined.History),
         )
 
-    Row(
+    Box(
         modifier =
             modifier
                 .fillMaxWidth()
-                .padding(
-                    top = Spacing.NavBarPaddingTop,
-                    start = Spacing.NavBarPaddingH,
-                    end = Spacing.NavBarPaddingH,
-                    bottom = Spacing.NavBarPaddingBottom,
-                )
-                .heightIn(min = Spacing.NavBarHeight)
-                .clip(shapes.pill)
-                .background(SvdSurface)
-                .border(width = 1.dp, color = SvdBorder, shape = shapes.pill)
-                .padding(Spacing.NavBarInternalPadding),
+                .background(SvdBg),
     ) {
-        tabs.forEachIndexed { index, tab ->
-            val isSelected = index == selectedIndex
-            Column(
-                modifier =
-                    Modifier
-                        .weight(1f)
-                        .heightIn(min = 54.dp)
-                        .clip(shapes.navTab)
-                        .background(if (isSelected) SvdPrimarySoft else Color.Transparent)
-                        .semantics(mergeDescendants = true) {
-                            role = Role.Tab
-                            contentDescription = tab.label
-                            selected = isSelected
-                        }
-                        .clickable { onSelect(index) },
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
-            ) {
-                Icon(
-                    imageVector = tab.icon,
-                    contentDescription = null,
-                    tint = if (isSelected) SvdPrimaryStrong else SvdSubtleForeground,
-                    modifier = Modifier.size(18.dp),
-                )
-                Text(
-                    text = tab.label,
-                    color = if (isSelected) SvdPrimaryStrong else SvdSubtleForeground,
-                    fontSize = 10.sp,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
-                    letterSpacing = 0.5.sp,
-                )
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        top = Spacing.NavBarPaddingTop,
+                        start = Spacing.NavBarPaddingH,
+                        end = Spacing.NavBarPaddingH,
+                        bottom = Spacing.NavBarPaddingBottom,
+                    )
+                    .heightIn(min = Spacing.NavBarHeight)
+                    .clip(shapes.pill)
+                    .background(SvdSurface)
+                    .border(width = 1.dp, color = SvdBorder, shape = shapes.pill)
+                    .padding(Spacing.NavBarInternalPadding),
+        ) {
+            tabs.forEachIndexed { index, tab ->
+                val isSelected = index == selectedIndex
+                Column(
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .heightIn(min = 54.dp)
+                            .clip(shapes.navTab)
+                            .background(if (isSelected) SvdPrimarySoft else Color.Transparent)
+                            .semantics(mergeDescendants = true) {
+                                role = Role.Tab
+                                contentDescription = tab.label
+                                selected = isSelected
+                            }
+                            .clickable { onSelect(index) },
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+                ) {
+                    Icon(
+                        imageVector = tab.icon,
+                        contentDescription = null,
+                        tint = if (isSelected) SvdPrimaryStrong else SvdSubtleForeground,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Text(
+                        text = tab.label,
+                        color = if (isSelected) SvdPrimaryStrong else SvdSubtleForeground,
+                        fontSize = 10.sp,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+                        letterSpacing = 0.5.sp,
+                    )
+                }
             }
         }
     }

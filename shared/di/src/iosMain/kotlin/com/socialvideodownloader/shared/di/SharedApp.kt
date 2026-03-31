@@ -1,9 +1,14 @@
 package com.socialvideodownloader.shared.di
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -30,6 +35,7 @@ import com.socialvideodownloader.shared.feature.library.SharedLibraryViewModel
 import com.socialvideodownloader.shared.feature.library.ui.LibraryScreen
 import com.socialvideodownloader.shared.feature.library.ui.LibraryStrings
 import com.socialvideodownloader.shared.ui.components.PillNavigationBar
+import com.socialvideodownloader.shared.ui.theme.SvdBg
 import com.socialvideodownloader.shared.ui.theme.SvdTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -86,8 +92,19 @@ fun SharedApp() {
             }
         }
 
-        Column(modifier = Modifier.fillMaxSize()) {
-            Box(modifier = Modifier.weight(1f)) {
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(SvdBg),
+        ) {
+            Box(
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .background(SvdBg),
+            ) {
                 NavHost(
                     navController = navController,
                     startDestination = DEST_DOWNLOAD,
@@ -149,21 +166,36 @@ fun SharedApp() {
                 }
             }
 
-            PillNavigationBar(
-                selectedIndex = selectedTab,
-                onSelect = { index ->
-                    selectedTab = index
-                    val destination = tabDestinations[index]
-                    navController.navigate(destination) {
-                        popUpTo(navController.graph.startDestinationId) {
-                            saveState = true
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .background(SvdBg),
+            ) {
+                PillNavigationBar(
+                    selectedIndex = selectedTab,
+                    onSelect = { index ->
+                        selectedTab = index
+                        val destination = tabDestinations[index]
+                        navController.navigate(destination) {
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
                         }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-            )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                Spacer(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .windowInsetsBottomHeight(WindowInsets.safeDrawing)
+                            .background(SvdBg),
+                )
+            }
         }
     }
 }
