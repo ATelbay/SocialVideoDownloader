@@ -1,380 +1,139 @@
 package com.socialvideodownloader.feature.history.ui
 
 import android.app.Activity
+import android.text.format.DateUtils
+import android.text.format.Formatter
 import android.util.Log
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.socialvideodownloader.core.domain.model.DownloadStatus
-import com.socialvideodownloader.core.ui.components.SvdTopBar
-import com.socialvideodownloader.core.ui.theme.AppShapesInstance
-import com.socialvideodownloader.core.ui.theme.SvdBg
-import com.socialvideodownloader.core.ui.theme.SvdBorder
-import com.socialvideodownloader.core.ui.theme.SvdForeground
-import com.socialvideodownloader.core.ui.theme.SvdSubtleForeground
-import com.socialvideodownloader.core.ui.theme.SvdSurface
-import com.socialvideodownloader.core.ui.tokens.Spacing
 import com.socialvideodownloader.core.ui.util.openVideo
 import com.socialvideodownloader.core.ui.util.shareVideo
 import com.socialvideodownloader.feature.history.R
-import com.socialvideodownloader.feature.history.components.HistoryBottomSheet
-import com.socialvideodownloader.feature.history.components.HistoryDeleteDialog
-import com.socialvideodownloader.shared.feature.history.HistoryEffect.LaunchGoogleSignIn
-import com.socialvideodownloader.shared.feature.history.HistoryEffect.LaunchUpgradeFlow
-import com.socialvideodownloader.shared.feature.history.HistoryEffect.OpenContent
-import com.socialvideodownloader.shared.feature.history.HistoryEffect.RetryDownload
-import com.socialvideodownloader.shared.feature.history.HistoryEffect.ShareContent
-import com.socialvideodownloader.shared.feature.history.HistoryEffect.ShowMessage
-import com.socialvideodownloader.shared.feature.history.HistoryIntent.ConfirmDeletion
-import com.socialvideodownloader.shared.feature.history.HistoryIntent.CopyLinkClicked
-import com.socialvideodownloader.shared.feature.history.HistoryIntent.DeleteFilesSelectionChanged
-import com.socialvideodownloader.shared.feature.history.HistoryIntent.DeleteItemClicked
-import com.socialvideodownloader.shared.feature.history.HistoryIntent.DismissDeletionDialog
-import com.socialvideodownloader.shared.feature.history.HistoryIntent.DismissItemMenu
-import com.socialvideodownloader.shared.feature.history.HistoryIntent.DismissRestoreDialog
-import com.socialvideodownloader.shared.feature.history.HistoryIntent.RestoreFromCloud
-import com.socialvideodownloader.shared.feature.history.HistoryIntent.SearchQueryChanged
-import com.socialvideodownloader.shared.feature.history.HistoryIntent.ShareClicked
-import com.socialvideodownloader.shared.feature.history.HistoryIntent.SignInWithGoogle
-import com.socialvideodownloader.shared.feature.history.HistoryIntent.SignOutCloud
-import com.socialvideodownloader.shared.feature.history.HistoryIntent.TapUpgrade
-import com.socialvideodownloader.shared.feature.history.HistoryIntent.ToggleCloudBackup
-import com.socialvideodownloader.shared.feature.history.HistoryMessageType
-import com.socialvideodownloader.shared.feature.history.HistoryUiState.Content
-import com.socialvideodownloader.shared.feature.history.RestoreState.Idle
+import com.socialvideodownloader.shared.feature.history.ui.HistoryScreen
+import com.socialvideodownloader.shared.feature.history.ui.HistoryStrings
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
     onNavigateToDownload: (initialUrl: String, existingRecordId: Long?) -> Unit,
     viewModel: HistoryViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    var searchQuery by rememberSaveable { mutableStateOf("") }
-    var isSearchActive by rememberSaveable { mutableStateOf(false) }
-    // US3: Billing — controls visibility of upgrade dialog
-    var showUpgradeDialog by rememberSaveable { mutableStateOf(false) }
-
-    // Credential Manager for Google Sign-In
-    val credentialManager = remember { CredentialManager.create(context) }
-
-    // Pre-resolve strings for use inside LaunchedEffect (avoids LocalContext lint)
-    val msgDeleted = stringResource(R.string.history_deleted)
-    val msgAllDeleted = stringResource(R.string.history_all_deleted)
-    val msgLinkCopied = stringResource(R.string.history_link_copied)
-    val msgCloudSyncError = stringResource(R.string.history_cloud_sync_error)
-    val msgFileUnavailable = stringResource(R.string.history_file_unavailable)
-    val msgDeleteFileFailed = stringResource(R.string.history_delete_single_file_failed)
-    val msgOpenError = stringResource(R.string.history_open_error)
-    val msgShareError = stringResource(R.string.history_share_error)
+    val credentialManager = androidx.compose.runtime.remember { CredentialManager.create(context) }
     val googleWebClientId = stringResource(R.string.google_web_client_id)
-    val msgSignInFailed = stringResource(R.string.cloud_sign_in_failed)
 
-    LaunchedEffect(Unit) {
-        viewModel.effect.collect { effect ->
-            snackbarHostState.currentSnackbarData?.dismiss()
-            when (effect) {
-                is ShowMessage -> {
-                    val msg =
-                        when (effect.messageType) {
-                            HistoryMessageType.DELETE_SUCCESS -> msgDeleted
-                            HistoryMessageType.DELETE_ALL_SUCCESS -> msgAllDeleted
-                            HistoryMessageType.COPY_URL_SUCCESS -> msgLinkCopied
-                            HistoryMessageType.CLOUD_SYNC_ERROR -> msgCloudSyncError
-                            HistoryMessageType.FILE_UNAVAILABLE -> msgFileUnavailable
-                            HistoryMessageType.DELETE_FILE_FAILED -> msgDeleteFileFailed
-                        }
-                    snackbarHostState.showSnackbar(msg)
-                }
-                is OpenContent -> {
-                    try {
-                        context.openVideo(effect.contentUri)
-                    } catch (e: Exception) {
-                        snackbarHostState.showSnackbar(msgOpenError)
-                    }
-                }
-                is ShareContent -> {
-                    try {
-                        context.shareVideo(effect.contentUri)
-                    } catch (e: Exception) {
-                        snackbarHostState.showSnackbar(msgShareError)
-                    }
-                }
-                is RetryDownload -> {
-                    onNavigateToDownload(effect.sourceUrl, effect.existingRecordId)
-                }
-                // US3: Billing — show upgrade dialog
-                is LaunchUpgradeFlow -> {
-                    showUpgradeDialog = true
-                }
-                // Google Sign-In — launch Credential Manager
-                is LaunchGoogleSignIn -> {
-                    val activity = context as? Activity
-                    if (activity == null) {
-                        Log.e("HistoryScreen", "No Activity context for Credential Manager")
-                        return@collect
-                    }
-                    coroutineScope.launch {
-                        try {
-                            val googleIdOption =
-                                GetGoogleIdOption.Builder()
-                                    .setFilterByAuthorizedAccounts(false)
-                                    .setServerClientId(googleWebClientId)
-                                    .build()
-                            val request =
-                                GetCredentialRequest.Builder()
-                                    .addCredentialOption(googleIdOption)
-                                    .build()
-                            val result =
-                                credentialManager.getCredential(
-                                    context = activity,
-                                    request = request,
-                                )
-                            val googleIdTokenCredential =
-                                GoogleIdTokenCredential.createFrom(result.credential.data)
-                            viewModel.onIntent(
-                                SignInWithGoogle(googleIdTokenCredential.idToken),
-                            )
-                        } catch (e: GetCredentialCancellationException) {
-                            // User cancelled — no-op
-                        } catch (e: Exception) {
-                            Log.e("HistoryScreen", "Google sign-in failed", e)
-                            snackbarHostState.showSnackbar(msgSignInFailed)
-                        }
-                    }
-                }
-            }
-        }
-    }
+    // Pre-resolve format strings for use in non-composable lambdas
+    val capacityBannerFmt = stringResource(R.string.cloud_capacity_banner)
+    val restoreProgressFmt = stringResource(R.string.cloud_restore_progress)
+    val restoreCompletedFmt = stringResource(R.string.cloud_restore_complete)
+    val cloudBackupSyncedFmt = stringResource(R.string.cloud_backup_synced)
 
-    Scaffold(
-        modifier = modifier,
-        containerColor = SvdBg,
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        topBar = {
-            Column {
-                if (isSearchActive) {
-                    // Search mode
-                    Row(
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .height(Spacing.TopBarHeight)
-                                .padding(horizontal = Spacing.TopBarPaddingH),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        TextField(
-                            value = searchQuery,
-                            onValueChange = { query ->
-                                searchQuery = query
-                                viewModel.onIntent(SearchQueryChanged(query))
-                            },
-                            placeholder = {
-                                Text(
-                                    text = stringResource(R.string.history_search_hint),
-                                    color = SvdSubtleForeground,
-                                )
-                            },
-                            singleLine = true,
-                            shape = AppShapesInstance.control,
-                            colors =
-                                TextFieldDefaults.colors(
-                                    focusedContainerColor = SvdSurface,
-                                    unfocusedContainerColor = SvdSurface,
-                                    focusedIndicatorColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent,
-                                    disabledIndicatorColor = Color.Transparent,
-                                    focusedTextColor = SvdForeground,
-                                    unfocusedTextColor = SvdForeground,
-                                ),
-                            modifier =
-                                Modifier
-                                    .weight(1f)
-                                    .border(1.dp, SvdBorder, AppShapesInstance.control),
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Box(
-                            modifier =
-                                Modifier
-                                    .size(36.dp)
-                                    .clip(AppShapesInstance.control)
-                                    .background(SvdSurface),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            androidx.compose.material3.IconButton(
-                                onClick = {
-                                    searchQuery = ""
-                                    isSearchActive = false
-                                    viewModel.onIntent(SearchQueryChanged(""))
-                                },
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = null,
-                                    tint = SvdForeground,
-                                    modifier = Modifier.size(18.dp),
-                                )
-                            }
-                        }
-                    }
-                } else {
-                    SvdTopBar(
-                        title = stringResource(R.string.history_screen_title_full),
-                        actionLabel = stringResource(R.string.history_action_filter),
-                        onActionClick = { isSearchActive = true },
-                    )
-                }
+    val strings = HistoryStrings(
+        screenTitle = stringResource(R.string.history_screen_title_full),
+        filterActionLabel = stringResource(R.string.history_action_filter),
+        searchHint = stringResource(R.string.history_search_hint),
+        emptyTitle = stringResource(R.string.history_empty_title),
+        emptyDescription = stringResource(R.string.history_empty_description_new),
+        noResultsDescription = stringResource(R.string.history_no_results_description),
+        startDownloadingLabel = stringResource(R.string.history_start_downloading),
+        startNewDownloadLabel = stringResource(R.string.history_start_new_download),
+        restoreButtonLabel = stringResource(R.string.cloud_restore_button),
+        capacityBannerText = { used, limit ->
+            String.format(capacityBannerFmt, used, limit)
+        },
+        capacityUpgradeLabel = stringResource(R.string.cloud_capacity_upgrade),
+        okLabel = stringResource(android.R.string.ok),
+        restoreProgressText = { current, total ->
+            String.format(restoreProgressFmt, current, total)
+        },
+        restoreCompletedText = { restored, skipped ->
+            String.format(restoreCompletedFmt, restored, skipped)
+        },
+        restoreKeyLostText = stringResource(R.string.cloud_restore_key_lost),
+        deleteTitle = stringResource(R.string.history_delete_single_title),
+        deleteBodyText = stringResource(R.string.history_delete_message_single),
+        deleteFilesLabel = stringResource(R.string.history_delete_checkbox_label),
+        deleteCancelLabel = stringResource(R.string.history_delete_cancel),
+        deleteConfirmLabel = stringResource(R.string.history_delete_confirm),
+        bottomSheetCopyLinkLabel = stringResource(R.string.history_bottom_sheet_copy_link),
+        bottomSheetShareLabel = stringResource(R.string.history_bottom_sheet_share),
+        bottomSheetDeleteLabel = stringResource(R.string.history_bottom_sheet_delete),
+        upgradeTitle = stringResource(R.string.upgrade_title),
+        upgradeDescription = stringResource(R.string.upgrade_description),
+        upgradePriceLabel = stringResource(R.string.upgrade_price),
+        upgradeBuyLabel = stringResource(R.string.upgrade_buy_button),
+        upgradeCancelLabel = stringResource(R.string.history_delete_cancel),
+        cloudBackupToggleLabel = stringResource(R.string.cloud_backup_toggle_label),
+        cloudSignInLabel = stringResource(R.string.cloud_sign_in_google),
+        cloudSignOutLabel = stringResource(R.string.cloud_sign_out),
+        cloudSignedInAs = stringResource(R.string.cloud_signed_in_as, ""),
+        cloudSignInFailedMessage = stringResource(R.string.cloud_sign_in_failed),
+        cloudBackupDisabledText = stringResource(R.string.cloud_backup_disabled),
+        cloudBackupNeverText = stringResource(R.string.cloud_backup_never),
+        cloudBackupSyncingText = stringResource(R.string.cloud_backup_syncing),
+        cloudBackupSyncedText = { time -> String.format(cloudBackupSyncedFmt, time) },
+        cloudBackupPausedText = stringResource(R.string.cloud_backup_paused),
+        cloudBackupErrorText = stringResource(R.string.cloud_backup_error),
+        msgDeleted = stringResource(R.string.history_deleted),
+        msgAllDeleted = stringResource(R.string.history_all_deleted),
+        msgLinkCopied = stringResource(R.string.history_link_copied),
+        msgCloudSyncError = stringResource(R.string.history_cloud_sync_error),
+        msgFileUnavailable = stringResource(R.string.history_file_unavailable),
+        msgDeleteFileFailed = stringResource(R.string.history_delete_single_file_failed),
+        msgOpenError = stringResource(R.string.history_open_error),
+        msgShareError = stringResource(R.string.history_share_error),
+    )
+
+    HistoryScreen(
+        viewModel = viewModel.shared,
+        strings = strings,
+        formattedDate = { epochMillis ->
+            DateUtils.getRelativeTimeSpanString(
+                epochMillis,
+                System.currentTimeMillis(),
+                DateUtils.MINUTE_IN_MILLIS,
+            ).toString()
+        },
+        formattedSize = { bytes -> Formatter.formatFileSize(context, bytes) },
+        onNavigateToDownload = onNavigateToDownload,
+        onOpenFile = { uri -> context.openVideo(uri) },
+        onShareFile = { uri -> context.shareVideo(uri) },
+        onLaunchGoogleSignIn = {
+            val activity = context as? Activity ?: return@HistoryScreen null
+            try {
+                val googleIdOption =
+                    GetGoogleIdOption.Builder()
+                        .setFilterByAuthorizedAccounts(false)
+                        .setServerClientId(googleWebClientId)
+                        .build()
+                val request =
+                    GetCredentialRequest.Builder()
+                        .addCredentialOption(googleIdOption)
+                        .build()
+                val result = credentialManager.getCredential(context = activity, request = request)
+                GoogleIdTokenCredential.createFrom(result.credential.data).idToken
+            } catch (e: GetCredentialCancellationException) {
+                null
+            } catch (e: Exception) {
+                Log.e("HistoryScreen", "Google sign-in failed", e)
+                null
             }
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-    ) { innerPadding ->
-        // US3: Billing — show capacity banner when near limit
-        val contentState = uiState as? Content
-        // US1: Cloud backup state
-        val cloudBackupState by viewModel.cloudBackupState.collectAsStateWithLifecycle()
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-        ) {
-            CloudBackupSection(
-                state = cloudBackupState,
-                onToggleBackup = { viewModel.onIntent(ToggleCloudBackup) },
-                onSignOut = { viewModel.onIntent(SignOutCloud) },
-            )
-            if (cloudBackupState.isCloudBackupEnabled) {
-                TextButton(
-                    onClick = { viewModel.onIntent(RestoreFromCloud) },
-                    modifier = Modifier.padding(horizontal = 8.dp),
-                ) {
-                    Text(text = stringResource(R.string.cloud_restore_button))
-                }
-            }
-            // US2: Restore dialog
-            if (cloudBackupState.restoreState != Idle) {
-                RestoreDialog(
-                    restoreState = cloudBackupState.restoreState,
-                    onDismiss = { viewModel.onIntent(DismissRestoreDialog) },
-                )
-            }
-            val capacity = contentState?.cloudCapacity
-            if (capacity?.isNearLimit == true) {
-                CapacityBanner(
-                    capacity = capacity,
-                    onUpgradeClick = { viewModel.onIntent(TapUpgrade) },
-                )
-            }
-            HistoryContent(
-                uiState = uiState,
-                onIntent = viewModel::onIntent,
-                onStartDownloading = { onNavigateToDownload("", null) },
-                modifier = Modifier.fillMaxSize(),
-            )
-        }
-
-        // Re-declare for bottom sheet / dialog use below
-        val openItemId = contentState?.openMenuItemId
-        if (openItemId != null) {
-            val selectedItem = contentState.items.find { it.id == openItemId }
-            if (selectedItem != null) {
-                HistoryBottomSheet(
-                    title = selectedItem.title,
-                    showShare = selectedItem.status == DownloadStatus.COMPLETED && selectedItem.isFileAccessible,
-                    onCopyLink = {
-                        viewModel.onIntent(CopyLinkClicked(openItemId))
-                        viewModel.onIntent(DismissItemMenu)
-                    },
-                    onShare = {
-                        viewModel.onIntent(ShareClicked(openItemId))
-                        viewModel.onIntent(DismissItemMenu)
-                    },
-                    onDelete = {
-                        viewModel.onIntent(DeleteItemClicked(openItemId))
-                        viewModel.onIntent(DismissItemMenu)
-                    },
-                    onDismiss = { viewModel.onIntent(DismissItemMenu) },
-                )
-            }
-        }
-
-        contentState?.deleteConfirmation?.let { confirmation ->
-            HistoryDeleteDialog(
-                state = confirmation,
-                onDeleteFilesSelectionChanged = { selected ->
-                    viewModel.onIntent(DeleteFilesSelectionChanged(selected))
-                },
-                onConfirm = {
-                    viewModel.onIntent(ConfirmDeletion)
-                },
-                onDismiss = {
-                    viewModel.onIntent(DismissDeletionDialog)
-                },
-            )
-        }
-
-        // US3: Billing — upgrade dialog triggered by CapacityBanner or effect
-        if (showUpgradeDialog) {
-            UpgradeScreen(
-                onBuyClick = {
-                    showUpgradeDialog = false
-                    val activity = context as? Activity
-                    if (activity != null) {
-                        coroutineScope.launch {
-                            viewModel.launchPurchaseFlow(activity)
-                        }
-                    }
-                },
-                onDismiss = { showUpgradeDialog = false },
-            )
-        }
-    }
+        onLaunchUpgradeFlow = {
+            val activity = context as? Activity ?: return@HistoryScreen
+            coroutineScope.launch { viewModel.launchPurchaseFlow(activity) }
+        },
+        modifier = modifier,
+    )
 }

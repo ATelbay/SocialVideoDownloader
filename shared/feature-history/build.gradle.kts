@@ -6,6 +6,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":shared:data"))
+            implementation(project(":shared:ui"))
         }
     }
 }
