@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.sp
 import com.socialvideodownloader.shared.ui.theme.LocalAppShapes
 import com.socialvideodownloader.shared.ui.theme.SvdBorder
 import com.socialvideodownloader.shared.ui.theme.SvdForeground
-import com.socialvideodownloader.shared.ui.tokens.Spacing
+import com.socialvideodownloader.shared.ui.theme.Spacing
 
 @Composable
 fun SecondaryButton(

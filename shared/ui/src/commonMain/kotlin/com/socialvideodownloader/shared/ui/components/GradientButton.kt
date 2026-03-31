@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.sp
 import com.socialvideodownloader.shared.ui.theme.LocalAppShapes
 import com.socialvideodownloader.shared.ui.theme.SvdPrimary
 import com.socialvideodownloader.shared.ui.theme.SvdWarning
-import com.socialvideodownloader.shared.ui.tokens.Spacing
+import com.socialvideodownloader.shared.ui.theme.Spacing
 
 @Composable
 fun GradientButton(

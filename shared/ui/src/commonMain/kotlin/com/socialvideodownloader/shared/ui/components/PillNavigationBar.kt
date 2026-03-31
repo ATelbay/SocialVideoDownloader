@@ -31,7 +31,7 @@ import com.socialvideodownloader.shared.ui.theme.SvdPrimarySoft
 import com.socialvideodownloader.shared.ui.theme.SvdPrimaryStrong
 import com.socialvideodownloader.shared.ui.theme.SvdSubtleForeground
 import com.socialvideodownloader.shared.ui.theme.SvdSurface
-import com.socialvideodownloader.shared.ui.tokens.Spacing
+import com.socialvideodownloader.shared.ui.theme.Spacing
 
 @Composable
 fun PillNavigationBar(

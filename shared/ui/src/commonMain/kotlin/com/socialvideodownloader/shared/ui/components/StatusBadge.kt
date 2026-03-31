@@ -25,7 +25,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.socialvideodownloader.core.domain.model.DownloadStatus
 import com.socialvideodownloader.shared.ui.theme.LocalAppShapes
 import com.socialvideodownloader.shared.ui.theme.SvdAccent
 import com.socialvideodownloader.shared.ui.theme.SvdAccentSoft
@@ -35,28 +34,32 @@ import com.socialvideodownloader.shared.ui.theme.SvdPrimarySoft
 import com.socialvideodownloader.shared.ui.theme.SvdPrimaryStrong
 import com.socialvideodownloader.shared.ui.theme.SvdSuccess
 import com.socialvideodownloader.shared.ui.theme.SvdSuccessSoft
-import com.socialvideodownloader.shared.ui.tokens.Spacing
+import com.socialvideodownloader.shared.ui.theme.Spacing
 
+/**
+ * Displays a colored status chip.
+ *
+ * @param status A string representation of the download status. Recognised values:
+ *   "COMPLETED", "FAILED", "DOWNLOADING", "PENDING", "QUEUED", "CANCELLED".
+ *   Unknown values are rendered with a neutral accent color.
+ * @param isAnimated When true, a pulsing dot is shown (used for active downloads).
+ */
 @Composable
 fun StatusBadge(
-    status: DownloadStatus,
+    status: String,
+    isAnimated: Boolean = status.equals("DOWNLOADING", ignoreCase = true),
     modifier: Modifier = Modifier,
 ) {
     val shapes = LocalAppShapes.current
     val (containerColor, contentColor, label) =
-        when (status) {
-            DownloadStatus.COMPLETED ->
-                Triple(SvdSuccessSoft, SvdSuccess, "Completed")
-            DownloadStatus.FAILED ->
-                Triple(SvdErrorSoft, SvdError, "Failed")
-            DownloadStatus.DOWNLOADING ->
-                Triple(SvdPrimarySoft, SvdPrimaryStrong, "Downloading")
-            DownloadStatus.PENDING ->
-                Triple(SvdAccentSoft, SvdAccent, "Pending")
-            DownloadStatus.QUEUED ->
-                Triple(SvdAccentSoft, SvdAccent, "Queued")
-            DownloadStatus.CANCELLED ->
-                Triple(SvdAccentSoft, SvdAccent, "Cancelled")
+        when (status.uppercase()) {
+            "COMPLETED" -> Triple(SvdSuccessSoft, SvdSuccess, "Completed")
+            "FAILED" -> Triple(SvdErrorSoft, SvdError, "Failed")
+            "DOWNLOADING" -> Triple(SvdPrimarySoft, SvdPrimaryStrong, "Downloading")
+            "PENDING" -> Triple(SvdAccentSoft, SvdAccent, "Pending")
+            "QUEUED" -> Triple(SvdAccentSoft, SvdAccent, "Queued")
+            "CANCELLED" -> Triple(SvdAccentSoft, SvdAccent, "Cancelled")
+            else -> Triple(SvdAccentSoft, SvdAccent, status)
         }
 
     Row(
@@ -69,7 +72,7 @@ fun StatusBadge(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        if (status == DownloadStatus.DOWNLOADING) {
+        if (isAnimated) {
             AnimatedSpinnerDot(color = contentColor)
         }
         Text(

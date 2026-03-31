@@ -24,7 +24,7 @@ import com.socialvideodownloader.shared.ui.theme.SvdForeground
 import com.socialvideodownloader.shared.ui.theme.SvdPrimarySoft
 import com.socialvideodownloader.shared.ui.theme.SvdPrimaryStrong
 import com.socialvideodownloader.shared.ui.theme.SvdSurfaceAlt
-import com.socialvideodownloader.shared.ui.tokens.Spacing
+import com.socialvideodownloader.shared.ui.theme.Spacing
 
 @Composable
 fun SvdTopBar(

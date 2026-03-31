@@ -13,4 +13,30 @@ object Spacing {
     val PrimaryButtonHeight = 52.dp
     val ChipHeight = 40.dp
     val ThumbnailSize = 80.dp
+
+    // Chip
+    val ChipPaddingV = 10.dp
+    val ChipPaddingH = 16.dp
+
+    // Navigation bar
+    val NavBarPaddingTop = 12.dp
+    val NavBarPaddingH = 21.dp
+    val NavBarPaddingBottom = 21.dp
+    val NavBarInternalPadding = 4.dp
+
+    // Top bar
+    val TopBarPaddingH = 14.dp
+
+    // Status / action chips
+    val StatusChipHeight = 28.dp
+    val ActionChipHeight = 30.dp
+
+    // Thumbnails
+    val ThumbnailFullHeight = 184.dp
+    val ThumbnailCompactWidth = 96.dp
+    val ThumbnailCompactHeight = 72.dp
+
+    // Card inner padding
+    val CardInnerPaddingFull = 14.dp
+    val CardInnerPaddingCompact = 12.dp
 }
