@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import org.koin.core.parameter.parametersOf
 import org.koin.mp.KoinPlatform
+import platform.Foundation.NSUserDefaults
 
 /**
  * Swift-accessible helper for retrieving shared ViewModels from Koin.
@@ -39,4 +40,35 @@ object KoinHelper {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
         return KoinPlatform.getKoin().get { parametersOf(scope) }
     }
+
+    /**
+     * Writes a URL to the shared App Group so the Compose DownloadViewModel can pick it up.
+     * Called from Swift when an `socialvideodownloader://` URL scheme is opened.
+     */
+    fun pushSharedUrl(url: String) {
+        val defaults = NSUserDefaults(suiteName = APP_GROUP) ?: return
+        defaults.setObject(url, forKey = SHARED_URL_KEY)
+        defaults.synchronize()
+    }
+
+    /**
+     * Reads the Share Extension URL from NSUserDefaults if present and re-writes it
+     * using the same key that [com.socialvideodownloader.shared.feature.download.platform.PlatformActions]
+     * reads, so the Compose DownloadScreen picks it up on the next composition.
+     *
+     * Called from Swift when the app becomes active.
+     */
+    fun consumeSharedUrl() {
+        val defaults = NSUserDefaults(suiteName = APP_GROUP) ?: return
+        // The Share Extension writes to "SharedURL"; PlatformActions reads "pending_shared_url".
+        // Normalize by copying to the canonical key if needed.
+        val shareExtensionKey = "SharedURL"
+        val url = defaults.stringForKey(shareExtensionKey) ?: return
+        defaults.removeObjectForKey(shareExtensionKey)
+        defaults.setObject(url, forKey = SHARED_URL_KEY)
+        defaults.synchronize()
+    }
 }
+
+private const val SHARED_URL_KEY = "pending_shared_url"
+private const val APP_GROUP = "group.com.socialvideodownloader.shared"
