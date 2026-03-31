@@ -28,6 +28,27 @@
 <!--
   SYNC IMPACT REPORT
   ==================
+  Version change: 4.0.0 → 5.0.0
+  Modified principles:
+    - III. Modern Stack: iOS UI changed from SwiftUI to Compose Multiplatform 1.9.x.
+      SwiftUI is now permitted only in the Share Extension. SKIE retained only for
+      Share Extension Swift↔KMP bridge (no longer used for ViewModel wrappers).
+    - IV. Modular Separation: Added :shared:ui and :shared:di to Shared KMP modules list.
+  Removed sections: N/A
+  Added sections: N/A
+  Templates requiring updates:
+    ✅ plan-template.md — "Constitution Check" is dynamic, no changes needed
+    ✅ spec-template.md — generic, compatible with new principles
+    ✅ tasks-template.md — generic, compatible with new principles
+  Follow-up TODOs:
+    - All iOS screen specs MUST reference Compose Multiplatform, not SwiftUI.
+    - SKIE usage in non-Share Extension code is now a violation of Principle III.
+    - Shared UI components MUST live in :shared:ui, not platform-specific modules.
+-->
+
+<!--
+  SYNC IMPACT REPORT
+  ==================
   Version change: 3.0.0 → 4.0.0
   Modified principles:
     - II. On-Device Architecture: Renamed to "On-Device Architecture (Android) /
@@ -100,9 +121,10 @@
   Dynamic Color is optional; a fixed branded palette is acceptable when
   design consistency across devices is required.
   XML layouts and Android View system are forbidden for new code.
-- **iOS UI**: MUST be built with SwiftUI. UIKit is forbidden for new code.
-  iOS follows the same MVI-equivalent pattern: ObservableObject/StateFlow-backed
-  ViewModels expose state; views send intents/actions only.
+- **iOS UI**: MUST be built with Compose Multiplatform (shared with Android via CMP 1.9.x).
+  SwiftUI is permitted only in the Share Extension.
+  iOS follows the same MVI-equivalent pattern: shared ViewModels expose state;
+  Compose screens collect state and send intents/actions only.
 - **Android DI**: MUST use Hilt with KSP annotation processing.
 - **Shared KMP modules DI**: MUST use Koin (Hilt cannot run in commonMain).
   Hilt and Koin coexist in the Android app via a bridge module.
@@ -112,7 +134,7 @@
 - **Architecture**: Shared KMP ViewModels (in :shared:feature-*) are the canonical
   state machines. They expose `StateFlow<UiState>` and receive a sealed `Intent`.
   Android Compose ViewModels delegate to the shared ViewModel.
-  iOS SwiftUI ViewModels wrap the shared ViewModel via SKIE-generated async sequences.
+  iOS screens consume shared ViewModels directly via Compose Multiplatform. SKIE is retained only for the Share Extension's Swift↔KMP bridge.
   UiState and Intent are always `sealed interface` (Kotlin) / equivalent Swift enums.
 - **Language**: Kotlin 2.0+ for all Kotlin code (Android + shared). Swift 6.x for iOS.
   Java is forbidden for new code.
@@ -123,7 +145,8 @@
   - **Android app modules**: `:app`, `:feature:download`, `:feature:history`,
     `:core:domain`, `:core:data`, `:core:ui`, `:core:cloud`, `:core:billing`
   - **Shared KMP modules**: `:shared:network`, `:shared:data`,
-    `:shared:feature-download`, `:shared:feature-history`, `:shared:feature-library`
+    `:shared:feature-download`, `:shared:feature-history`, `:shared:feature-library`,
+    `:shared:ui`, `:shared:di`
   - **iOS app**: `iosApp/` (Swift, outside Gradle)
 - Shared KMP modules use `commonMain`/`androidMain`/`iosMain` source sets.
   Android-specific code (Hilt, Compose, MediaStore) stays in androidMain or
@@ -213,13 +236,13 @@
 - **Language (Android + shared)**: Kotlin 2.0+ (Java forbidden for new code)
 - **Language (iOS)**: Swift 6.x
 - **Android UI**: Jetpack Compose + Material 3
-- **iOS UI**: SwiftUI (iOS 16.0+)
+- **iOS UI**: Compose Multiplatform 1.9.x (iOS 16.0+)
 - **Architecture**: MVI (`sealed interface` for State + Intent in Kotlin; equivalent Swift enums on iOS)
 - **Android DI**: Hilt with KSP
 - **Shared KMP DI**: Koin 4.x
 - **Database**: Room KMP (shared schema in commonMain, platform builders in androidMain/iosMain)
 - **Networking (shared)**: Ktor 3.x (OkHttp engine on Android, Darwin engine on iOS)
-- **iOS↔KMP interop**: SKIE (StateFlow → AsyncSequence, sealed class → Swift enum)
+- **iOS↔KMP interop**: CMP (direct Compose consumption); SKIE retained for Share Extension only
 - **Extraction (Android)**: youtubedl-android (yt-dlp) + FFmpeg + aria2c (on-device)
 - **Extraction (iOS)**: yt-dlp API server (self-hosted, server-mediated)
 - **Images**: Coil (Android video thumbnails)
@@ -263,4 +286,4 @@
   these principles. Violations MUST be flagged before merge.
 - Runtime development guidance lives in `AGENTS.md` for Codex and `.claude/CLAUDE.md` for Claude Code.
 
-**Version**: 4.0.0 | **Ratified**: 2026-03-14 | **Last Amended**: 2026-03-30
+**Version**: 5.0.0 | **Ratified**: 2026-03-14 | **Last Amended**: 2026-03-31

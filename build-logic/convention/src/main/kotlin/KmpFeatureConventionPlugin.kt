@@ -10,6 +10,7 @@ class KmpFeatureConventionPlugin : Plugin<Project> {
         with(target) {
             with(pluginManager) {
                 apply("svd.kmp.library")
+                apply("svd.kmp.compose")
             }
 
             val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
@@ -20,6 +21,9 @@ class KmpFeatureConventionPlugin : Plugin<Project> {
                         dependencies {
                             implementation(project(":core:domain"))
                             implementation(libs.findLibrary("koin-core").get())
+                            implementation(libs.findLibrary("coil3-compose").get())
+                            implementation(libs.findLibrary("coil3-network-ktor3").get())
+                            implementation(libs.findLibrary("navigation-compose-multiplatform").get())
                         }
                     }
                 }
