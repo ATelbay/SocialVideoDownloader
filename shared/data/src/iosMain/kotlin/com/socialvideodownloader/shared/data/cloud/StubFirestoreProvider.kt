@@ -13,7 +13,7 @@ class StubFirestoreProvider : PlatformFirestoreProvider {
     override suspend fun setDocument(
         collectionPath: String,
         documentId: String,
-        data: String,
+        jsonData: String,
     ): Boolean = true // stub: pretend write succeeded
 
     override suspend fun deleteDocument(

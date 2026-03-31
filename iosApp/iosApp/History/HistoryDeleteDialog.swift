@@ -1,5 +1,4 @@
 import SwiftUI
-import shared_feature_history
 
 // MARK: - Single-item delete confirmation
 
@@ -29,7 +28,7 @@ struct HistoryDeleteConfirmation: ViewModifier {
             },
             message: {
                 if let title = itemTitle {
-                    Text(""\(title)" will be removed from your history.")
+                    Text("\"\(title)\" will be removed from your history.")
                 } else {
                     Text("This item will be removed from your history.")
                 }

@@ -1,5 +1,5 @@
 import SwiftUI
-import shared_feature_library
+@preconcurrency import shared_feature_library
 
 // MARK: - ViewModel Wrapper
 
@@ -49,7 +49,7 @@ final class LibraryViewModelWrapper: ObservableObject {
                 case let share as LibraryEffectShareContent:
                     self.shareContentUri = share.contentUri
                 case let message as LibraryEffectShowMessage:
-                    self.toastMessage = self.resolveMessage(message.messageType)
+                    self.toastMessage = self.resolveMessage(String(describing: message.messageType))
                 default:
                     break
                 }
@@ -61,15 +61,15 @@ final class LibraryViewModelWrapper: ObservableObject {
         shared.onIntent(intent: intent)
     }
 
-    private func resolveMessage(_ type: LibraryMessageType) -> String {
-        switch type {
-        case .deleteSuccess:
+    private func resolveMessage(_ typeDescription: String) -> String {
+        switch typeDescription.lowercased() {
+        case let value where value.contains("delete"):
             return "File deleted."
-        case .fileNotFound:
+        case let value where value.contains("notfound"):
             return "File not found."
-        case .shareError:
+        case let value where value.contains("share"):
             return "Unable to share file."
-        case .openError:
+        case let value where value.contains("open"):
             return "Unable to open file."
         default:
             return "Something went wrong."
@@ -151,13 +151,13 @@ struct LibraryView: View {
     private var contentView: some View {
         if let state = viewModel.state {
             switch state {
-            case is LibraryUiState.Loading:
+            case is LibraryUiStateLoading:
                 loadingView
 
-            case is LibraryUiState.Empty:
+            case is LibraryUiStateEmpty:
                 emptyView
 
-            case let content as LibraryUiState.Content:
+            case let content as LibraryUiStateContent:
                 gridView(items: content.items)
 
             default:
@@ -188,7 +188,7 @@ struct LibraryView: View {
         VStack(spacing: 16) {
             Image(systemName: "square.grid.2x2")
                 .font(.system(size: 56))
-                .foregroundStyle(.svdOnSurfaceVariant)
+                .foregroundStyle(Color.svdOnSurfaceVariant)
             Text("Library")
                 .font(SVDFont.headlineLarge())
                 .foregroundColor(.svdOnSurface)

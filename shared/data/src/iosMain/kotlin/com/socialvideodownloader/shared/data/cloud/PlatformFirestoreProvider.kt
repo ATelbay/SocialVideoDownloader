@@ -15,13 +15,13 @@ package com.socialvideodownloader.shared.data.cloud
 interface PlatformFirestoreProvider {
     /**
      * Write a document to Firestore at the given path.
-     * [data] is a JSON string representation of the document.
+     * [jsonData] is a JSON string representation of the document.
      * Returns true if the write succeeded.
      */
     suspend fun setDocument(
         collectionPath: String,
         documentId: String,
-        data: String,
+        jsonData: String,
     ): Boolean
 
     /**

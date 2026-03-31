@@ -24,7 +24,7 @@ struct DownloadCompleteView: View {
                     .frame(width: 120, height: 120)
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 72))
-                    .foregroundStyle(.svdAccent)
+                    .foregroundColor(.svdAccent)
                     .scaleEffect(checkmarkScale)
                     .opacity(checkmarkOpacity)
             }

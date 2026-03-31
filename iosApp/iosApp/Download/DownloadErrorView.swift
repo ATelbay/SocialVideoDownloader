@@ -1,10 +1,9 @@
 import SwiftUI
-import shared_data
 
 /// Error screen — shown when the download state is [DownloadUiState.Error].
 struct DownloadErrorView: View {
 
-    let errorType: DownloadErrorType
+    let title: String
     let message: String?
     let onRetry: () -> Void
     let onReset: () -> Void
@@ -24,7 +23,7 @@ struct DownloadErrorView: View {
             }
 
             VStack(spacing: 10) {
-                Text(title(for: errorType))
+                Text(title)
                     .font(SVDFont.headlineMedium())
                     .foregroundColor(.svdOnSurface)
                     .multilineTextAlignment(.center)
@@ -57,25 +56,6 @@ struct DownloadErrorView: View {
             }
 
             Spacer()
-        }
-    }
-
-    private func title(for type: DownloadErrorType) -> String {
-        switch type {
-        case .networkError:
-            return "No Internet Connection"
-        case .serverUnavailable:
-            return "Server Unavailable"
-        case .extractionFailed:
-            return "Could Not Extract Video"
-        case .unsupportedUrl:
-            return "Unsupported URL"
-        case .storageFull:
-            return "Storage Full"
-        case .downloadFailed:
-            return "Download Failed"
-        default:
-            return "Something Went Wrong"
         }
     }
 }

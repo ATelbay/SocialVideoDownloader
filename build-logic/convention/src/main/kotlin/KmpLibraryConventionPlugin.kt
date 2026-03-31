@@ -30,7 +30,7 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
                 jvmToolchain(javaVersion)
 
                 androidTarget()
-                val frameworkBaseName = project.name.replace("-", "_")
+                val frameworkBaseName = project.path.removePrefix(":").replace(":", "_").replace("-", "_")
                 iosArm64 {
                     binaries.framework {
                         baseName = frameworkBaseName

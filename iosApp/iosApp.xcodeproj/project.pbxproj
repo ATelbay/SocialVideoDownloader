@@ -238,10 +238,11 @@
 			);
 			name = "Build KMP Frameworks";
 			outputPaths = (
+				"$(DERIVED_FILE_DIR)/kmp-frameworks.stamp",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd \"$SRCROOT/..\"\n./gradlew \\\n  :shared:data:embedAndSignAppleFrameworkForXcode \\\n  :shared:feature-download:embedAndSignAppleFrameworkForXcode \\\n  :shared:feature-history:embedAndSignAppleFrameworkForXcode \\\n  :shared:feature-library:embedAndSignAppleFrameworkForXcode \\\n  :shared:network:embedAndSignAppleFrameworkForXcode \\\n  :core:domain:embedAndSignAppleFrameworkForXcode\n";
+			shellScript = "cd \"$SRCROOT/..\"\n./gradlew \\\n  :shared:data:embedAndSignAppleFrameworkForXcode \\\n  :shared:feature-download:embedAndSignAppleFrameworkForXcode \\\n  :shared:feature-history:embedAndSignAppleFrameworkForXcode \\\n  :shared:feature-library:embedAndSignAppleFrameworkForXcode \\\n  :shared:network:embedAndSignAppleFrameworkForXcode \\\n  :core:domain:embedAndSignAppleFrameworkForXcode\n\ntouch \"$DERIVED_FILE_DIR/kmp-frameworks.stamp\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -330,7 +331,12 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/data/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/network/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/feature-download/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/feature-history/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/feature-library/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../core/domain/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -390,7 +396,12 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/data/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/network/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/feature-download/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/feature-history/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/feature-library/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../core/domain/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MTL_FAST_MATH = YES;
