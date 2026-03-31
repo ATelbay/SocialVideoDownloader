@@ -224,7 +224,8 @@ private fun DownloadScreenContent(
 
                 is DownloadUiState.Error ->
                     DownloadErrorContent(
-                        message = targetState.message ?: targetState.errorType.name,
+                        errorType = targetState.errorType,
+                        message = targetState.message,
                         onRetryClicked = { onIntent(DownloadIntent.RetryClicked) },
                         onNewDownloadClicked = { onIntent(DownloadIntent.NewDownloadClicked) },
                         modifier = nonIdlePadding,
