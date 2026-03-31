@@ -121,6 +121,9 @@ fun SharedApp() {
                             onNavigateToDownload = {
                                 selectedTab = 0
                                 navController.navigate(DEST_DOWNLOAD) {
+                                    popUpTo(navController.graph.startDestinationId) {
+                                        saveState = true
+                                    }
                                     launchSingleTop = true
                                     restoreState = true
                                 }
@@ -141,6 +144,9 @@ fun SharedApp() {
                             onNavigateToDownload = { initialUrl, _ ->
                                 selectedTab = 0
                                 navController.navigate(DEST_DOWNLOAD) {
+                                    popUpTo(navController.graph.startDestinationId) {
+                                        saveState = true
+                                    }
                                     launchSingleTop = true
                                     restoreState = true
                                 }
@@ -254,7 +260,7 @@ private fun defaultHistoryStrings() =
         upgradeBuyLabel = "Upgrade",
         upgradeCancelLabel = "Not now",
         cloudBackupToggleLabel = "Cloud backup",
-        cloudSignInLabel = "Sign in with Google",
+        cloudSignInLabel = "Sign in",
         cloudSignOutLabel = "Sign out",
         cloudSignedInAs = "Signed in as",
         cloudSignInFailedMessage = "Sign-in failed. Please try again.",

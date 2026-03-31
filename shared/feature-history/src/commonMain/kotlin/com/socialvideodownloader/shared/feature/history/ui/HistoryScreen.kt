@@ -168,6 +168,8 @@ fun HistoryScreen(
                     val idToken = onLaunchGoogleSignIn()
                     if (idToken != null) {
                         viewModel.onIntent(HistoryIntent.SignInWithGoogle(idToken))
+                    } else {
+                        viewModel.onIntent(HistoryIntent.SignInCancelled)
                     }
                 }
             }

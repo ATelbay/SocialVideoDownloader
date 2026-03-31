@@ -30,6 +30,8 @@ sealed interface HistoryIntent {
     // Google Sign-In
     data class SignInWithGoogle(val idToken: String) : HistoryIntent
 
+    data object SignInCancelled : HistoryIntent
+
     data object SignOutCloud : HistoryIntent
 
     data object DismissSignInError : HistoryIntent
