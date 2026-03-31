@@ -6,13 +6,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Card
@@ -90,34 +90,38 @@ private fun FullVideoInfoCard(
     ) {
         Column {
             // Thumbnail area — edge-to-edge within card, top-only rounding
-            val thumbnailShape = RoundedCornerShape(
-                topStart = 24.dp,
-                topEnd = 24.dp,
-                bottomStart = 0.dp,
-                bottomEnd = 0.dp,
-            )
+            val thumbnailShape =
+                RoundedCornerShape(
+                    topStart = 24.dp,
+                    topEnd = 24.dp,
+                    bottomStart = 0.dp,
+                    bottomEnd = 0.dp,
+                )
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(Spacing.ThumbnailFullHeight)
-                    .clip(thumbnailShape),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(Spacing.ThumbnailFullHeight)
+                        .clip(thumbnailShape),
             ) {
                 AsyncImage(
                     model = thumbnailUrl,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .matchParentSize()
-                        .clip(thumbnailShape)
-                        .background(SvdPrimarySoft),
+                    modifier =
+                        Modifier
+                            .matchParentSize()
+                            .clip(thumbnailShape)
+                            .background(SvdPrimarySoft),
                 )
 
                 // Play button overlay
                 Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .align(Alignment.Center)
-                        .background(Color(0x33000000), AppShapesInstance.pill),
+                    modifier =
+                        Modifier
+                            .size(44.dp)
+                            .align(Alignment.Center)
+                            .background(Color(0x33000000), AppShapesInstance.pill),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
@@ -132,9 +136,10 @@ private fun FullVideoInfoCard(
                 if (platformName != null) {
                     PlatformBadge(
                         platformName = platformName,
-                        modifier = Modifier
-                            .align(Alignment.BottomStart)
-                            .padding(10.dp),
+                        modifier =
+                            Modifier
+                                .align(Alignment.BottomStart)
+                                .padding(10.dp),
                     )
                 }
             }
@@ -143,10 +148,11 @@ private fun FullVideoInfoCard(
             Column(modifier = Modifier.padding(Spacing.CardInnerPaddingFull)) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
-                    ),
+                    style =
+                        MaterialTheme.typography.titleMedium.copy(
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold,
+                        ),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     color = SvdForeground,
@@ -156,10 +162,11 @@ private fun FullVideoInfoCard(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = uploaderName,
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontSize = 13.sp,
-                            lineHeight = (13 * 1.45).sp,
-                        ),
+                        style =
+                            MaterialTheme.typography.labelMedium.copy(
+                                fontSize = 13.sp,
+                                lineHeight = (13 * 1.45).sp,
+                            ),
                         color = SvdMutedForeground,
                     )
                 }
@@ -188,22 +195,24 @@ private fun CompactVideoInfoCard(
         ) {
             // Thumbnail with teal bg
             Box(
-                modifier = Modifier
-                    .size(
-                        width = Spacing.ThumbnailCompactWidth,
-                        height = Spacing.ThumbnailCompactHeight,
-                    )
-                    .clip(AppShapesInstance.thumbnail)
-                    .background(SvdAccent),
+                modifier =
+                    Modifier
+                        .size(
+                            width = Spacing.ThumbnailCompactWidth,
+                            height = Spacing.ThumbnailCompactHeight,
+                        )
+                        .clip(AppShapesInstance.thumbnail)
+                        .background(SvdAccent),
                 contentAlignment = Alignment.Center,
             ) {
                 AsyncImage(
                     model = thumbnailUrl,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .matchParentSize()
-                        .clip(AppShapesInstance.thumbnail),
+                    modifier =
+                        Modifier
+                            .matchParentSize()
+                            .clip(AppShapesInstance.thumbnail),
                 )
                 Icon(
                     imageVector = Icons.Filled.PlayArrow,

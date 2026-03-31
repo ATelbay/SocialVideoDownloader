@@ -24,7 +24,6 @@ import kotlinx.coroutines.flow.asStateFlow
 class AndroidDownloadManager(
     private val context: Context,
 ) : PlatformDownloadManager {
-
     private val _downloadState = MutableStateFlow<DownloadServiceState>(DownloadServiceState.Idle)
     override val downloadState: StateFlow<DownloadServiceState> = _downloadState.asStateFlow()
 
@@ -37,27 +36,29 @@ class AndroidDownloadManager(
             }
 
     override suspend fun startDownload(request: DownloadRequest) {
-        val intent = Intent(ACTION_START_DOWNLOAD).apply {
-            component = ComponentName(context.packageName, DOWNLOAD_SERVICE_CLASS)
-            putExtra(EXTRA_REQUEST_ID, request.id)
-            putExtra(EXTRA_SOURCE_URL, request.sourceUrl)
-            putExtra(EXTRA_VIDEO_TITLE, request.videoTitle)
-            putExtra(EXTRA_THUMBNAIL_URL, request.thumbnailUrl)
-            putExtra(EXTRA_FORMAT_ID, request.formatId)
-            putExtra(EXTRA_FORMAT_LABEL, request.formatLabel)
-            putExtra(EXTRA_IS_VIDEO_ONLY, request.isVideoOnly)
-            putExtra(EXTRA_SHARE_ONLY, request.shareOnly)
-            putExtra(EXTRA_DIRECT_DOWNLOAD_URL, request.directDownloadUrl)
-            request.existingRecordId?.let { putExtra(EXTRA_EXISTING_RECORD_ID, it) }
-        }
+        val intent =
+            Intent(ACTION_START_DOWNLOAD).apply {
+                component = ComponentName(context.packageName, DOWNLOAD_SERVICE_CLASS)
+                putExtra(EXTRA_REQUEST_ID, request.id)
+                putExtra(EXTRA_SOURCE_URL, request.sourceUrl)
+                putExtra(EXTRA_VIDEO_TITLE, request.videoTitle)
+                putExtra(EXTRA_THUMBNAIL_URL, request.thumbnailUrl)
+                putExtra(EXTRA_FORMAT_ID, request.formatId)
+                putExtra(EXTRA_FORMAT_LABEL, request.formatLabel)
+                putExtra(EXTRA_IS_VIDEO_ONLY, request.isVideoOnly)
+                putExtra(EXTRA_SHARE_ONLY, request.shareOnly)
+                putExtra(EXTRA_DIRECT_DOWNLOAD_URL, request.directDownloadUrl)
+                request.existingRecordId?.let { putExtra(EXTRA_EXISTING_RECORD_ID, it) }
+            }
         ContextCompat.startForegroundService(context, intent)
     }
 
     override fun cancelDownload(requestId: String) {
-        val intent = Intent(ACTION_CANCEL_DOWNLOAD).apply {
-            component = ComponentName(context.packageName, DOWNLOAD_SERVICE_CLASS)
-            putExtra(EXTRA_REQUEST_ID, requestId)
-        }
+        val intent =
+            Intent(ACTION_CANCEL_DOWNLOAD).apply {
+                component = ComponentName(context.packageName, DOWNLOAD_SERVICE_CLASS)
+                putExtra(EXTRA_REQUEST_ID, requestId)
+            }
         context.startService(intent)
     }
 

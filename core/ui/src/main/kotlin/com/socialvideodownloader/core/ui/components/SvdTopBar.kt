@@ -36,43 +36,50 @@ fun SvdTopBar(
     onActionClick: (() -> Unit)? = null,
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(Spacing.TopBarHeight)
-            .clip(AppShapesInstance.control)
-            .background(SvdSurfaceAlt)
-            .border(1.dp, SvdBorder, AppShapesInstance.control)
-            .padding(horizontal = Spacing.TopBarPaddingH),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(Spacing.TopBarHeight)
+                .clip(AppShapesInstance.control)
+                .background(SvdSurfaceAlt)
+                .border(1.dp, SvdBorder, AppShapesInstance.control)
+                .padding(horizontal = Spacing.TopBarPaddingH),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = title,
-            style = MaterialTheme.typography.bodyLarge.copy(
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-            ),
+            style =
+                MaterialTheme.typography.bodyLarge.copy(
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                ),
             color = SvdForeground,
         )
         Spacer(Modifier.weight(1f))
         if (actionLabel != null) {
             Box(
-                modifier = Modifier
-                    .clip(AppShapesInstance.pill)
-                    .background(SvdPrimarySoft)
-                    .then(
-                        if (onActionClick != null) Modifier.clickable(onClick = onActionClick)
-                        else Modifier,
-                    )
-                    .height(Spacing.ActionChipHeight)
-                    .padding(horizontal = 12.dp),
+                modifier =
+                    Modifier
+                        .clip(AppShapesInstance.pill)
+                        .background(SvdPrimarySoft)
+                        .then(
+                            if (onActionClick != null) {
+                                Modifier.clickable(onClick = onActionClick)
+                            } else {
+                                Modifier
+                            },
+                        )
+                        .height(Spacing.ActionChipHeight)
+                        .padding(horizontal = 12.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = actionLabel,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    ),
+                    style =
+                        MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        ),
                     color = SvdPrimaryStrong,
                 )
             }

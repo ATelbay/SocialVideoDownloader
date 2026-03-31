@@ -11,7 +11,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class VideoInfoMapperTest {
-
     private lateinit var mapper: VideoInfoMapper
 
     @BeforeEach
@@ -21,13 +20,14 @@ class VideoInfoMapperTest {
 
     @Test
     fun `maps VideoInfo fields to VideoMetadata`() {
-        val videoInfo = createVideoInfo(
-            title = "Test Title",
-            thumbnail = "https://thumb.jpg",
-            duration = 300,
-            uploader = "Author",
-            formats = emptyList(),
-        )
+        val videoInfo =
+            createVideoInfo(
+                title = "Test Title",
+                thumbnail = "https://thumb.jpg",
+                duration = 300,
+                uploader = "Author",
+                formats = emptyList(),
+            )
 
         val result = mapper.mapToMetadata(videoInfo, "https://youtube.com/v")
 
@@ -40,11 +40,12 @@ class VideoInfoMapperTest {
 
     @Test
     fun `filters out formats with null formatId`() {
-        val formats = listOf(
-            createVideoFormat(formatId = "248", height = 1080),
-            createVideoFormat(formatId = null, height = 720),
-            createVideoFormat(formatId = "136", height = 720),
-        )
+        val formats =
+            listOf(
+                createVideoFormat(formatId = "248", height = 1080),
+                createVideoFormat(formatId = null, height = 720),
+                createVideoFormat(formatId = "136", height = 720),
+            )
         val videoInfo = createVideoInfo(formats = formats)
 
         val result = mapper.mapToMetadata(videoInfo, "url")
@@ -54,9 +55,10 @@ class VideoInfoMapperTest {
 
     @Test
     fun `detects audio-only format when vcodec is none`() {
-        val formats = listOf(
-            createVideoFormat(formatId = "251", vcodec = "none", acodec = "opus", ext = "webm", height = 0),
-        )
+        val formats =
+            listOf(
+                createVideoFormat(formatId = "251", vcodec = "none", acodec = "opus", ext = "webm", height = 0),
+            )
         val videoInfo = createVideoInfo(formats = formats)
 
         val result = mapper.mapToMetadata(videoInfo, "url")
@@ -67,9 +69,10 @@ class VideoInfoMapperTest {
 
     @Test
     fun `detects video-only format when acodec is none`() {
-        val formats = listOf(
-            createVideoFormat(formatId = "248", acodec = "none", vcodec = "vp9", height = 1080),
-        )
+        val formats =
+            listOf(
+                createVideoFormat(formatId = "248", acodec = "none", vcodec = "vp9", height = 1080),
+            )
         val videoInfo = createVideoInfo(formats = formats)
 
         val result = mapper.mapToMetadata(videoInfo, "url")
@@ -80,9 +83,10 @@ class VideoInfoMapperTest {
 
     @Test
     fun `generates label from height for video formats`() {
-        val formats = listOf(
-            createVideoFormat(formatId = "248", height = 1080, vcodec = null),
-        )
+        val formats =
+            listOf(
+                createVideoFormat(formatId = "248", height = 1080, vcodec = null),
+            )
         val videoInfo = createVideoInfo(formats = formats)
 
         val result = mapper.mapToMetadata(videoInfo, "url")
@@ -92,11 +96,12 @@ class VideoInfoMapperTest {
 
     @Test
     fun `sorts video formats by resolution descending`() {
-        val formats = listOf(
-            createVideoFormat(formatId = "1", height = 480),
-            createVideoFormat(formatId = "2", height = 1080),
-            createVideoFormat(formatId = "3", height = 720),
-        )
+        val formats =
+            listOf(
+                createVideoFormat(formatId = "1", height = 480),
+                createVideoFormat(formatId = "2", height = 1080),
+                createVideoFormat(formatId = "3", height = 720),
+            )
         val videoInfo = createVideoInfo(formats = formats)
 
         val result = mapper.mapToMetadata(videoInfo, "url")
@@ -108,10 +113,11 @@ class VideoInfoMapperTest {
 
     @Test
     fun `audio formats come after video formats`() {
-        val formats = listOf(
-            createVideoFormat(formatId = "251", vcodec = "none", acodec = "opus", height = 0, ext = "webm"),
-            createVideoFormat(formatId = "248", height = 1080),
-        )
+        val formats =
+            listOf(
+                createVideoFormat(formatId = "251", vcodec = "none", acodec = "opus", height = 0, ext = "webm"),
+                createVideoFormat(formatId = "248", height = 1080),
+            )
         val videoInfo = createVideoInfo(formats = formats)
 
         val result = mapper.mapToMetadata(videoInfo, "url")
@@ -126,13 +132,14 @@ class VideoInfoMapperTest {
         duration: Int = 0,
         uploader: String? = null,
         formats: List<VideoFormat> = emptyList(),
-    ): VideoInfo = mockk<VideoInfo> {
-        every { this@mockk.title } returns title
-        every { this@mockk.thumbnail } returns thumbnail
-        every { this@mockk.duration } returns duration
-        every { this@mockk.uploader } returns uploader
-        every { this@mockk.formats } returns ArrayList(formats)
-    }
+    ): VideoInfo =
+        mockk<VideoInfo> {
+            every { this@mockk.title } returns title
+            every { this@mockk.thumbnail } returns thumbnail
+            every { this@mockk.duration } returns duration
+            every { this@mockk.uploader } returns uploader
+            every { this@mockk.formats } returns ArrayList(formats)
+        }
 
     private fun createVideoFormat(
         formatId: String? = "248",
@@ -143,14 +150,15 @@ class VideoInfoMapperTest {
         vcodec: String? = "vp9",
         acodec: String? = "mp4a",
         abr: Int = 0,
-    ): VideoFormat = mockk<VideoFormat> {
-        every { this@mockk.formatId } returns formatId
-        every { this@mockk.height } returns height
-        every { this@mockk.ext } returns ext
-        every { this@mockk.fileSize } returns fileSize
-        every { this@mockk.fileSizeApproximate } returns fileSizeApproximate
-        every { this@mockk.vcodec } returns vcodec
-        every { this@mockk.acodec } returns acodec
-        every { this@mockk.abr } returns abr
-    }
+    ): VideoFormat =
+        mockk<VideoFormat> {
+            every { this@mockk.formatId } returns formatId
+            every { this@mockk.height } returns height
+            every { this@mockk.ext } returns ext
+            every { this@mockk.fileSize } returns fileSize
+            every { this@mockk.fileSizeApproximate } returns fileSizeApproximate
+            every { this@mockk.vcodec } returns vcodec
+            every { this@mockk.acodec } returns acodec
+            every { this@mockk.abr } returns abr
+        }
 }

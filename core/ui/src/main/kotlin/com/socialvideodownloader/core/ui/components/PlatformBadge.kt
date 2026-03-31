@@ -41,11 +41,12 @@ fun PlatformBadge(
     val icon = platformIcon(platformName)
 
     Row(
-        modifier = modifier
-            .clip(AppShapesInstance.pill)
-            .background(SvdSurfaceAlt)
-            .border(1.dp, SvdBorder, AppShapesInstance.pill)
-            .padding(vertical = Spacing.ChipPaddingV, horizontal = Spacing.ChipPaddingH),
+        modifier =
+            modifier
+                .clip(AppShapesInstance.pill)
+                .background(SvdSurfaceAlt)
+                .border(1.dp, SvdBorder, AppShapesInstance.pill)
+                .padding(vertical = Spacing.ChipPaddingV, horizontal = Spacing.ChipPaddingH),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -57,24 +58,26 @@ fun PlatformBadge(
         )
         Text(
             text = platformName,
-            style = MaterialTheme.typography.labelMedium.copy(
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
-            ),
+            style =
+                MaterialTheme.typography.labelMedium.copy(
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                ),
             color = SvdForeground,
         )
     }
 }
 
-private fun platformIcon(platformName: String): ImageVector = when {
-    platformName.contains("youtube", ignoreCase = true) -> Icons.Outlined.SmartDisplay
-    platformName.contains("instagram", ignoreCase = true) -> Icons.Outlined.CameraAlt
-    platformName.contains("tiktok", ignoreCase = true) -> Icons.Outlined.MusicNote
-    platformName.contains("twitter", ignoreCase = true) || platformName.contains("x.com", ignoreCase = true) -> Icons.Outlined.Public
-    platformName.contains("vimeo", ignoreCase = true) -> Icons.Outlined.PlayCircle
-    platformName.contains("facebook", ignoreCase = true) -> Icons.Outlined.OndemandVideo
-    else -> Icons.Outlined.Public
-}
+private fun platformIcon(platformName: String): ImageVector =
+    when {
+        platformName.contains("youtube", ignoreCase = true) -> Icons.Outlined.SmartDisplay
+        platformName.contains("instagram", ignoreCase = true) -> Icons.Outlined.CameraAlt
+        platformName.contains("tiktok", ignoreCase = true) -> Icons.Outlined.MusicNote
+        platformName.contains("twitter", ignoreCase = true) || platformName.contains("x.com", ignoreCase = true) -> Icons.Outlined.Public
+        platformName.contains("vimeo", ignoreCase = true) -> Icons.Outlined.PlayCircle
+        platformName.contains("facebook", ignoreCase = true) -> Icons.Outlined.OndemandVideo
+        else -> Icons.Outlined.Public
+    }
 
 @Preview(showBackground = true)
 @Composable

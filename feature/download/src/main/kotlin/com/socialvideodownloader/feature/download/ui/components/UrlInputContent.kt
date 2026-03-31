@@ -42,13 +42,14 @@ fun UrlInputContent(
     val clipboardManager = LocalClipboardManager.current
 
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(Spacing.InputHeight)
-            .clip(AppShapesInstance.control)
-            .background(SvdSurface)
-            .border(1.dp, SvdBorder, AppShapesInstance.control)
-            .padding(start = 16.dp, end = 6.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(Spacing.InputHeight)
+                .clip(AppShapesInstance.control)
+                .background(SvdSurface)
+                .border(1.dp, SvdBorder, AppShapesInstance.control)
+                .padding(start = 16.dp, end = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -65,10 +66,11 @@ fun UrlInputContent(
                     if (url.isEmpty()) {
                         Text(
                             text = stringResource(R.string.download_url_input_placeholder),
-                            style = urlTextStyle.copy(
-                                color = SvdSubtleForeground,
-                                fontSize = 15.sp,
-                            ),
+                            style =
+                                urlTextStyle.copy(
+                                    color = SvdSubtleForeground,
+                                    fontSize = 15.sp,
+                                ),
                         )
                     }
                     innerTextField()
@@ -77,24 +79,26 @@ fun UrlInputContent(
         )
 
         Box(
-            modifier = Modifier
-                .clip(AppShapesInstance.pill)
-                .background(SvdSurfaceAlt)
-                .clickable {
-                    clipboardManager.getText()?.text?.let { text ->
-                        onUrlChanged(text)
+            modifier =
+                Modifier
+                    .clip(AppShapesInstance.pill)
+                    .background(SvdSurfaceAlt)
+                    .clickable {
+                        clipboardManager.getText()?.text?.let { text ->
+                            onUrlChanged(text)
+                        }
                     }
-                }
-                .height(32.dp)
-                .padding(horizontal = 12.dp),
+                    .height(32.dp)
+                    .padding(horizontal = 12.dp),
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = stringResource(R.string.download_paste_button),
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                ),
+                style =
+                    MaterialTheme.typography.labelSmall.copy(
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    ),
                 color = SvdForeground,
             )
         }

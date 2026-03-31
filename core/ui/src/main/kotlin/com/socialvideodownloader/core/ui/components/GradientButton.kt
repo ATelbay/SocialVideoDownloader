@@ -38,12 +38,13 @@ fun GradientButton(
     enabled: Boolean = true,
 ) {
     Box(
-        modifier = modifier
-            .height(Spacing.PrimaryButtonHeight)
-            .clip(AppShapesInstance.control)
-            .alpha(if (enabled) 1f else 0.5f)
-            .background(Brush.verticalGradient(listOf(SvdPrimary, SvdWarning)))
-            .clickable(enabled = enabled, onClick = onClick),
+        modifier =
+            modifier
+                .height(Spacing.PrimaryButtonHeight)
+                .clip(AppShapesInstance.control)
+                .alpha(if (enabled) 1f else 0.5f)
+                .background(Brush.verticalGradient(listOf(SvdPrimary, SvdWarning)))
+                .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -52,10 +53,11 @@ fun GradientButton(
             }
             Text(
                 text = text,
-                style = MaterialTheme.typography.labelLarge.copy(
-                    letterSpacing = 0.6.sp,
-                    color = Color.White,
-                ),
+                style =
+                    MaterialTheme.typography.labelLarge.copy(
+                        letterSpacing = 0.6.sp,
+                        color = Color.White,
+                    ),
             )
         }
     }

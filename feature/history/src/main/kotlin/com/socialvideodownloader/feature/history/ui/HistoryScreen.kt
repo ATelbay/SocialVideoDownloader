@@ -19,7 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -51,8 +50,6 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.socialvideodownloader.core.domain.model.DownloadStatus
 import com.socialvideodownloader.core.ui.components.SvdTopBar
-import com.socialvideodownloader.core.ui.util.openVideo
-import com.socialvideodownloader.core.ui.util.shareVideo
 import com.socialvideodownloader.core.ui.theme.AppShapesInstance
 import com.socialvideodownloader.core.ui.theme.SvdBg
 import com.socialvideodownloader.core.ui.theme.SvdBorder
@@ -60,6 +57,8 @@ import com.socialvideodownloader.core.ui.theme.SvdForeground
 import com.socialvideodownloader.core.ui.theme.SvdSubtleForeground
 import com.socialvideodownloader.core.ui.theme.SvdSurface
 import com.socialvideodownloader.core.ui.tokens.Spacing
+import com.socialvideodownloader.core.ui.util.openVideo
+import com.socialvideodownloader.core.ui.util.shareVideo
 import com.socialvideodownloader.feature.history.R
 import com.socialvideodownloader.feature.history.components.HistoryBottomSheet
 import com.socialvideodownloader.feature.history.components.HistoryDeleteDialog
@@ -107,37 +106,46 @@ fun HistoryScreen(
     // Credential Manager for Google Sign-In
     val credentialManager = remember { CredentialManager.create(context) }
 
+    // Pre-resolve strings for use inside LaunchedEffect (avoids LocalContext lint)
+    val msgDeleted = stringResource(R.string.history_deleted)
+    val msgAllDeleted = stringResource(R.string.history_all_deleted)
+    val msgLinkCopied = stringResource(R.string.history_link_copied)
+    val msgCloudSyncError = stringResource(R.string.history_cloud_sync_error)
+    val msgFileUnavailable = stringResource(R.string.history_file_unavailable)
+    val msgDeleteFileFailed = stringResource(R.string.history_delete_single_file_failed)
+    val msgOpenError = stringResource(R.string.history_open_error)
+    val msgShareError = stringResource(R.string.history_share_error)
+    val googleWebClientId = stringResource(R.string.google_web_client_id)
+    val msgSignInFailed = stringResource(R.string.cloud_sign_in_failed)
+
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             snackbarHostState.currentSnackbarData?.dismiss()
             when (effect) {
                 is ShowMessage -> {
-                    val msgRes = when (effect.messageType) {
-                        HistoryMessageType.DELETE_SUCCESS -> R.string.history_deleted
-                        HistoryMessageType.DELETE_ALL_SUCCESS -> R.string.history_all_deleted
-                        HistoryMessageType.COPY_URL_SUCCESS -> R.string.history_link_copied
-                        HistoryMessageType.CLOUD_SYNC_ERROR -> R.string.history_cloud_sync_error
-                        HistoryMessageType.FILE_UNAVAILABLE -> R.string.history_file_unavailable
-                        HistoryMessageType.DELETE_FILE_FAILED -> R.string.history_delete_single_file_failed
-                    }
-                    snackbarHostState.showSnackbar(context.getString(msgRes))
+                    val msg =
+                        when (effect.messageType) {
+                            HistoryMessageType.DELETE_SUCCESS -> msgDeleted
+                            HistoryMessageType.DELETE_ALL_SUCCESS -> msgAllDeleted
+                            HistoryMessageType.COPY_URL_SUCCESS -> msgLinkCopied
+                            HistoryMessageType.CLOUD_SYNC_ERROR -> msgCloudSyncError
+                            HistoryMessageType.FILE_UNAVAILABLE -> msgFileUnavailable
+                            HistoryMessageType.DELETE_FILE_FAILED -> msgDeleteFileFailed
+                        }
+                    snackbarHostState.showSnackbar(msg)
                 }
                 is OpenContent -> {
                     try {
                         context.openVideo(effect.contentUri)
                     } catch (e: Exception) {
-                        snackbarHostState.showSnackbar(
-                            context.getString(R.string.history_open_error),
-                        )
+                        snackbarHostState.showSnackbar(msgOpenError)
                     }
                 }
                 is ShareContent -> {
                     try {
                         context.shareVideo(effect.contentUri)
                     } catch (e: Exception) {
-                        snackbarHostState.showSnackbar(
-                            context.getString(R.string.history_share_error),
-                        )
+                        snackbarHostState.showSnackbar(msgShareError)
                     }
                 }
                 is RetryDownload -> {
@@ -156,19 +164,20 @@ fun HistoryScreen(
                     }
                     coroutineScope.launch {
                         try {
-                            val googleIdOption = GetGoogleIdOption.Builder()
-                                .setFilterByAuthorizedAccounts(false)
-                                .setServerClientId(
-                                    context.getString(R.string.google_web_client_id),
+                            val googleIdOption =
+                                GetGoogleIdOption.Builder()
+                                    .setFilterByAuthorizedAccounts(false)
+                                    .setServerClientId(googleWebClientId)
+                                    .build()
+                            val request =
+                                GetCredentialRequest.Builder()
+                                    .addCredentialOption(googleIdOption)
+                                    .build()
+                            val result =
+                                credentialManager.getCredential(
+                                    context = activity,
+                                    request = request,
                                 )
-                                .build()
-                            val request = GetCredentialRequest.Builder()
-                                .addCredentialOption(googleIdOption)
-                                .build()
-                            val result = credentialManager.getCredential(
-                                context = activity,
-                                request = request,
-                            )
                             val googleIdTokenCredential =
                                 GoogleIdTokenCredential.createFrom(result.credential.data)
                             viewModel.onIntent(
@@ -178,9 +187,7 @@ fun HistoryScreen(
                             // User cancelled — no-op
                         } catch (e: Exception) {
                             Log.e("HistoryScreen", "Google sign-in failed", e)
-                            snackbarHostState.showSnackbar(
-                                context.getString(R.string.cloud_sign_in_failed),
-                            )
+                            snackbarHostState.showSnackbar(msgSignInFailed)
                         }
                     }
                 }
@@ -197,10 +204,11 @@ fun HistoryScreen(
                 if (isSearchActive) {
                     // Search mode
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(Spacing.TopBarHeight)
-                            .padding(horizontal = Spacing.TopBarPaddingH),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(Spacing.TopBarHeight)
+                                .padding(horizontal = Spacing.TopBarPaddingH),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         TextField(
@@ -217,25 +225,28 @@ fun HistoryScreen(
                             },
                             singleLine = true,
                             shape = AppShapesInstance.control,
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = SvdSurface,
-                                unfocusedContainerColor = SvdSurface,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                disabledIndicatorColor = Color.Transparent,
-                                focusedTextColor = SvdForeground,
-                                unfocusedTextColor = SvdForeground,
-                            ),
-                            modifier = Modifier
-                                .weight(1f)
-                                .border(1.dp, SvdBorder, AppShapesInstance.control),
+                            colors =
+                                TextFieldDefaults.colors(
+                                    focusedContainerColor = SvdSurface,
+                                    unfocusedContainerColor = SvdSurface,
+                                    focusedIndicatorColor = Color.Transparent,
+                                    unfocusedIndicatorColor = Color.Transparent,
+                                    disabledIndicatorColor = Color.Transparent,
+                                    focusedTextColor = SvdForeground,
+                                    unfocusedTextColor = SvdForeground,
+                                ),
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .border(1.dp, SvdBorder, AppShapesInstance.control),
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(AppShapesInstance.control)
-                                .background(SvdSurface),
+                            modifier =
+                                Modifier
+                                    .size(36.dp)
+                                    .clip(AppShapesInstance.control)
+                                    .background(SvdSurface),
                             contentAlignment = Alignment.Center,
                         ) {
                             androidx.compose.material3.IconButton(
@@ -270,9 +281,10 @@ fun HistoryScreen(
         // US1: Cloud backup state
         val cloudBackupState by viewModel.cloudBackupState.collectAsStateWithLifecycle()
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
         ) {
             CloudBackupSection(
                 state = cloudBackupState,

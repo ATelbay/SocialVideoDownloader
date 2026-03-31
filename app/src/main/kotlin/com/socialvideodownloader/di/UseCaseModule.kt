@@ -34,26 +34,18 @@ import dagger.hilt.components.SingletonComponent
 @Module
 @InstallIn(SingletonComponent::class)
 object UseCaseModule {
+    @Provides
+    fun provideExtractVideoInfoUseCase(repository: VideoExtractorRepository): ExtractVideoInfoUseCase = ExtractVideoInfoUseCase(repository)
 
     @Provides
-    fun provideExtractVideoInfoUseCase(
-        repository: VideoExtractorRepository,
-    ): ExtractVideoInfoUseCase = ExtractVideoInfoUseCase(repository)
+    fun provideDownloadVideoUseCase(repository: VideoExtractorRepository): DownloadVideoUseCase = DownloadVideoUseCase(repository)
 
     @Provides
-    fun provideDownloadVideoUseCase(
-        repository: VideoExtractorRepository,
-    ): DownloadVideoUseCase = DownloadVideoUseCase(repository)
+    fun provideCancelDownloadUseCase(repository: VideoExtractorRepository): CancelDownloadUseCase = CancelDownloadUseCase(repository)
 
     @Provides
-    fun provideCancelDownloadUseCase(
-        repository: VideoExtractorRepository,
-    ): CancelDownloadUseCase = CancelDownloadUseCase(repository)
-
-    @Provides
-    fun provideSaveFileToMediaStoreUseCase(
-        repository: MediaStoreRepository,
-    ): SaveFileToMediaStoreUseCase = SaveFileToMediaStoreUseCase(repository)
+    fun provideSaveFileToMediaStoreUseCase(repository: MediaStoreRepository): SaveFileToMediaStoreUseCase =
+        SaveFileToMediaStoreUseCase(repository)
 
     @Provides
     fun provideFindExistingDownloadUseCase(
@@ -62,9 +54,7 @@ object UseCaseModule {
     ): FindExistingDownloadUseCase = FindExistingDownloadUseCase(downloadRepository, fileAccessManager)
 
     @Provides
-    fun provideSaveDownloadRecordUseCase(
-        repository: DownloadRepository,
-    ): SaveDownloadRecordUseCase = SaveDownloadRecordUseCase(repository)
+    fun provideSaveDownloadRecordUseCase(repository: DownloadRepository): SaveDownloadRecordUseCase = SaveDownloadRecordUseCase(repository)
 
     @Provides
     fun provideDisableCloudBackupUseCase(

@@ -36,9 +36,10 @@ fun CloudBackupSection(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         if (!state.isSignedIn) {
@@ -77,15 +78,17 @@ fun CloudBackupSection(
                     AsyncImage(
                         model = state.userPhotoUrl,
                         contentDescription = null,
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape),
+                        modifier =
+                            Modifier
+                                .size(32.dp)
+                                .clip(CircleShape),
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                 }
                 Text(
-                    text = state.userName
-                        ?: stringResource(R.string.cloud_signed_in_as, ""),
+                    text =
+                        state.userName
+                            ?: stringResource(R.string.cloud_signed_in_as, ""),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.weight(1f),
                 )
@@ -124,14 +127,18 @@ fun CloudBackupSection(
 }
 
 @Composable
-private fun syncStatusText(isEnabled: Boolean, syncStatus: SyncStatus): String? {
+private fun syncStatusText(
+    isEnabled: Boolean,
+    syncStatus: SyncStatus,
+): String? {
     if (!isEnabled) return stringResource(R.string.cloud_backup_disabled)
     return when (syncStatus) {
         is SyncStatus.Idle -> stringResource(R.string.cloud_backup_never)
         is SyncStatus.Syncing -> stringResource(R.string.cloud_backup_syncing)
         is SyncStatus.Synced -> {
-            val formattedTime = DateFormat.getTimeInstance(DateFormat.SHORT)
-                .format(Date(syncStatus.lastSyncTimestamp))
+            val formattedTime =
+                DateFormat.getTimeInstance(DateFormat.SHORT)
+                    .format(Date(syncStatus.lastSyncTimestamp))
             stringResource(R.string.cloud_backup_synced, formattedTime)
         }
         is SyncStatus.Paused -> stringResource(R.string.cloud_backup_paused)

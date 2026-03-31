@@ -94,9 +94,10 @@ fun ExistingDownloadBanner(
                         model = existingDownload.thumbnailUrl,
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(width = Spacing.ThumbnailCompactWidth, height = Spacing.ThumbnailCompactHeight)
-                            .clip(AppShapesInstance.thumbnail),
+                        modifier =
+                            Modifier
+                                .size(width = Spacing.ThumbnailCompactWidth, height = Spacing.ThumbnailCompactHeight)
+                                .clip(AppShapesInstance.thumbnail),
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                 }
@@ -116,8 +117,9 @@ fun ExistingDownloadBanner(
                         color = SvdSubtleForeground,
                     )
                     if (existingDownload.completedAt > 0L) {
-                        val dateStr = DateFormat.getDateInstance(DateFormat.MEDIUM)
-                            .format(Date(existingDownload.completedAt))
+                        val dateStr =
+                            DateFormat.getDateInstance(DateFormat.MEDIUM)
+                                .format(Date(existingDownload.completedAt))
                         Text(
                             text = stringResource(R.string.download_existing_downloaded_on, dateStr),
                             fontSize = 12.sp,

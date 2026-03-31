@@ -1,5 +1,5 @@
 import SwiftUI
-import shared_feature_history
+@preconcurrency import shared_feature_library
 
 /// A single row in the history list.
 ///
@@ -120,7 +120,7 @@ struct HistoryItemRow: View {
                     Text("·")
                         .font(SVDFont.caption())
                         .foregroundColor(.svdOnSurfaceVariant)
-                    Text(formattedSize(bytes: size))
+                    Text(formattedSize(bytes: size.int64Value))
                         .font(SVDFont.caption())
                         .foregroundColor(.svdOnSurfaceVariant)
                 }

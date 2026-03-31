@@ -55,12 +55,13 @@ fun HistoryContent(
         is Content -> {
             LazyColumn(
                 modifier = modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    top = Spacing.ContentTopPadding,
-                    start = Spacing.ScreenPadding,
-                    end = Spacing.ScreenPadding,
-                    bottom = Spacing.ContentBottomPadding,
-                ),
+                contentPadding =
+                    PaddingValues(
+                        top = Spacing.ContentTopPadding,
+                        start = Spacing.ScreenPadding,
+                        end = Spacing.ScreenPadding,
+                        bottom = Spacing.ContentBottomPadding,
+                    ),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 items(uiState.items, key = { it.id }) { item ->

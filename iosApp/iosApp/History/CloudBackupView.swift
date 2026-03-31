@@ -1,5 +1,5 @@
 import SwiftUI
-import shared_feature_history
+@preconcurrency import shared_feature_library
 
 // MARK: - CloudBackupView
 
@@ -18,7 +18,7 @@ struct CloudBackupView: View {
 
     let cloudState: CloudBackupState
     /// Capacity snapshot from ObserveCloudCapacityUseCase; nil while loading.
-    let cloudCapacity: CloudCapacity?
+    let cloudCapacity: DomainCloudCapacity?
     let onToggleBackup: () -> Void
     let onSignOut: () -> Void
     let onRestore: () -> Void
@@ -82,7 +82,7 @@ struct CloudBackupView: View {
     @ViewBuilder
     private var syncStatusBadge: some View {
         switch cloudState.syncStatus {
-        case is SyncStatusSyncing:
+        case is DomainSyncStatusSyncing:
             HStack(spacing: 4) {
                 ProgressView()
                     .scaleEffect(0.7)
@@ -91,7 +91,7 @@ struct CloudBackupView: View {
                     .font(SVDFont.caption())
                     .foregroundColor(.svdAccent)
             }
-        case let synced as SyncStatusSynced:
+        case let synced as DomainSyncStatusSynced:
             HStack(spacing: 4) {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 12))
@@ -100,7 +100,7 @@ struct CloudBackupView: View {
                     .font(SVDFont.caption())
                     .foregroundColor(.svdOnSurfaceVariant)
             }
-        case let paused as SyncStatusPaused:
+        case let paused as DomainSyncStatusPaused:
             HStack(spacing: 4) {
                 Image(systemName: "pause.circle")
                     .font(.system(size: 12))
@@ -109,7 +109,7 @@ struct CloudBackupView: View {
                     .font(SVDFont.caption())
                     .foregroundColor(.svdWarning)
             }
-        case let error as SyncStatusError:
+        case is DomainSyncStatusError:
             HStack(spacing: 4) {
                 Image(systemName: "exclamationmark.circle")
                     .font(.system(size: 12))
@@ -416,7 +416,7 @@ private extension Int64 {
         CloudBackupView(
             cloudState: CloudBackupState(
                 isCloudBackupEnabled: true,
-                syncStatus: SyncStatusSynced(lastSyncTimestamp: Int64(Date().timeIntervalSince1970 * 1000)),
+                syncStatus: DomainSyncStatusSynced(lastSyncTimestamp: Int64(Date().timeIntervalSince1970 * 1000)),
                 restoreState: RestoreStateIdle(),
                 isSignedIn: true,
                 isSigningIn: false,
@@ -424,7 +424,7 @@ private extension Int64 {
                 userPhotoUrl: nil,
                 signInError: nil
             ),
-            cloudCapacity: CloudCapacity(used: 42, limit: 1000, isNearLimit: false),
+            cloudCapacity: DomainCloudCapacity(used: 42, limit: 1000, isNearLimit: false),
             onToggleBackup: {},
             onSignOut: {},
             onRestore: {},

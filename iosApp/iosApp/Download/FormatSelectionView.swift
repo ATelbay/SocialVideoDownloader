@@ -1,6 +1,5 @@
 import SwiftUI
-import shared_feature_download
-import shared_core_domain
+@preconcurrency import shared_feature_library
 
 /// Format selection screen — shown when the download state is [DownloadUiState.FormatSelection].
 ///
@@ -9,7 +8,7 @@ import shared_core_domain
 /// is highlighted and the Download button is enabled.
 struct FormatSelectionView: View {
 
-    let metadata: VideoMetadata
+    let metadata: DomainVideoMetadata
     let selectedFormatId: String
     let onIntent: (DownloadIntent) -> Void
 
@@ -136,7 +135,7 @@ struct FormatSelectionView: View {
 // MARK: - FormatChip
 
 private struct FormatChip: View {
-    let format: VideoFormatOption
+    let format: DomainVideoFormatOption
     let isSelected: Bool
     let onTap: () -> Void
 
@@ -147,7 +146,7 @@ private struct FormatChip: View {
                     .font(SVDFont.labelLarge())
                     .foregroundColor(isSelected ? .white : .svdOnSurface)
                     .lineLimit(1)
-                if let size = format.fileSizeBytes {
+                if let size = format.fileSizeBytes?.int64Value {
                     Text(formattedSize(size))
                         .font(SVDFont.caption())
                         .foregroundColor(isSelected ? .white.opacity(0.8) : .svdOnSurfaceVariant)

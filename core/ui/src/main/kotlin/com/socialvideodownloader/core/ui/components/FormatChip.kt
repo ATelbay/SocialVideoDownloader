@@ -41,15 +41,17 @@ fun FormatChip(
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.labelMedium.copy(
-                fontSize = 13.sp,
-                fontWeight = fontWeight,
-                color = labelColor,
-            ),
-            modifier = Modifier.padding(
-                horizontal = Spacing.ChipPaddingH,
-                vertical = Spacing.ChipPaddingV,
-            ),
+            style =
+                MaterialTheme.typography.labelMedium.copy(
+                    fontSize = 13.sp,
+                    fontWeight = fontWeight,
+                    color = labelColor,
+                ),
+            modifier =
+                Modifier.padding(
+                    horizontal = Spacing.ChipPaddingH,
+                    vertical = Spacing.ChipPaddingV,
+                ),
         )
     }
 }

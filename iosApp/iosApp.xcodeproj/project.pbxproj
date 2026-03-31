@@ -23,6 +23,11 @@
 		AA000050 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100050 /* NotificationService.swift */; };
 		AA000060 /* KoinHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100060 /* KoinHelper.swift */; };
 		AA000070 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = AA100070 /* Localizable.strings */; };
+		AA000041 /* HistoryItemRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100041 /* HistoryItemRow.swift */; };
+		AA000042 /* HistoryDeleteDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100042 /* HistoryDeleteDialog.swift */; };
+		AA000043 /* CloudBackupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100043 /* CloudBackupView.swift */; };
+		AA000044 /* UpgradeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100044 /* UpgradeView.swift */; };
+		AA000031 /* LibraryItemRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100031 /* LibraryItemRow.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -43,6 +48,12 @@
 		AA100050 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		AA100060 /* KoinHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KoinHelper.swift; sourceTree = "<group>"; };
 		AA100070 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = Localizable.strings; sourceTree = "<group>"; };
+		AA100041 /* HistoryItemRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryItemRow.swift; sourceTree = "<group>"; };
+		AA100042 /* HistoryDeleteDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryDeleteDialog.swift; sourceTree = "<group>"; };
+		AA100043 /* CloudBackupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudBackupView.swift; sourceTree = "<group>"; };
+		AA100044 /* UpgradeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpgradeView.swift; sourceTree = "<group>"; };
+		AA100031 /* LibraryItemRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryItemRow.swift; sourceTree = "<group>"; };
+		AA100004 /* iosApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iosApp.entitlements; sourceTree = "<group>"; };
 		AA200001 /* iosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -84,6 +95,7 @@
 			isa = PBXGroup;
 			children = (
 				AA100030 /* LibraryView.swift */,
+				AA100031 /* LibraryItemRow.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -92,6 +104,10 @@
 			isa = PBXGroup;
 			children = (
 				AA100040 /* HistoryView.swift */,
+				AA100041 /* HistoryItemRow.swift */,
+				AA100042 /* HistoryDeleteDialog.swift */,
+				AA100043 /* CloudBackupView.swift */,
+				AA100044 /* UpgradeView.swift */,
 			);
 			path = History;
 			sourceTree = "<group>";
@@ -118,6 +134,7 @@
 				AA100001 /* App.swift */,
 				AA100002 /* ContentView.swift */,
 				AA100003 /* Info.plist */,
+				AA100004 /* iosApp.entitlements */,
 				AA100070 /* Localizable.strings */,
 				AA410000 /* Theme */,
 				AA420000 /* Download */,
@@ -152,6 +169,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = AA700001 /* Build configuration list for PBXNativeTarget "iosApp" */;
 			buildPhases = (
+				AA600003 /* Build KMP Frameworks */,
 				AA600001 /* Sources */,
 				AA300001 /* Frameworks */,
 				AA600002 /* Resources */,
@@ -210,6 +228,24 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		AA600003 /* Build KMP Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Build KMP Frameworks";
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/kmp-frameworks.stamp",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cd \"$SRCROOT/..\"\n./gradlew \\\n  :shared:data:embedAndSignAppleFrameworkForXcode \\\n  :shared:feature-download:embedAndSignAppleFrameworkForXcode \\\n  :shared:feature-history:embedAndSignAppleFrameworkForXcode \\\n  :shared:feature-library:embedAndSignAppleFrameworkForXcode \\\n  :shared:network:embedAndSignAppleFrameworkForXcode \\\n  :core:domain:embedAndSignAppleFrameworkForXcode\n\ntouch \"$DERIVED_FILE_DIR/kmp-frameworks.stamp\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		AA600001 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -230,6 +266,11 @@
 				AA000040 /* HistoryView.swift in Sources */,
 				AA000050 /* NotificationService.swift in Sources */,
 				AA000060 /* KoinHelper.swift in Sources */,
+				AA000041 /* HistoryItemRow.swift in Sources */,
+				AA000042 /* HistoryDeleteDialog.swift in Sources */,
+				AA000043 /* CloudBackupView.swift in Sources */,
+				AA000044 /* UpgradeView.swift in Sources */,
+				AA000031 /* LibraryItemRow.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -273,7 +314,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -290,7 +331,12 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/data/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/network/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/feature-download/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/feature-history/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/feature-library/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../core/domain/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -339,7 +385,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -350,7 +396,12 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/data/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/network/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/feature-download/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/feature-history/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/feature-library/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../core/domain/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MTL_FAST_MATH = YES;
@@ -366,6 +417,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = iosApp/iosApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
@@ -391,6 +443,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = iosApp/iosApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";

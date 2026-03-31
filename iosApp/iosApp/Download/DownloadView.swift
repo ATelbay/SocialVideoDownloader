@@ -1,5 +1,5 @@
 import SwiftUI
-import shared_feature_download
+@preconcurrency import shared_feature_library
 
 // MARK: - ViewModel Wrapper
 
@@ -9,7 +9,7 @@ import shared_feature_download
 @MainActor
 final class DownloadViewModelWrapper: ObservableObject {
 
-    @Published var state: DownloadUiState = DownloadUiState.Idle(existingDownload: nil, prefillUrl: nil)
+    @Published var state: any DownloadUiState = DownloadUiStateIdle(existingDownload: nil, prefillUrl: nil)
 
     let shared: SharedDownloadViewModel
     private var stateTask: Task<Void, Never>?
@@ -82,14 +82,14 @@ struct DownloadView: View {
             .navigationBarTitleDisplayMode(.inline)
         }
         // React to one-shot events
-        .onChange(of: viewModel.shareFilePath) { oldValue, newValue in
+        .onChange(of: viewModel.shareFilePath) { newValue in
             if let path = newValue {
                 shareFilePath = path
                 showShareSheet = true
                 viewModel.shareFilePath = nil
             }
         }
-        .onChange(of: viewModel.openFileUrl) { oldValue, newValue in
+        .onChange(of: viewModel.openFileUrl) { newValue in
             if let path = newValue {
                 openFilePath = path
                 showOpenFile = true
@@ -111,26 +111,26 @@ struct DownloadView: View {
     @ViewBuilder
     private var currentScreen: some View {
         switch viewModel.state {
-        case let idle as DownloadUiState.Idle:
+        case let idle as DownloadUiStateIdle:
             UrlInputView(
                 prefillUrl: idle.prefillUrl as String?,
                 existingDownload: idle.existingDownload,
                 onIntent: viewModel.send
             )
 
-        case let extracting as DownloadUiState.Extracting:
+        case let extracting as DownloadUiStateExtracting:
             ExtractingView(url: extracting.url, onCancel: {
                 viewModel.send(DownloadIntentBackToIdleClicked())
             })
 
-        case let formatSelection as DownloadUiState.FormatSelection:
+        case let formatSelection as DownloadUiStateFormatSelection:
             FormatSelectionView(
                 metadata: formatSelection.metadata,
                 selectedFormatId: formatSelection.selectedFormatId,
                 onIntent: viewModel.send
             )
 
-        case let downloading as DownloadUiState.Downloading:
+        case let downloading as DownloadUiStateDownloading:
             DownloadProgressView(
                 videoTitle: downloading.metadata.title,
                 thumbnailUrl: downloading.metadata.thumbnailUrl as String?,
@@ -138,7 +138,7 @@ struct DownloadView: View {
                 onCancel: { viewModel.send(DownloadIntentCancelDownloadClicked()) }
             )
 
-        case let done as DownloadUiState.Done:
+        case let done as DownloadUiStateDone:
             DownloadCompleteView(
                 videoTitle: done.metadata.title,
                 thumbnailUrl: done.metadata.thumbnailUrl as String?,
@@ -148,9 +148,9 @@ struct DownloadView: View {
                 onNewDownload: { viewModel.send(DownloadIntentNewDownloadClicked()) }
             )
 
-        case let error as DownloadUiState.Error:
+        case let error as DownloadUiStateError:
             DownloadErrorView(
-                errorType: error.errorType,
+                title: downloadErrorTitle(for: error.errorType),
                 message: error.message as String?,
                 onRetry: { viewModel.send(DownloadIntentRetryClicked()) },
                 onReset: { viewModel.send(DownloadIntentNewDownloadClicked()) }
@@ -158,6 +158,25 @@ struct DownloadView: View {
 
         default:
             ProgressView()
+        }
+    }
+
+    private func downloadErrorTitle(for errorType: Any) -> String {
+        switch String(describing: errorType).lowercased() {
+        case let value where value.contains("network"):
+            return "No Internet Connection"
+        case let value where value.contains("server"):
+            return "Server Unavailable"
+        case let value where value.contains("extraction"):
+            return "Could Not Extract Video"
+        case let value where value.contains("unsupported"):
+            return "Unsupported URL"
+        case let value where value.contains("storage"):
+            return "Storage Full"
+        case let value where value.contains("download"):
+            return "Download Failed"
+        default:
+            return "Something Went Wrong"
         }
     }
 }

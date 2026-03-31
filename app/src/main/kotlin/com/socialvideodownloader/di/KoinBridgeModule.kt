@@ -26,11 +26,9 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object KoinBridgeModule {
-
     @Provides
     @Singleton
-    fun providePlatformDownloadManager(): PlatformDownloadManager =
-        KoinPlatform.getKoin().get()
+    fun providePlatformDownloadManager(): PlatformDownloadManager = KoinPlatform.getKoin().get()
 
     /**
      * Provides the concrete [AndroidDownloadManager] so that [DownloadViewModel]
@@ -47,16 +45,13 @@ object KoinBridgeModule {
 
     @Provides
     @Singleton
-    fun providePlatformFileStorage(): PlatformFileStorage =
-        KoinPlatform.getKoin().get()
+    fun providePlatformFileStorage(): PlatformFileStorage = KoinPlatform.getKoin().get()
 
     @Provides
     @Singleton
-    fun providePlatformClipboard(): PlatformClipboard =
-        KoinPlatform.getKoin().get()
+    fun providePlatformClipboard(): PlatformClipboard = KoinPlatform.getKoin().get()
 
     @Provides
     @Singleton
-    fun providePlatformStringProvider(): PlatformStringProvider =
-        KoinPlatform.getKoin().get()
+    fun providePlatformStringProvider(): PlatformStringProvider = KoinPlatform.getKoin().get()
 }

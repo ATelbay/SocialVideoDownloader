@@ -1,8 +1,9 @@
 import SwiftUI
-import shared_data
+import shared_feature_library
 
 // Shared state for the URL received via the Share Extension or URL scheme.
 // ContentView injects this as an EnvironmentObject so DownloadView can observe it.
+@MainActor
 final class SharedURLState: ObservableObject {
     @Published var pendingURL: String? = nil
 
@@ -15,9 +16,7 @@ final class SharedURLState: ObservableObject {
               let urlString = defaults.string(forKey: key) else { return }
         defaults.removeObject(forKey: key)
         defaults.synchronize()
-        DispatchQueue.main.async { [weak self] in
-            self?.pendingURL = urlString
-        }
+        pendingURL = urlString
     }
 }
 
@@ -44,7 +43,7 @@ struct SocialVideoDownloaderApp: App {
                     }
                 }
         }
-        .onChange(of: scenePhase) { _, newPhase in
+        .onChange(of: scenePhase) { newPhase in
             if newPhase == .active {
                 // Check for URLs deposited by the Share Extension while the app was backgrounded
                 sharedURLState.consumeSharedURL()

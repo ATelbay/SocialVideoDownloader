@@ -1,5 +1,5 @@
 import SwiftUI
-import shared_feature_history
+@preconcurrency import shared_feature_library
 
 // MARK: - ViewModel Wrapper
 
@@ -9,8 +9,17 @@ import shared_feature_history
 @MainActor
 final class HistoryViewModelWrapper: ObservableObject {
 
-    @Published var state: HistoryUiState = HistoryUiState.Loading()
-    @Published var cloudState: CloudBackupState = CloudBackupState()
+    @Published var state: any HistoryUiState = HistoryUiStateLoading.shared
+    @Published var cloudState: CloudBackupState = CloudBackupState(
+        isCloudBackupEnabled: false,
+        syncStatus: DomainSyncStatusIdle.shared,
+        restoreState: RestoreStateIdle(),
+        isSignedIn: false,
+        isSigningIn: false,
+        userName: nil,
+        userPhotoUrl: nil,
+        signInError: nil
+    )
 
     let shared: SharedHistoryViewModel
     private var stateTask: Task<Void, Never>?
@@ -54,7 +63,7 @@ final class HistoryViewModelWrapper: ObservableObject {
             for await effect in shared.effect {
                 switch effect {
                 case let showMessage as HistoryEffectShowMessage:
-                    self.toastMessage = showMessage.messageType.localizedString
+                    self.toastMessage = self.localizedHistoryMessage(showMessage.messageType)
                 case let retry as HistoryEffectRetryDownload:
                     self.retryUrl = retry.sourceUrl
                 case is HistoryEffectLaunchUpgradeFlow:
@@ -75,20 +84,23 @@ final class HistoryViewModelWrapper: ObservableObject {
     func send(_ intent: HistoryIntent) {
         shared.onIntent(intent: intent)
     }
-}
 
-// MARK: - HistoryMessageType helpers
-
-private extension HistoryMessageType {
-    var localizedString: String {
-        switch self {
-        case .deleteSuccess: return "Item deleted."
-        case .deleteAllSuccess: return "All items deleted."
-        case .copyUrlSuccess: return "Link copied to clipboard."
-        case .cloudSyncError: return "Cloud sync failed."
-        case .fileUnavailable: return "File is no longer available."
-        case .deleteFileFailed: return "Could not delete the file."
-        default: return "Something went wrong."
+    private func localizedHistoryMessage(_ type: Any) -> String {
+        switch String(describing: type).lowercased() {
+        case let value where value.contains("deleteallsuccess"):
+            return "All items deleted."
+        case let value where value.contains("deletesuccess"):
+            return "Item deleted."
+        case let value where value.contains("copyurlsuccess"):
+            return "Link copied to clipboard."
+        case let value where value.contains("cloudsyncerror"):
+            return "Cloud sync failed."
+        case let value where value.contains("fileunavailable"):
+            return "File is no longer available."
+        case let value where value.contains("deletefilefailed"):
+            return "Could not delete the file."
+        default:
+            return "Something went wrong."
         }
     }
 }
@@ -160,13 +172,13 @@ struct HistoryView: View {
     @ViewBuilder
     private var content: some View {
         switch viewModel.state {
-        case is HistoryUiState.Loading:
+        case is HistoryUiStateLoading:
             loadingView
 
-        case let emptyState as HistoryUiState.Empty:
+        case let emptyState as HistoryUiStateEmpty:
             emptyView(state: emptyState)
 
-        case let contentState as HistoryUiState.Content:
+        case let contentState as HistoryUiStateContent:
             contentView(state: contentState)
 
         default:
@@ -190,7 +202,7 @@ struct HistoryView: View {
 
     // MARK: Empty
 
-    private func emptyView(state: HistoryUiState.Empty) -> some View {
+    private func emptyView(state: HistoryUiStateEmpty) -> some View {
         ScrollView {
             VStack(spacing: 16) {
                 // Cloud backup section shown even when history is empty
@@ -202,7 +214,7 @@ struct HistoryView: View {
                     .font(.system(size: 56))
                     .foregroundStyle(Color.svdOnSurfaceVariant)
                 if state.isFiltering {
-                    Text("No results for "\(state.query)"")
+                    Text("No results for \"\(state.query)\"")
                         .font(SVDFont.headlineMedium())
                         .foregroundColor(.svdOnSurface)
                         .multilineTextAlignment(.center)
@@ -229,7 +241,7 @@ struct HistoryView: View {
 
     // MARK: Content
 
-    private func contentView(state: HistoryUiState.Content) -> some View {
+    private func contentView(state: HistoryUiStateContent) -> some View {
         VStack(spacing: 0) {
             searchBar(query: state.query)
             itemList(state: state)
@@ -257,7 +269,7 @@ struct HistoryView: View {
         )
     }
 
-    private func cloudBackupSectionWithCapacity(capacity: CloudCapacity?) -> some View {
+    private func cloudBackupSectionWithCapacity(capacity: DomainCloudCapacity?) -> some View {
         CloudBackupView(
             cloudState: viewModel.cloudState,
             cloudCapacity: capacity,
@@ -301,7 +313,7 @@ struct HistoryView: View {
 
     // MARK: Item list
 
-    private func itemList(state: HistoryUiState.Content) -> some View {
+    private func itemList(state: HistoryUiStateContent) -> some View {
         List {
             // Cloud backup section pinned at the top of the history list
             Section {

@@ -37,17 +37,19 @@ fun HistoryEmptyState(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 40.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(horizontal = 40.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
-            modifier = Modifier
-                .size(88.dp)
-                .clip(CircleShape)
-                .background(SvdSurfaceStrong),
+            modifier =
+                Modifier
+                    .size(88.dp)
+                    .clip(CircleShape)
+                    .background(SvdSurfaceStrong),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
@@ -66,9 +68,10 @@ fun HistoryEmptyState(
         )
 
         Text(
-            text = stringResource(
-                if (isSearchResult) R.string.history_no_results_description else R.string.history_empty_description_new,
-            ),
+            text =
+                stringResource(
+                    if (isSearchResult) R.string.history_no_results_description else R.string.history_empty_description_new,
+                ),
             style = MaterialTheme.typography.bodyMedium,
             color = SvdMutedForeground,
             textAlign = TextAlign.Center,

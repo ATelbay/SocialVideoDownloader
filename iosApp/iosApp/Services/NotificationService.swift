@@ -1,11 +1,11 @@
 import Foundation
-import UserNotifications
+@preconcurrency import UserNotifications
 
 /// Manages local notification permission and posting.
 ///
 /// Used by the Download screen to notify the user when a download completes
 /// while the app is in the background.
-final class NotificationService {
+final class NotificationService: @unchecked Sendable {
 
     static let shared = NotificationService()
     private init() {}
@@ -14,18 +14,24 @@ final class NotificationService {
 
     /// Request notification authorization if not already granted.
     /// - Parameter completion: Called with `true` if permission was granted.
-    func requestPermission(completion: @escaping (Bool) -> Void) {
+    func requestPermission(completion: @escaping @MainActor @Sendable (Bool) -> Void) {
         let center = UNUserNotificationCenter.current()
         center.getNotificationSettings { settings in
             switch settings.authorizationStatus {
             case .authorized, .provisional:
-                DispatchQueue.main.async { completion(true) }
+                Task { @MainActor in
+                    completion(true)
+                }
             case .notDetermined:
                 center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
-                    DispatchQueue.main.async { completion(granted) }
+                    Task { @MainActor in
+                        completion(granted)
+                    }
                 }
             default:
-                DispatchQueue.main.async { completion(false) }
+                Task { @MainActor in
+                    completion(false)
+                }
             }
         }
     }

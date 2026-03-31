@@ -5,6 +5,15 @@ plugins {
 }
 
 kotlin {
+    // Override the framework baseName from "data" to "shared_data" to avoid
+    // SKIE Swift code-gen collision where parameter names like "data" shadow
+    // the module name in generated suspend wrappers.
+    targets.withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget> {
+        binaries.withType<org.jetbrains.kotlin.gradle.plugin.mpp.Framework> {
+            baseName = "shared_data"
+        }
+    }
+
     sourceSets {
         commonMain.dependencies {
             implementation(project(":core:domain"))

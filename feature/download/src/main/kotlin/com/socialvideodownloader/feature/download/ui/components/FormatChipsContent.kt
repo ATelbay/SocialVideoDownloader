@@ -21,15 +21,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.socialvideodownloader.core.ui.theme.SectionLabel
 import com.socialvideodownloader.core.domain.model.VideoFormatOption
 import com.socialvideodownloader.core.ui.components.FormatChip
 import com.socialvideodownloader.core.ui.theme.AppShapesInstance
+import com.socialvideodownloader.core.ui.theme.SectionLabel
+import com.socialvideodownloader.core.ui.theme.StatsValue
 import com.socialvideodownloader.core.ui.theme.SvdBorder
 import com.socialvideodownloader.core.ui.theme.SvdForeground
 import com.socialvideodownloader.core.ui.theme.SvdSubtleForeground
 import com.socialvideodownloader.core.ui.theme.SvdSurfaceAlt
-import com.socialvideodownloader.core.ui.theme.StatsValue
 import com.socialvideodownloader.core.ui.tokens.Spacing
 import com.socialvideodownloader.feature.download.R
 
@@ -43,9 +43,10 @@ fun FormatChipsContent(
     val context = LocalContext.current
     val videoFormats = remember(formats) { formats.filter { !it.isAudioOnly } }
     val audioFormats = remember(formats) { formats.filter { it.isAudioOnly } }
-    val selectedFormat = remember(formats, selectedFormatId) {
-        formats.find { it.formatId == selectedFormatId }
-    }
+    val selectedFormat =
+        remember(formats, selectedFormatId) {
+            formats.find { it.formatId == selectedFormatId }
+        }
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -99,12 +100,13 @@ fun FormatChipsContent(
 
         // Format summary bar
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(AppShapesInstance.summary)
-                .background(SvdSurfaceAlt)
-                .border(1.dp, SvdBorder, AppShapesInstance.summary)
-                .padding(Spacing.SummaryBarPadding),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .clip(AppShapesInstance.summary)
+                    .background(SvdSurfaceAlt)
+                    .border(1.dp, SvdBorder, AppShapesInstance.summary)
+                    .padding(Spacing.SummaryBarPadding),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
@@ -122,15 +124,15 @@ fun FormatChipsContent(
                     color = SvdForeground,
                 )
                 Text(
-                    text = selectedFormat?.fileSizeBytes?.let { bytes ->
-                        Formatter.formatFileSize(context, bytes)
-                    } ?: stringResource(R.string.download_format_info_unknown_size),
+                    text =
+                        selectedFormat?.fileSizeBytes?.let { bytes ->
+                            Formatter.formatFileSize(context, bytes)
+                        } ?: stringResource(R.string.download_format_info_unknown_size),
                     style = StatsValue,
                     color = SvdForeground,
                 )
             }
         }
-
     }
 }
 

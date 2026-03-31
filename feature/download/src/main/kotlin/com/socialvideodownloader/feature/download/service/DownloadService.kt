@@ -29,14 +29,21 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class DownloadService : Service() {
-
     @Inject lateinit var downloadVideo: DownloadVideoUseCase
+
     @Inject lateinit var cancelDownload: CancelDownloadUseCase
+
     @Inject lateinit var saveDownloadRecord: SaveDownloadRecordUseCase
+
     @Inject lateinit var saveFileToMediaStore: SaveFileToMediaStoreUseCase
+
     @Inject lateinit var notificationManager: DownloadNotificationManager
+
     @Inject lateinit var stateHolder: DownloadServiceStateHolder
-    @Inject @IoDispatcher lateinit var ioDispatcher: CoroutineDispatcher
+
+    @Inject @IoDispatcher
+    lateinit var ioDispatcher: CoroutineDispatcher
+
     @Inject lateinit var errorMessageMapper: ErrorMessageMapper
 
     private val serviceScope = CoroutineScope(SupervisorJob())
@@ -45,7 +52,11 @@ class DownloadService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    override fun onStartCommand(
+        intent: Intent?,
+        flags: Int,
+        startId: Int,
+    ): Int {
         when (intent?.action) {
             ACTION_START_DOWNLOAD -> {
                 val request = extractDownloadRequest(intent) ?: return START_NOT_STICKY
@@ -79,71 +90,78 @@ class DownloadService : Service() {
     }
 
     private fun processNext() {
-        val request = queue.poll() ?: run {
-            isProcessing.set(false)
-            stateHolder.update(DownloadServiceState.Idle)
-            stopSelf()
-            return
-        }
+        val request =
+            queue.poll() ?: run {
+                isProcessing.set(false)
+                stateHolder.update(DownloadServiceState.Idle)
+                stopSelf()
+                return
+            }
 
         isProcessing.set(true)
         val notificationId = request.id.hashCode()
 
-        val initialProgress = DownloadProgress(
-            requestId = request.id,
-            progressPercent = 0f,
-            downloadedBytes = 0L,
-            speedBytesPerSec = 0L,
-            etaSeconds = 0L,
-        )
+        val initialProgress =
+            DownloadProgress(
+                requestId = request.id,
+                progressPercent = 0f,
+                downloadedBytes = 0L,
+                speedBytesPerSec = 0L,
+                etaSeconds = 0L,
+            )
         stateHolder.update(DownloadServiceState.Downloading(request.id, initialProgress))
 
-        val foregroundNotification = notificationManager.buildProgressNotification(
-            notificationId = notificationId,
-            requestId = request.id,
-            videoTitle = request.videoTitle,
-            progressPercent = 0,
-            speedText = "",
-            etaText = "",
-        )
+        val foregroundNotification =
+            notificationManager.buildProgressNotification(
+                notificationId = notificationId,
+                requestId = request.id,
+                videoTitle = request.videoTitle,
+                progressPercent = 0,
+                speedText = "",
+                etaText = "",
+            )
         startForeground(notificationId, foregroundNotification)
 
         serviceScope.launch(ioDispatcher) {
             try {
                 var highWaterMark = 0f
-                val outputPath = downloadVideo(request) { progressPercent, etaSeconds, speedText ->
-                    val speedBytes = parseSpeedToBytes(speedText)
-                    val safeProgress = progressPercent.coerceAtLeast(0f)
-                    val isMuxing = highWaterMark >= MUXING_DETECTION_THRESHOLD && safeProgress < highWaterMark
-                    highWaterMark = maxOf(highWaterMark, safeProgress)
-                    val displayProgress = if (isMuxing) 100f else safeProgress
-                    val safeEta = etaSeconds.coerceAtLeast(0L)
-                    val totalBytes = request.totalBytes
-                    val progress = DownloadProgress(
-                        requestId = request.id,
-                        progressPercent = displayProgress,
-                        downloadedBytes = if (!isMuxing && totalBytes != null && totalBytes > 0) {
-                            ((displayProgress / 100f) * totalBytes).toLong()
-                        } else {
-                            0L
-                        },
-                        totalBytes = request.totalBytes,
-                        speedBytesPerSec = if (isMuxing) 0L else speedBytes,
-                        etaSeconds = if (isMuxing) 0L else safeEta,
-                        isMuxing = isMuxing,
-                    )
-                    stateHolder.update(DownloadServiceState.Downloading(request.id, progress))
+                val outputPath =
+                    downloadVideo(request) { progressPercent, etaSeconds, speedText ->
+                        val speedBytes = parseSpeedToBytes(speedText)
+                        val safeProgress = progressPercent.coerceAtLeast(0f)
+                        val isMuxing = highWaterMark >= MUXING_DETECTION_THRESHOLD && safeProgress < highWaterMark
+                        highWaterMark = maxOf(highWaterMark, safeProgress)
+                        val displayProgress = if (isMuxing) 100f else safeProgress
+                        val safeEta = etaSeconds.coerceAtLeast(0L)
+                        val totalBytes = request.totalBytes
+                        val progress =
+                            DownloadProgress(
+                                requestId = request.id,
+                                progressPercent = displayProgress,
+                                downloadedBytes =
+                                    if (!isMuxing && totalBytes != null && totalBytes > 0) {
+                                        ((displayProgress / 100f) * totalBytes).toLong()
+                                    } else {
+                                        0L
+                                    },
+                                totalBytes = request.totalBytes,
+                                speedBytesPerSec = if (isMuxing) 0L else speedBytes,
+                                etaSeconds = if (isMuxing) 0L else safeEta,
+                                isMuxing = isMuxing,
+                            )
+                        stateHolder.update(DownloadServiceState.Downloading(request.id, progress))
 
-                    val updatedNotification = notificationManager.buildProgressNotification(
-                        notificationId = notificationId,
-                        requestId = request.id,
-                        videoTitle = request.videoTitle,
-                        progressPercent = if (isMuxing) 100 else displayProgress.toInt(),
-                        speedText = if (isMuxing) "" else speedText,
-                        etaText = if (isMuxing) "" else formatEta(safeEta),
-                    )
-                    notificationManager.updateNotification(notificationId, updatedNotification)
-                }
+                        val updatedNotification =
+                            notificationManager.buildProgressNotification(
+                                notificationId = notificationId,
+                                requestId = request.id,
+                                videoTitle = request.videoTitle,
+                                progressPercent = if (isMuxing) 100 else displayProgress.toInt(),
+                                speedText = if (isMuxing) "" else speedText,
+                                etaText = if (isMuxing) "" else formatEta(safeEta),
+                            )
+                        notificationManager.updateNotification(notificationId, updatedNotification)
+                    }
 
                 if (request.shareOnly) {
                     // Share mode: move to share temp dir, create FileProvider URI, skip MediaStore/Room
@@ -156,43 +174,49 @@ class DownloadService : Service() {
                         sourceFile.delete()
                     }
 
-                    val shareUri = FileProvider.getUriForFile(
-                        this@DownloadService,
-                        "$packageName.fileprovider",
-                        destFile,
-                    )
+                    val shareUri =
+                        FileProvider.getUriForFile(
+                            this@DownloadService,
+                            "$packageName.fileprovider",
+                            destFile,
+                        )
 
                     stateHolder.update(DownloadServiceState.Completed(request.id, shareUri.toString()))
                     notificationManager.cancelNotification(notificationId)
                 } else {
                     // Normal mode: save to MediaStore and Room
                     val ext = java.io.File(outputPath).extension.ifEmpty { "mp4" }
-                    val mimeType = if (request.isVideoOnly || ext == "mp4" || ext == "mkv" || ext == "webm") {
-                        "video/$ext"
-                    } else {
-                        "audio/$ext"
-                    }
-                    val savedUri = saveFileToMediaStore(
-                        outputPath,
-                        "${request.videoTitle}.$ext",
-                        mimeType,
-                    )
-
-                    val fileSizeBytes: Long? = try {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                            contentResolver.query(
-                                android.net.Uri.parse(savedUri),
-                                arrayOf(android.provider.OpenableColumns.SIZE),
-                                null, null, null,
-                            )?.use { cursor ->
-                                if (cursor.moveToFirst()) cursor.getLong(0).takeIf { it > 0 } else null
-                            }
+                    val mimeType =
+                        if (request.isVideoOnly || ext == "mp4" || ext == "mkv" || ext == "webm") {
+                            "video/$ext"
                         } else {
-                            java.io.File(savedUri).length().takeIf { it > 0 }
+                            "audio/$ext"
                         }
-                    } catch (_: Exception) {
-                        null
-                    }
+                    val savedUri =
+                        saveFileToMediaStore(
+                            outputPath,
+                            "${request.videoTitle}.$ext",
+                            mimeType,
+                        )
+
+                    val fileSizeBytes: Long? =
+                        try {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                contentResolver.query(
+                                    android.net.Uri.parse(savedUri),
+                                    arrayOf(android.provider.OpenableColumns.SIZE),
+                                    null,
+                                    null,
+                                    null,
+                                )?.use { cursor ->
+                                    if (cursor.moveToFirst()) cursor.getLong(0).takeIf { it > 0 } else null
+                                }
+                            } else {
+                                java.io.File(savedUri).length().takeIf { it > 0 }
+                            }
+                        } catch (_: Exception) {
+                            null
+                        }
 
                     saveDownloadRecord(
                         DownloadRecord(
@@ -312,10 +336,11 @@ class DownloadService : Service() {
         private const val TAG = "DownloadService"
         private const val MUXING_DETECTION_THRESHOLD = 95f
         const val SHARE_TEMP_DIR = "ytdl_share"
+
         // XOR mask to derive completion/error notification IDs from progress IDs without collision.
         // hashCode() returns values in [-2^31, 2^31-1]; XOR with this bit pattern flips the sign bit,
         // guaranteeing the result is always in a different half of the Int space.
-        private const val COMPLETION_ID_XOR = Int.MIN_VALUE  // 0x80000000
+        private const val COMPLETION_ID_XOR = Int.MIN_VALUE // 0x80000000
 
         const val ACTION_START_DOWNLOAD = "com.socialvideodownloader.action.START_DOWNLOAD"
         const val ACTION_CANCEL_DOWNLOAD = "com.socialvideodownloader.action.CANCEL_DOWNLOAD"

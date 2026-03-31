@@ -1,5 +1,6 @@
 package com.socialvideodownloader.shared.data.platform
 
+import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
@@ -15,6 +16,7 @@ import java.io.File
  * Uses MediaStore API for scoped storage access on Android 10+.
  * Files are saved to Downloads/SocialVideoDownloader/.
  */
+@SuppressLint("NewApi") // MediaStore.Downloads requires API 29+; callers gate on Build.VERSION_CODES.Q
 class AndroidFileStorage(
     private val context: Context,
 ) : PlatformFileStorage {

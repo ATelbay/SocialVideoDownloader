@@ -66,7 +66,7 @@ struct LibraryItemRow: View {
             .overlay(
                 Image(systemName: "play.rectangle.fill")
                     .font(.system(size: 32))
-                    .foregroundStyle(.svdOnSurfaceVariant)
+                    .foregroundColor(.svdOnSurfaceVariant)
             )
     }
 
@@ -89,7 +89,7 @@ struct LibraryItemRow: View {
 
                 Spacer(minLength: 0)
 
-                if let bytes = item.fileSizeBytes {
+                if let bytes = item.fileSizeBytes?.int64Value {
                     Text(formatFileSize(bytes))
                         .font(SVDFont.caption())
                         .foregroundColor(.svdOnSurfaceVariant)

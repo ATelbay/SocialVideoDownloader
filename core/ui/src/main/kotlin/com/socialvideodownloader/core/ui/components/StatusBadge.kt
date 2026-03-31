@@ -44,43 +44,53 @@ fun StatusBadge(
     status: DownloadStatus,
     modifier: Modifier = Modifier,
 ) {
-    val (containerColor, contentColor, label) = when (status) {
-        DownloadStatus.COMPLETED -> Triple(
-            SvdSuccessSoft,
-            SvdSuccess,
-            stringResource(R.string.status_completed),
-        )
-        DownloadStatus.FAILED -> Triple(
-            SvdErrorSoft,
-            SvdError,
-            stringResource(R.string.status_failed),
-        )
-        DownloadStatus.DOWNLOADING -> Triple(
-            SvdPrimarySoft,
-            SvdPrimaryStrong,
-            stringResource(R.string.status_downloading),
-        )
-        DownloadStatus.PENDING, DownloadStatus.QUEUED -> Triple(
-            SvdAccentSoft,
-            SvdAccent,
-            stringResource(
-                if (status == DownloadStatus.PENDING) R.string.status_pending
-                else R.string.status_queued,
-            ),
-        )
-        DownloadStatus.CANCELLED -> Triple(
-            SvdAccentSoft,
-            SvdAccent,
-            stringResource(R.string.status_cancelled),
-        )
-    }
+    val (containerColor, contentColor, label) =
+        when (status) {
+            DownloadStatus.COMPLETED ->
+                Triple(
+                    SvdSuccessSoft,
+                    SvdSuccess,
+                    stringResource(R.string.status_completed),
+                )
+            DownloadStatus.FAILED ->
+                Triple(
+                    SvdErrorSoft,
+                    SvdError,
+                    stringResource(R.string.status_failed),
+                )
+            DownloadStatus.DOWNLOADING ->
+                Triple(
+                    SvdPrimarySoft,
+                    SvdPrimaryStrong,
+                    stringResource(R.string.status_downloading),
+                )
+            DownloadStatus.PENDING, DownloadStatus.QUEUED ->
+                Triple(
+                    SvdAccentSoft,
+                    SvdAccent,
+                    stringResource(
+                        if (status == DownloadStatus.PENDING) {
+                            R.string.status_pending
+                        } else {
+                            R.string.status_queued
+                        },
+                    ),
+                )
+            DownloadStatus.CANCELLED ->
+                Triple(
+                    SvdAccentSoft,
+                    SvdAccent,
+                    stringResource(R.string.status_cancelled),
+                )
+        }
 
     Row(
-        modifier = modifier
-            .height(Spacing.StatusChipHeight)
-            .clip(AppShapesInstance.pill)
-            .background(containerColor)
-            .padding(horizontal = 10.dp),
+        modifier =
+            modifier
+                .height(Spacing.StatusChipHeight)
+                .clip(AppShapesInstance.pill)
+                .background(containerColor)
+                .padding(horizontal = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -89,10 +99,11 @@ fun StatusBadge(
         }
         Text(
             text = label,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
-            ),
+            style =
+                MaterialTheme.typography.labelSmall.copy(
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                ),
             color = contentColor,
         )
     }
@@ -104,17 +115,19 @@ private fun AnimatedSpinnerDot(color: Color) {
     val alpha by infiniteTransition.animateFloat(
         initialValue = 1f,
         targetValue = 0.2f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 600, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse,
-        ),
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(durationMillis = 600, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse,
+            ),
         label = "dot_alpha",
     )
 
     Box(
-        modifier = Modifier
-            .size(6.dp)
-            .clip(CircleShape)
-            .background(color.copy(alpha = alpha)),
+        modifier =
+            Modifier
+                .size(6.dp)
+                .clip(CircleShape)
+                .background(color.copy(alpha = alpha)),
     )
 }

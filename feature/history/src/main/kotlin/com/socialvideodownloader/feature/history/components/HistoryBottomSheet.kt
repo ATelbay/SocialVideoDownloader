@@ -30,7 +30,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.socialvideodownloader.core.ui.theme.AppShapesInstance
 import com.socialvideodownloader.core.ui.theme.SvdBorder
 import com.socialvideodownloader.core.ui.theme.SvdError
 import com.socialvideodownloader.core.ui.theme.SvdForeground
@@ -57,15 +56,16 @@ fun HistoryBottomSheet(
         containerColor = SvdSurface,
         dragHandle = {
             Box(
-                modifier = Modifier
-                    .padding(vertical = 12.dp)
-                    .width(40.dp)
-                    .height(4.dp)
-                    .alpha(0.5f)
-                    .background(
-                        color = SvdSubtleForeground,
-                        shape = RoundedCornerShape(2.dp),
-                    ),
+                modifier =
+                    Modifier
+                        .padding(vertical = 12.dp)
+                        .width(40.dp)
+                        .height(4.dp)
+                        .alpha(0.5f)
+                        .background(
+                            color = SvdSubtleForeground,
+                            shape = RoundedCornerShape(2.dp),
+                        ),
             )
         },
         modifier = modifier,
@@ -77,19 +77,21 @@ fun HistoryBottomSheet(
                 color = SvdForeground,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
             )
 
             HorizontalDivider(color = SvdBorder)
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(onClick = onCopyLink)
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onCopyLink)
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Link,
@@ -109,10 +111,11 @@ fun HistoryBottomSheet(
             if (showShare) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(onClick = onShare)
-                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable(onClick = onShare)
+                            .padding(horizontal = 16.dp, vertical = 16.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Share,
@@ -132,10 +135,11 @@ fun HistoryBottomSheet(
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(onClick = onDelete)
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onDelete)
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Delete,

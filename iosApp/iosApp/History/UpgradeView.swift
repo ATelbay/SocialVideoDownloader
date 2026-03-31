@@ -1,5 +1,4 @@
 import SwiftUI
-import shared_feature_history
 
 // MARK: - UpgradeView
 

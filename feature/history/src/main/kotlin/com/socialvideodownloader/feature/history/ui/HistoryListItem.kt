@@ -48,29 +48,32 @@ fun HistoryListItemRow(
     val context = LocalContext.current
 
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(AppShapesInstance.card)
-            .background(SvdSurface)
-            .border(1.dp, SvdBorder, AppShapesInstance.card)
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
-            .padding(Spacing.CardInnerPaddingCompact),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clip(AppShapesInstance.card)
+                .background(SvdSurface)
+                .border(1.dp, SvdBorder, AppShapesInstance.card)
+                .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+                .padding(Spacing.CardInnerPaddingCompact),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             // Thumbnail placeholder 72x72
             Box(
-                modifier = Modifier
-                    .size(Spacing.ThumbnailHistorySize)
-                    .clip(AppShapesInstance.thumbnail)
-                    .background(SvdSurfaceStrong),
+                modifier =
+                    Modifier
+                        .size(Spacing.ThumbnailHistorySize)
+                        .clip(AppShapesInstance.thumbnail)
+                        .background(SvdSurfaceStrong),
             ) {
                 AsyncImage(
                     model = item.thumbnailUrl,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .matchParentSize()
-                        .clip(AppShapesInstance.thumbnail),
+                    modifier =
+                        Modifier
+                            .matchParentSize()
+                            .clip(AppShapesInstance.thumbnail),
                 )
             }
 
@@ -90,9 +93,14 @@ fun HistoryListItemRow(
                     overflow = TextOverflow.Ellipsis,
                 )
 
-                val host = remember(item.sourceUrl) {
-                    try { android.net.Uri.parse(item.sourceUrl).host?.removePrefix("www.") } catch (_: Exception) { null }
-                }
+                val host =
+                    remember(item.sourceUrl) {
+                        try {
+                            android.net.Uri.parse(item.sourceUrl).host?.removePrefix("www.")
+                        } catch (_: Exception) {
+                            null
+                        }
+                    }
                 if (host != null) {
                     Text(
                         text = host,
@@ -109,11 +117,12 @@ fun HistoryListItemRow(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     Text(
-                        text = DateUtils.getRelativeTimeSpanString(
-                            item.createdAt,
-                            System.currentTimeMillis(),
-                            DateUtils.MINUTE_IN_MILLIS,
-                        ).toString(),
+                        text =
+                            DateUtils.getRelativeTimeSpanString(
+                                item.createdAt,
+                                System.currentTimeMillis(),
+                                DateUtils.MINUTE_IN_MILLIS,
+                            ).toString(),
                         style = MaterialTheme.typography.labelMedium,
                         color = SvdMutedForeground,
                     )

@@ -1,6 +1,5 @@
 import SwiftUI
-import shared_feature_download
-import shared_core_domain
+@preconcurrency import shared_feature_library
 
 /// URL input screen — shown when the download state is [DownloadUiState.Idle].
 ///
@@ -9,7 +8,7 @@ import shared_core_domain
 struct UrlInputView: View {
 
     let prefillUrl: String?
-    let existingDownload: ExistingDownload?
+    let existingDownload: DomainExistingDownload?
     let onIntent: (DownloadIntent) -> Void
 
     @State private var urlText: String = ""
@@ -17,7 +16,7 @@ struct UrlInputView: View {
 
     init(
         prefillUrl: String?,
-        existingDownload: ExistingDownload?,
+        existingDownload: DomainExistingDownload?,
         onIntent: @escaping (DownloadIntent) -> Void
     ) {
         self.prefillUrl = prefillUrl
@@ -47,7 +46,7 @@ struct UrlInputView: View {
         VStack(spacing: 8) {
             Image(systemName: "arrow.down.circle.fill")
                 .font(.system(size: 52))
-                .foregroundStyle(.svdPrimary)
+                .foregroundColor(.svdPrimary)
             Text("Paste a video URL")
                 .font(SVDFont.headlineLarge())
                 .foregroundColor(.svdOnSurface)
@@ -124,7 +123,7 @@ struct UrlInputView: View {
 
     // MARK: - Existing download banner
 
-    private func existingDownloadBanner(existing: ExistingDownload) -> some View {
+    private func existingDownloadBanner(existing: DomainExistingDownload) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "checkmark.circle.fill")
@@ -143,7 +142,7 @@ struct UrlInputView: View {
             }
 
             HStack(spacing: 12) {
-                if existing.isFileAccessible {
+                if FileManager.default.fileExists(atPath: existing.contentUri) {
                     Button {
                         onIntent(DownloadIntentOpenExistingClicked())
                     } label: {

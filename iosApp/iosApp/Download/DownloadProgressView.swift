@@ -1,12 +1,12 @@
 import SwiftUI
-import shared_core_domain
+@preconcurrency import shared_feature_library
 
 /// Progress screen — shown when the download state is [DownloadUiState.Downloading].
 struct DownloadProgressView: View {
 
     let videoTitle: String
     let thumbnailUrl: String?
-    let progress: DownloadProgress?
+    let progress: DomainDownloadProgress?
     let onCancel: () -> Void
 
     var body: some View {
@@ -94,7 +94,7 @@ struct DownloadProgressView: View {
         }
     }
 
-    private func statusLine(for p: DownloadProgress) -> String {
+    private func statusLine(for p: DomainDownloadProgress) -> String {
         var parts: [String] = []
         if p.speedBytesPerSec > 0 {
             parts.append(formatSpeed(p.speedBytesPerSec))
@@ -102,7 +102,7 @@ struct DownloadProgressView: View {
         if p.etaSeconds > 0 {
             parts.append("ETA \(formatEta(p.etaSeconds))")
         }
-        if let total = p.totalBytes, total > 0 {
+        if let total = p.totalBytes?.int64Value, total > 0 {
             parts.append("\(formatBytes(p.downloadedBytes)) / \(formatBytes(total))")
         }
         return parts.joined(separator: " · ")

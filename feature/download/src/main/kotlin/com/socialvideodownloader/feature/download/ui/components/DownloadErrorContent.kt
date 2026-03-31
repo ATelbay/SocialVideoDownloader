@@ -46,9 +46,10 @@ fun DownloadErrorContent(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Box(
-                modifier = Modifier
-                    .size(Spacing.HeroIconSize)
-                    .background(SvdErrorSoft, CircleShape),
+                modifier =
+                    Modifier
+                        .size(Spacing.HeroIconSize)
+                        .background(SvdErrorSoft, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(

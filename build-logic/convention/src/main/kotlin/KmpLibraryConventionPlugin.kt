@@ -30,8 +30,19 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
                 jvmToolchain(javaVersion)
 
                 androidTarget()
-                iosArm64()
-                iosSimulatorArm64()
+                val frameworkBaseName = project.path.removePrefix(":").replace(":", "_").replace("-", "_")
+                iosArm64 {
+                    binaries.framework {
+                        baseName = frameworkBaseName
+                        isStatic = true
+                    }
+                }
+                iosSimulatorArm64 {
+                    binaries.framework {
+                        baseName = frameworkBaseName
+                        isStatic = true
+                    }
+                }
 
                 sourceSets.apply {
                     getByName("commonMain") {
