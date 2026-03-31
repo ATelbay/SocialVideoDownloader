@@ -47,13 +47,14 @@ fun ExtractingContent(
     ) {
         // URL bar
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(Spacing.InputHeight)
-                .clip(AppShapesInstance.control)
-                .background(SvdSurface)
-                .border(1.dp, SvdBorder, AppShapesInstance.control)
-                .padding(horizontal = 16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(Spacing.InputHeight)
+                    .clip(AppShapesInstance.control)
+                    .background(SvdSurface)
+                    .border(1.dp, SvdBorder, AppShapesInstance.control)
+                    .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -93,12 +94,13 @@ fun ExtractingContent(
 
         // Cancel button — neutral borderStrong style
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(Spacing.SecondaryButtonHeight)
-                .clip(AppShapesInstance.control)
-                .border(1.dp, SvdBorderStrong, AppShapesInstance.control)
-                .clickable(onClick = onCancelClicked),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(Spacing.SecondaryButtonHeight)
+                    .clip(AppShapesInstance.control)
+                    .border(1.dp, SvdBorderStrong, AppShapesInstance.control)
+                    .clickable(onClick = onCancelClicked),
             contentAlignment = Alignment.Center,
         ) {
             Text(

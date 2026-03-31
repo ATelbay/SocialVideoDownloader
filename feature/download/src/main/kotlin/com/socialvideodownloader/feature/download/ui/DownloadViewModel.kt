@@ -9,13 +9,12 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.socialvideodownloader.core.domain.di.IoDispatcher
+import com.socialvideodownloader.core.domain.usecase.ExtractVideoInfoUseCase
+import com.socialvideodownloader.core.domain.usecase.FindExistingDownloadUseCase
 import com.socialvideodownloader.feature.download.service.DownloadService
 import com.socialvideodownloader.feature.download.service.DownloadServiceState
 import com.socialvideodownloader.feature.download.service.DownloadServiceStateHolder
 import com.socialvideodownloader.shared.data.platform.AndroidDownloadManager
-import com.socialvideodownloader.shared.data.platform.DownloadServiceState as SharedDownloadServiceState
-import com.socialvideodownloader.core.domain.usecase.ExtractVideoInfoUseCase
-import com.socialvideodownloader.core.domain.usecase.FindExistingDownloadUseCase
 import com.socialvideodownloader.shared.feature.download.DownloadEvent
 import com.socialvideodownloader.shared.feature.download.DownloadIntent
 import com.socialvideodownloader.shared.feature.download.DownloadUiState
@@ -28,6 +27,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.socialvideodownloader.shared.data.platform.DownloadServiceState as SharedDownloadServiceState
 
 /**
  * Android thin delegate ViewModel for the download screen.
@@ -42,130 +42,139 @@ import javax.inject.Inject
  * any changes — the public API surface is identical to the old ViewModel.
  */
 @HiltViewModel
-class DownloadViewModel @Inject constructor(
-    private val extractVideoInfo: ExtractVideoInfoUseCase,
-    private val findExistingDownload: FindExistingDownloadUseCase,
-    private val serviceStateHolder: DownloadServiceStateHolder,
-    @ApplicationContext private val context: Context,
-    private val savedStateHandle: SavedStateHandle,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-    private val androidDownloadManager: AndroidDownloadManager,
-) : ViewModel() {
+class DownloadViewModel
+    @Inject
+    constructor(
+        private val extractVideoInfo: ExtractVideoInfoUseCase,
+        private val findExistingDownload: FindExistingDownloadUseCase,
+        private val serviceStateHolder: DownloadServiceStateHolder,
+        @ApplicationContext private val context: Context,
+        private val savedStateHandle: SavedStateHandle,
+        @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+        private val androidDownloadManager: AndroidDownloadManager,
+    ) : ViewModel() {
+        private val shared =
+            SharedDownloadViewModel(
+                coroutineScope = viewModelScope,
+                extractVideoInfo = extractVideoInfo,
+                findExistingDownload = findExistingDownload,
+                platformDownloadManager = androidDownloadManager,
+                initialUrl = savedStateHandle["initialUrl"],
+                savedUrl = savedStateHandle["currentUrl"],
+            )
 
-    private val shared = SharedDownloadViewModel(
-        coroutineScope = viewModelScope,
-        extractVideoInfo = extractVideoInfo,
-        findExistingDownload = findExistingDownload,
-        platformDownloadManager = androidDownloadManager,
-        initialUrl = savedStateHandle["initialUrl"],
-        savedUrl = savedStateHandle["currentUrl"],
-    )
+        val uiState: StateFlow<DownloadUiState> = shared.uiState
+        val events: Flow<DownloadEvent> = shared.events
 
-    val uiState: StateFlow<DownloadUiState> = shared.uiState
-    val events: Flow<DownloadEvent> = shared.events
-
-    init {
-        // Wire notification permission check back through the Android layer
-        shared.platformDelegate = object : SharedDownloadViewModel.PlatformDelegate {
-            override fun checkNotificationPermission(pendingShareOnly: Boolean) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    val hasPermission = ContextCompat.checkSelfPermission(
-                        context,
-                        Manifest.permission.POST_NOTIFICATIONS,
-                    ) == PackageManager.PERMISSION_GRANTED
-                    if (!hasPermission) {
-                        // Ask the shared VM to emit RequestNotificationPermission event.
-                        // The UI will launch the system permission dialog; after the user
-                        // responds, the composable calls viewModel.onNotificationPermissionResult().
-                        shared.emitRequestNotificationPermission()
-                        return
+        init {
+            // Wire notification permission check back through the Android layer
+            shared.platformDelegate =
+                object : SharedDownloadViewModel.PlatformDelegate {
+                    override fun checkNotificationPermission(pendingShareOnly: Boolean) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            val hasPermission =
+                                ContextCompat.checkSelfPermission(
+                                    context,
+                                    Manifest.permission.POST_NOTIFICATIONS,
+                                ) == PackageManager.PERMISSION_GRANTED
+                            if (!hasPermission) {
+                                // Ask the shared VM to emit RequestNotificationPermission event.
+                                // The UI will launch the system permission dialog; after the user
+                                // responds, the composable calls viewModel.onNotificationPermissionResult().
+                                shared.emitRequestNotificationPermission()
+                                return
+                            }
+                        }
+                        shared.startDownload(shareOnly = pendingShareOnly)
                     }
                 }
-                shared.startDownload(shareOnly = pendingShareOnly)
+
+            // Sync DownloadServiceStateHolder → AndroidDownloadManager on every state change.
+            // This bridges the Android foreground service's state into the shared VM.
+            viewModelScope.launch {
+                serviceStateHolder.state.collect { serviceState ->
+                    androidDownloadManager.updateState(mapServiceState(serviceState))
+                }
             }
         }
 
-        // Sync DownloadServiceStateHolder → AndroidDownloadManager on every state change.
-        // This bridges the Android foreground service's state into the shared VM.
-        viewModelScope.launch {
-            serviceStateHolder.state.collect { serviceState ->
-                androidDownloadManager.updateState(mapServiceState(serviceState))
+        fun onIntent(intent: DownloadIntent) {
+            // Persist the URL changes via SavedStateHandle for process-death survival.
+            if (intent is DownloadIntent.UrlChanged) {
+                savedStateHandle["currentUrl"] = intent.url
+            }
+            shared.onIntent(intent)
+        }
+
+        /**
+         * Called by the Activity/composable after the POST_NOTIFICATIONS permission result.
+         * Forwards to the shared VM which decides whether to proceed or show rationale.
+         */
+        fun onNotificationPermissionResult(granted: Boolean) {
+            shared.onNotificationPermissionResult(granted)
+        }
+
+        override fun onCleared() {
+            // Only sweep leftover share temp files when the service is not active.
+            if (serviceStateHolder.state.value is DownloadServiceState.Idle) {
+                CoroutineScope(ioDispatcher).launch {
+                    java.io.File(context.cacheDir, DownloadService.SHARE_TEMP_DIR).deleteRecursively()
+                }
+            }
+            // Do NOT call shared.cleanup() — viewModelScope is cancelled by super.onCleared(),
+            // and SharedDownloadViewModel uses the same scope.
+            super.onCleared()
+        }
+
+        private fun mapServiceState(serviceState: DownloadServiceState): SharedDownloadServiceState {
+            return when (serviceState) {
+                is DownloadServiceState.Idle -> SharedDownloadServiceState.Idle
+                is DownloadServiceState.Queued ->
+                    SharedDownloadServiceState.Queued(
+                        requestId = serviceState.pendingIds.firstOrNull() ?: "",
+                        videoTitle = "",
+                    )
+                is DownloadServiceState.Downloading ->
+                    SharedDownloadServiceState.Downloading(
+                        requestId = serviceState.requestId,
+                        progress = serviceState.progress,
+                    )
+                is DownloadServiceState.Completed ->
+                    SharedDownloadServiceState.Completed(
+                        requestId = serviceState.requestId,
+                        filePath = serviceState.filePath,
+                        fileUri = serviceState.filePath,
+                    )
+                is DownloadServiceState.Failed ->
+                    SharedDownloadServiceState.Failed(
+                        requestId = serviceState.requestId,
+                        error = parseErrorType(serviceState.error),
+                    )
+                is DownloadServiceState.Cancelled ->
+                    SharedDownloadServiceState.Cancelled(
+                        requestId = serviceState.requestId,
+                    )
+            }
+        }
+
+        private fun parseErrorType(error: String): com.socialvideodownloader.shared.data.platform.DownloadErrorType {
+            val lower = error.lowercase()
+            return when {
+                "network" in lower || "connect" in lower || "timeout" in lower ->
+                    com.socialvideodownloader.shared.data.platform.DownloadErrorType.NETWORK_ERROR
+                "unsupported" in lower || "not supported" in lower ->
+                    com.socialvideodownloader.shared.data.platform.DownloadErrorType.UNSUPPORTED_URL
+                "storage" in lower || "no space" in lower || "disk" in lower ->
+                    com.socialvideodownloader.shared.data.platform.DownloadErrorType.STORAGE_FULL
+                "extract" in lower ->
+                    com.socialvideodownloader.shared.data.platform.DownloadErrorType.EXTRACTION_FAILED
+                "server" in lower || "503" in lower || "502" in lower ->
+                    com.socialvideodownloader.shared.data.platform.DownloadErrorType.SERVER_UNAVAILABLE
+                else ->
+                    com.socialvideodownloader.shared.data.platform.DownloadErrorType.DOWNLOAD_FAILED
             }
         }
     }
-
-    fun onIntent(intent: DownloadIntent) {
-        // Persist the URL changes via SavedStateHandle for process-death survival.
-        if (intent is DownloadIntent.UrlChanged) {
-            savedStateHandle["currentUrl"] = intent.url
-        }
-        shared.onIntent(intent)
-    }
-
-    /**
-     * Called by the Activity/composable after the POST_NOTIFICATIONS permission result.
-     * Forwards to the shared VM which decides whether to proceed or show rationale.
-     */
-    fun onNotificationPermissionResult(granted: Boolean) {
-        shared.onNotificationPermissionResult(granted)
-    }
-
-    override fun onCleared() {
-        // Only sweep leftover share temp files when the service is not active.
-        if (serviceStateHolder.state.value is DownloadServiceState.Idle) {
-            CoroutineScope(ioDispatcher).launch {
-                java.io.File(context.cacheDir, DownloadService.SHARE_TEMP_DIR).deleteRecursively()
-            }
-        }
-        // Do NOT call shared.cleanup() — viewModelScope is cancelled by super.onCleared(),
-        // and SharedDownloadViewModel uses the same scope.
-        super.onCleared()
-    }
-
-    private fun mapServiceState(serviceState: DownloadServiceState): SharedDownloadServiceState {
-        return when (serviceState) {
-            is DownloadServiceState.Idle -> SharedDownloadServiceState.Idle
-            is DownloadServiceState.Queued -> SharedDownloadServiceState.Queued(
-                requestId = serviceState.pendingIds.firstOrNull() ?: "",
-                videoTitle = "",
-            )
-            is DownloadServiceState.Downloading -> SharedDownloadServiceState.Downloading(
-                requestId = serviceState.requestId,
-                progress = serviceState.progress,
-            )
-            is DownloadServiceState.Completed -> SharedDownloadServiceState.Completed(
-                requestId = serviceState.requestId,
-                filePath = serviceState.filePath,
-                fileUri = serviceState.filePath,
-            )
-            is DownloadServiceState.Failed -> SharedDownloadServiceState.Failed(
-                requestId = serviceState.requestId,
-                error = parseErrorType(serviceState.error),
-            )
-            is DownloadServiceState.Cancelled -> SharedDownloadServiceState.Cancelled(
-                requestId = serviceState.requestId,
-            )
-        }
-    }
-
-    private fun parseErrorType(error: String): com.socialvideodownloader.shared.data.platform.DownloadErrorType {
-        val lower = error.lowercase()
-        return when {
-            "network" in lower || "connect" in lower || "timeout" in lower ->
-                com.socialvideodownloader.shared.data.platform.DownloadErrorType.NETWORK_ERROR
-            "unsupported" in lower || "not supported" in lower ->
-                com.socialvideodownloader.shared.data.platform.DownloadErrorType.UNSUPPORTED_URL
-            "storage" in lower || "no space" in lower || "disk" in lower ->
-                com.socialvideodownloader.shared.data.platform.DownloadErrorType.STORAGE_FULL
-            "extract" in lower ->
-                com.socialvideodownloader.shared.data.platform.DownloadErrorType.EXTRACTION_FAILED
-            "server" in lower || "503" in lower || "502" in lower ->
-                com.socialvideodownloader.shared.data.platform.DownloadErrorType.SERVER_UNAVAILABLE
-            else ->
-                com.socialvideodownloader.shared.data.platform.DownloadErrorType.DOWNLOAD_FAILED
-        }
-    }
-}
 
 // Re-export DownloadEvent as a typealias so the existing Compose UI layer
 // can import it from com.socialvideodownloader.feature.download.ui without changes.

@@ -21,7 +21,6 @@ import org.koin.core.context.startKoin
  * so calling initKoin() first in onCreate() is sufficient.
  */
 object KoinInitializer {
-
     fun init(context: Context) {
         // Set the Android context for the shared:data database factory
         androidContext = context.applicationContext

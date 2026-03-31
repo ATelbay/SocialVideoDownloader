@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.map
 
 class FakeDownloadRepository : DownloadRepository {
-
     val recordsFlow = MutableSharedFlow<List<DownloadRecord>>(replay = 1)
 
     override fun getAll(): Flow<List<DownloadRecord>> = recordsFlow
@@ -20,8 +19,7 @@ class FakeDownloadRepository : DownloadRepository {
     override suspend fun getCompletedSnapshot(): List<DownloadRecord> =
         recordsFlow.replayCache.firstOrNull()?.filter { it.status == DownloadStatus.COMPLETED } ?: emptyList()
 
-    override suspend fun getById(id: Long): DownloadRecord? =
-        recordsFlow.replayCache.firstOrNull()?.find { it.id == id }
+    override suspend fun getById(id: Long): DownloadRecord? = recordsFlow.replayCache.firstOrNull()?.find { it.id == id }
 
     override suspend fun insert(record: DownloadRecord): Long {
         val current = recordsFlow.replayCache.firstOrNull() ?: emptyList()

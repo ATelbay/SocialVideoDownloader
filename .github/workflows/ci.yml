@@ -101,7 +101,7 @@ jobs:
           name: ktlint-reports
           path: '**/build/reports/ktlint/'
 
-  android-test:
+  shared-test:
     needs: changes
     if: needs.changes.outputs.android == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest

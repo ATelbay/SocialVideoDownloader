@@ -68,11 +68,12 @@ fun DownloadScreen(
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-    ) { granted ->
-        viewModel.onNotificationPermissionResult(granted)
-    }
+    val permissionLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestPermission(),
+        ) { granted ->
+            viewModel.onNotificationPermissionResult(granted)
+        }
 
     LaunchedEffect(initialUrl) {
         if (initialUrl != null) {
@@ -84,20 +85,22 @@ fun DownloadScreen(
         viewModel.events.collect { event ->
             when (event) {
                 is DownloadEvent.OpenFile -> {
-                    val intent = Intent(Intent.ACTION_VIEW).apply {
-                        setDataAndType(Uri.parse(event.filePath), "video/*")
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }
+                    val intent =
+                        Intent(Intent.ACTION_VIEW).apply {
+                            setDataAndType(Uri.parse(event.filePath), "video/*")
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
                     context.startActivity(Intent.createChooser(intent, null))
                 }
                 is DownloadEvent.ShareFile -> {
                     val shareUri = Uri.parse(event.filePath)
-                    val intent = Intent(Intent.ACTION_SEND).apply {
-                        type = "video/*"
-                        putExtra(Intent.EXTRA_STREAM, shareUri)
-                        clipData = ClipData.newRawUri(null, shareUri)
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }
+                    val intent =
+                        Intent(Intent.ACTION_SEND).apply {
+                            type = "video/*"
+                            putExtra(Intent.EXTRA_STREAM, shareUri)
+                            clipData = ClipData.newRawUri(null, shareUri)
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
                     context.startActivity(Intent.createChooser(intent, null))
                 }
                 is DownloadEvent.ShowSnackbarMessage -> {
@@ -192,18 +195,20 @@ private fun DownloadScreenContent(
                     .togetherWith(fadeOut(tween(200)))
                     .using(SizeTransform(clip = false))
             },
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState()),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState()),
             label = "downloadStateTransition",
         ) { targetState ->
-            val nonIdlePadding = Modifier.padding(
-                top = 8.dp,
-                start = Spacing.ScreenPadding,
-                end = Spacing.ScreenPadding,
-                bottom = Spacing.ScreenPadding,
-            )
+            val nonIdlePadding =
+                Modifier.padding(
+                    top = 8.dp,
+                    start = Spacing.ScreenPadding,
+                    end = Spacing.ScreenPadding,
+                    bottom = Spacing.ScreenPadding,
+                )
             when (targetState) {
                 is DownloadUiState.Idle -> {
                     IdleContent(

@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.socialvideodownloader.core.domain.model.DownloadProgress
 import com.socialvideodownloader.core.ui.theme.AppShapesInstance
+import com.socialvideodownloader.core.ui.theme.StatsValue
 import com.socialvideodownloader.core.ui.theme.SvdBorder
 import com.socialvideodownloader.core.ui.theme.SvdBorderStrong
 import com.socialvideodownloader.core.ui.theme.SvdForeground
@@ -36,7 +37,6 @@ import com.socialvideodownloader.core.ui.theme.SvdPrimary
 import com.socialvideodownloader.core.ui.theme.SvdPrimaryStrong
 import com.socialvideodownloader.core.ui.theme.SvdSurfaceAlt
 import com.socialvideodownloader.core.ui.theme.SvdSurfaceStrong
-import com.socialvideodownloader.core.ui.theme.StatsValue
 import com.socialvideodownloader.core.ui.tokens.Spacing
 import com.socialvideodownloader.feature.download.R
 
@@ -58,12 +58,13 @@ fun DownloadProgressContent(
     ) {
         // Progress card
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(AppShapesInstance.cardLg)
-                .background(SvdSurfaceAlt)
-                .border(1.dp, SvdBorder, AppShapesInstance.cardLg)
-                .padding(Spacing.ProgressCardPadding),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .clip(AppShapesInstance.cardLg)
+                    .background(SvdSurfaceAlt)
+                    .border(1.dp, SvdBorder, AppShapesInstance.cardLg)
+                    .padding(Spacing.ProgressCardPadding),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
@@ -76,11 +77,12 @@ fun DownloadProgressContent(
 
             // Time estimate
             Text(
-                text = if (progress.isMuxing) {
-                    stringResource(R.string.download_finalizing_status)
-                } else {
-                    stringResource(R.string.download_downloading_status)
-                },
+                text =
+                    if (progress.isMuxing) {
+                        stringResource(R.string.download_finalizing_status)
+                    } else {
+                        stringResource(R.string.download_downloading_status)
+                    },
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                 color = SvdMutedForeground,
             )
@@ -88,27 +90,30 @@ fun DownloadProgressContent(
             // Progress bar
             if (progress.isMuxing) {
                 LinearProgressIndicator(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(Spacing.ProgressTrackHeight)
-                        .clip(AppShapesInstance.pill),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(Spacing.ProgressTrackHeight)
+                            .clip(AppShapesInstance.pill),
                     color = SvdPrimary,
                     trackColor = SvdSurfaceStrong,
                 )
             } else {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(Spacing.ProgressTrackHeight)
-                        .clip(AppShapesInstance.pill)
-                        .background(SvdSurfaceStrong),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(Spacing.ProgressTrackHeight)
+                            .clip(AppShapesInstance.pill)
+                            .background(SvdSurfaceStrong),
                 ) {
                     if (animatedProgress > 0f) {
                         Box(
-                            modifier = Modifier
-                                .fillMaxWidth(animatedProgress)
-                                .fillMaxHeight()
-                                .background(SvdPrimary, AppShapesInstance.pill),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth(animatedProgress)
+                                    .fillMaxHeight()
+                                    .background(SvdPrimary, AppShapesInstance.pill),
                         )
                     }
                 }
@@ -134,20 +139,22 @@ fun DownloadProgressContent(
 
         // Cancel button — neutral borderStrong style
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(Spacing.SecondaryButtonHeight)
-                .clip(AppShapesInstance.control)
-                .border(1.dp, SvdBorderStrong, AppShapesInstance.control)
-                .clickable(onClick = onCancelClicked),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(Spacing.SecondaryButtonHeight)
+                    .clip(AppShapesInstance.control)
+                    .border(1.dp, SvdBorderStrong, AppShapesInstance.control)
+                    .clickable(onClick = onCancelClicked),
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = stringResource(R.string.download_cancel_download),
-                style = MaterialTheme.typography.labelLarge.copy(
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                ),
+                style =
+                    MaterialTheme.typography.labelLarge.copy(
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    ),
                 color = SvdForeground,
             )
         }

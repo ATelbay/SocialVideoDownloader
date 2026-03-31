@@ -25,10 +25,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.socialvideodownloader.core.ui.components.SvdTopBar
 import com.socialvideodownloader.core.ui.theme.SvdBg
-import com.socialvideodownloader.core.ui.util.openVideo
-import com.socialvideodownloader.core.ui.util.shareVideo
 import com.socialvideodownloader.core.ui.theme.SvdPrimary
 import com.socialvideodownloader.core.ui.tokens.Spacing
+import com.socialvideodownloader.core.ui.util.openVideo
+import com.socialvideodownloader.core.ui.util.shareVideo
 import com.socialvideodownloader.feature.library.R
 import com.socialvideodownloader.feature.library.ui.components.LibraryEmptyState
 import com.socialvideodownloader.feature.library.ui.components.LibraryListItemRow
@@ -66,12 +66,13 @@ fun LibraryScreen(
                     }
                 }
                 is LibraryEffect.ShowMessage -> {
-                    val msgRes = when (effect.messageType) {
-                        LibraryMessageType.DELETE_SUCCESS -> R.string.library_deleted
-                        LibraryMessageType.FILE_NOT_FOUND -> R.string.library_open_error
-                        LibraryMessageType.SHARE_ERROR -> R.string.library_share_error
-                        LibraryMessageType.OPEN_ERROR -> R.string.library_open_error
-                    }
+                    val msgRes =
+                        when (effect.messageType) {
+                            LibraryMessageType.DELETE_SUCCESS -> R.string.library_deleted
+                            LibraryMessageType.FILE_NOT_FOUND -> R.string.library_open_error
+                            LibraryMessageType.SHARE_ERROR -> R.string.library_share_error
+                            LibraryMessageType.OPEN_ERROR -> R.string.library_open_error
+                        }
                     snackbarHostState.showSnackbar(context.getString(msgRes))
                 }
             }
@@ -90,9 +91,10 @@ fun LibraryScreen(
         when (val state = uiState) {
             is LibraryUiState.Loading -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding),
                     contentAlignment = Alignment.Center,
                 ) {
                     CircularProgressIndicator(color = SvdPrimary)
@@ -101,9 +103,10 @@ fun LibraryScreen(
 
             is LibraryUiState.Empty -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding),
                     contentAlignment = Alignment.Center,
                 ) {
                     LibraryEmptyState(onNavigateToDownload = onNavigateToDownload)
@@ -112,15 +115,17 @@ fun LibraryScreen(
 
             is LibraryUiState.Content -> {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    contentPadding = PaddingValues(
-                        top = Spacing.ContentTopPadding,
-                        start = Spacing.ScreenPadding,
-                        end = Spacing.ScreenPadding,
-                        bottom = Spacing.ContentBottomPadding,
-                    ),
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding),
+                    contentPadding =
+                        PaddingValues(
+                            top = Spacing.ContentTopPadding,
+                            start = Spacing.ScreenPadding,
+                            end = Spacing.ScreenPadding,
+                            bottom = Spacing.ContentBottomPadding,
+                        ),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     items(state.items, key = { it.id }) { item ->

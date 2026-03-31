@@ -30,20 +30,22 @@ fun SecondaryButton(
     enabled: Boolean = true,
 ) {
     Box(
-        modifier = modifier
-            .height(Spacing.PrimaryButtonHeight)
-            .clip(AppShapesInstance.control)
-            .alpha(if (enabled) 1f else 0.5f)
-            .border(1.dp, SvdBorder, AppShapesInstance.control)
-            .clickable(enabled = enabled, onClick = onClick),
+        modifier =
+            modifier
+                .height(Spacing.PrimaryButtonHeight)
+                .clip(AppShapesInstance.control)
+                .alpha(if (enabled) 1f else 0.5f)
+                .border(1.dp, SvdBorder, AppShapesInstance.control)
+                .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.labelLarge.copy(
-                letterSpacing = 0.6.sp,
-                color = SvdForeground,
-            ),
+            style =
+                MaterialTheme.typography.labelLarge.copy(
+                    letterSpacing = 0.6.sp,
+                    color = SvdForeground,
+                ),
         )
     }
 }

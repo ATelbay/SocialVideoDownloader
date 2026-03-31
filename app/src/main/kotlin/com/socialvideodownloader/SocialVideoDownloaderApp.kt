@@ -5,9 +5,6 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.util.Log
 import com.google.firebase.FirebaseApp
-import com.yausername.aria2c.Aria2c
-import com.yausername.ffmpeg.FFmpeg
-import com.yausername.youtubedl_android.YoutubeDL
 import com.socialvideodownloader.core.domain.di.IoDispatcher
 import com.socialvideodownloader.core.domain.repository.BillingRepository
 import com.socialvideodownloader.core.domain.repository.CloudBackupRepository
@@ -15,6 +12,9 @@ import com.socialvideodownloader.core.domain.sync.BackupPreferences
 import com.socialvideodownloader.core.domain.sync.CloudAuthService
 import com.socialvideodownloader.di.KoinInitializer
 import com.socialvideodownloader.feature.download.service.DownloadNotificationManager
+import com.yausername.aria2c.Aria2c
+import com.yausername.ffmpeg.FFmpeg
+import com.yausername.youtubedl_android.YoutubeDL
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -23,7 +23,6 @@ import javax.inject.Inject
 
 @HiltAndroidApp
 class SocialVideoDownloaderApp : Application() {
-
     @Inject
     @IoDispatcher
     lateinit var ioDispatcher: kotlinx.coroutines.CoroutineDispatcher
@@ -56,13 +55,14 @@ class SocialVideoDownloaderApp : Application() {
     }
 
     private fun createNotificationChannels() {
-        val channel = NotificationChannel(
-            DownloadNotificationManager.CHANNEL_ID,
-            getString(R.string.download_notification_channel_name),
-            NotificationManager.IMPORTANCE_LOW,
-        ).apply {
-            description = getString(R.string.download_notification_channel_description)
-        }
+        val channel =
+            NotificationChannel(
+                DownloadNotificationManager.CHANNEL_ID,
+                getString(R.string.download_notification_channel_name),
+                NotificationManager.IMPORTANCE_LOW,
+            ).apply {
+                description = getString(R.string.download_notification_channel_description)
+            }
         val notificationManager = getSystemService(NotificationManager::class.java)
         notificationManager.createNotificationChannel(channel)
     }

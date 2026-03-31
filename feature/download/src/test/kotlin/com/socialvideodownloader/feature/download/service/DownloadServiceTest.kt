@@ -1,14 +1,15 @@
 package com.socialvideodownloader.feature.download.service
 
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
 class DownloadServiceTest {
-
     @Test
-    fun `cancel cleanup deletes all files in ytdl_downloads cache directory`(@TempDir tempDir: File) {
+    fun `cancel cleanup deletes all files in ytdl_downloads cache directory`(
+        @TempDir tempDir: File,
+    ) {
         // Simulate cache directory with partial download files
         val cacheDir = File(tempDir, "ytdl_downloads").apply { mkdirs() }
         File(cacheDir, "partial_video.part").writeText("partial data")

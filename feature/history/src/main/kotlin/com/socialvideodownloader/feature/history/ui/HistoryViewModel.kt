@@ -34,47 +34,50 @@ import javax.inject.Inject
  * the Billing flow requires an Android Activity reference.
  */
 @HiltViewModel
-class HistoryViewModel @Inject constructor(
-    private val downloadRepository: DownloadRepository,
-    private val fileManager: FileAccessManager,
-    private val observeCloudCapacity: ObserveCloudCapacityUseCase,
-    private val billingRepository: BillingRepository,
-    private val enableCloudBackupUseCase: EnableCloudBackupUseCase,
-    private val disableCloudBackupUseCase: DisableCloudBackupUseCase,
-    private val syncManager: SyncManager,
-    private val backupPreferences: BackupPreferences,
-    private val restoreFromCloudUseCase: RestoreFromCloudUseCase,
-    private val cloudAuthService: CloudAuthService,
-    private val clipboard: PlatformClipboard,
-) : ViewModel() {
+class HistoryViewModel
+    @Inject
+    constructor(
+        private val downloadRepository: DownloadRepository,
+        private val fileManager: FileAccessManager,
+        private val observeCloudCapacity: ObserveCloudCapacityUseCase,
+        private val billingRepository: BillingRepository,
+        private val enableCloudBackupUseCase: EnableCloudBackupUseCase,
+        private val disableCloudBackupUseCase: DisableCloudBackupUseCase,
+        private val syncManager: SyncManager,
+        private val backupPreferences: BackupPreferences,
+        private val restoreFromCloudUseCase: RestoreFromCloudUseCase,
+        private val cloudAuthService: CloudAuthService,
+        private val clipboard: PlatformClipboard,
+    ) : ViewModel() {
+        private val shared =
+            SharedHistoryViewModel(
+                coroutineScope = viewModelScope,
+                downloadRepository = downloadRepository,
+                fileManager = fileManager,
+                deleteHistoryItemUseCase =
+                    DeleteHistoryItemUseCaseShared(
+                        repository = downloadRepository,
+                        fileManager = fileManager,
+                    ),
+                observeCloudCapacity = observeCloudCapacity,
+                billingRepository = billingRepository,
+                enableCloudBackupUseCase = enableCloudBackupUseCase,
+                disableCloudBackupUseCase = disableCloudBackupUseCase,
+                syncManager = syncManager,
+                backupPreferences = backupPreferences,
+                restoreFromCloudUseCase = restoreFromCloudUseCase,
+                cloudAuthService = cloudAuthService,
+                clipboard = clipboard,
+            )
 
-    private val shared = SharedHistoryViewModel(
-        coroutineScope = viewModelScope,
-        downloadRepository = downloadRepository,
-        fileManager = fileManager,
-        deleteHistoryItemUseCase = DeleteHistoryItemUseCaseShared(
-            repository = downloadRepository,
-            fileManager = fileManager,
-        ),
-        observeCloudCapacity = observeCloudCapacity,
-        billingRepository = billingRepository,
-        enableCloudBackupUseCase = enableCloudBackupUseCase,
-        disableCloudBackupUseCase = disableCloudBackupUseCase,
-        syncManager = syncManager,
-        backupPreferences = backupPreferences,
-        restoreFromCloudUseCase = restoreFromCloudUseCase,
-        cloudAuthService = cloudAuthService,
-        clipboard = clipboard,
-    )
+        val uiState: StateFlow<HistoryUiState> = shared.uiState
+        val effect: SharedFlow<HistoryEffect> = shared.effect
+        val cloudBackupState: StateFlow<CloudBackupState> = shared.cloudBackupState
 
-    val uiState: StateFlow<HistoryUiState> = shared.uiState
-    val effect: SharedFlow<HistoryEffect> = shared.effect
-    val cloudBackupState: StateFlow<CloudBackupState> = shared.cloudBackupState
+        fun onIntent(intent: HistoryIntent) = shared.onIntent(intent)
 
-    fun onIntent(intent: HistoryIntent) = shared.onIntent(intent)
-
-    /** Called by the screen with the Activity reference required by Google Play Billing. */
-    suspend fun launchPurchaseFlow(activity: Any) {
-        billingRepository.launchPurchaseFlow(activity)
+        /** Called by the screen with the Activity reference required by Google Play Billing. */
+        suspend fun launchPurchaseFlow(activity: Any) {
+            billingRepository.launchPurchaseFlow(activity)
+        }
     }
-}

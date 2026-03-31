@@ -36,7 +36,6 @@ import org.junit.jupiter.api.extension.RegisterExtension
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HistoryViewModelRestoreTest {
-
     @RegisterExtension
     val mainDispatcherRule = MainDispatcherRule()
 
@@ -62,96 +61,102 @@ class HistoryViewModelRestoreTest {
         every { syncManager.observeSyncStatus() } returns syncStatusFlow
     }
 
-    private fun createViewModel() = HistoryViewModel(
-        downloadRepository = repository,
-        fileManager = fileManager,
-        observeCloudCapacity = observeCloudCapacity,
-        billingRepository = billingRepository,
-        enableCloudBackupUseCase = enableCloudBackupUseCase,
-        disableCloudBackupUseCase = disableCloudBackupUseCase,
-        syncManager = syncManager,
-        backupPreferences = backupPreferences,
-        restoreFromCloudUseCase = restoreFromCloudUseCase,
-        cloudAuthService = cloudAuthService,
-        clipboard = clipboard,
-    )
-
-    @Test
-    fun `RestoreFromCloud intent triggers the use case`() = runTest {
-        coEvery { restoreFromCloudUseCase(any()) } returns RestoreResult(restored = 3, skipped = 1, failed = 0)
-        val vm = createViewModel()
-
-        vm.onIntent(RestoreFromCloud)
-
-        coVerify { restoreFromCloudUseCase(any()) }
-    }
-
-    @Test
-    fun `restore completion state shows correct counts`() = runTest {
-        coEvery { restoreFromCloudUseCase(any()) } returns RestoreResult(restored = 5, skipped = 2, failed = 0)
-        val vm = createViewModel()
-
-        vm.cloudBackupState.test {
-            awaitItem() // initial state
-
-            vm.onIntent(RestoreFromCloud)
-
-            val states = mutableListOf<RestoreState>()
-            // Collect until Completed
-            for (i in 0..10) {
-                val state = awaitItem().restoreState
-                states.add(state)
-                if (state is Completed) break
-            }
-
-            val completed = states.filterIsInstance<Completed>().firstOrNull()
-            assertTrue(completed != null, "Expected a Completed state")
-            assertEquals(5, completed!!.restored)
-            assertEquals(2, completed.skipped)
-
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun `error state when key is lost`() = runTest {
-        coEvery { restoreFromCloudUseCase(any()) } returns RestoreResult(
-            restored = 0,
-            skipped = 0,
-            failed = 0,
-            error = "Encryption key no longer available",
+    private fun createViewModel() =
+        HistoryViewModel(
+            downloadRepository = repository,
+            fileManager = fileManager,
+            observeCloudCapacity = observeCloudCapacity,
+            billingRepository = billingRepository,
+            enableCloudBackupUseCase = enableCloudBackupUseCase,
+            disableCloudBackupUseCase = disableCloudBackupUseCase,
+            syncManager = syncManager,
+            backupPreferences = backupPreferences,
+            restoreFromCloudUseCase = restoreFromCloudUseCase,
+            cloudAuthService = cloudAuthService,
+            clipboard = clipboard,
         )
-        val vm = createViewModel()
 
-        vm.cloudBackupState.test {
-            awaitItem() // initial state
+    @Test
+    fun `RestoreFromCloud intent triggers the use case`() =
+        runTest {
+            coEvery { restoreFromCloudUseCase(any()) } returns RestoreResult(restored = 3, skipped = 1, failed = 0)
+            val vm = createViewModel()
 
             vm.onIntent(RestoreFromCloud)
 
-            val states = mutableListOf<RestoreState>()
-            for (i in 0..10) {
-                val state = awaitItem().restoreState
-                states.add(state)
-                if (state is Error) break
-            }
-
-            val error = states.filterIsInstance<Error>().firstOrNull()
-            assertTrue(error != null, "Expected an Error state")
-            assertTrue(error!!.message.contains("key", ignoreCase = true))
-
-            cancelAndIgnoreRemainingEvents()
+            coVerify { restoreFromCloudUseCase(any()) }
         }
-    }
 
     @Test
-    fun `DismissRestoreDialog resets restoreState to Idle`() = runTest {
-        coEvery { restoreFromCloudUseCase(any()) } returns RestoreResult(restored = 1, skipped = 0, failed = 0)
-        val vm = createViewModel()
+    fun `restore completion state shows correct counts`() =
+        runTest {
+            coEvery { restoreFromCloudUseCase(any()) } returns RestoreResult(restored = 5, skipped = 2, failed = 0)
+            val vm = createViewModel()
 
-        vm.onIntent(RestoreFromCloud)
-        vm.onIntent(DismissRestoreDialog)
+            vm.cloudBackupState.test {
+                awaitItem() // initial state
 
-        val state = vm.cloudBackupState.value.restoreState
-        assertEquals(Idle, state)
-    }
+                vm.onIntent(RestoreFromCloud)
+
+                val states = mutableListOf<RestoreState>()
+                // Collect until Completed
+                for (i in 0..10) {
+                    val state = awaitItem().restoreState
+                    states.add(state)
+                    if (state is Completed) break
+                }
+
+                val completed = states.filterIsInstance<Completed>().firstOrNull()
+                assertTrue(completed != null, "Expected a Completed state")
+                assertEquals(5, completed!!.restored)
+                assertEquals(2, completed.skipped)
+
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `error state when key is lost`() =
+        runTest {
+            coEvery { restoreFromCloudUseCase(any()) } returns
+                RestoreResult(
+                    restored = 0,
+                    skipped = 0,
+                    failed = 0,
+                    error = "Encryption key no longer available",
+                )
+            val vm = createViewModel()
+
+            vm.cloudBackupState.test {
+                awaitItem() // initial state
+
+                vm.onIntent(RestoreFromCloud)
+
+                val states = mutableListOf<RestoreState>()
+                for (i in 0..10) {
+                    val state = awaitItem().restoreState
+                    states.add(state)
+                    if (state is Error) break
+                }
+
+                val error = states.filterIsInstance<Error>().firstOrNull()
+                assertTrue(error != null, "Expected an Error state")
+                assertTrue(error!!.message.contains("key", ignoreCase = true))
+
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `DismissRestoreDialog resets restoreState to Idle`() =
+        runTest {
+            coEvery { restoreFromCloudUseCase(any()) } returns RestoreResult(restored = 1, skipped = 0, failed = 0)
+            val vm = createViewModel()
+
+            vm.onIntent(RestoreFromCloud)
+            vm.onIntent(DismissRestoreDialog)
+
+            val state = vm.cloudBackupState.value.restoreState
+            assertEquals(Idle, state)
+        }
 }

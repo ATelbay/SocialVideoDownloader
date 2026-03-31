@@ -20,19 +20,21 @@ import javax.inject.Inject
  * without any changes — the public API surface is identical to the old ViewModel.
  */
 @HiltViewModel
-class LibraryViewModel @Inject constructor(
-    downloadRepository: DownloadRepository,
-    fileManager: FileAccessManager,
-) : ViewModel() {
+class LibraryViewModel
+    @Inject
+    constructor(
+        downloadRepository: DownloadRepository,
+        fileManager: FileAccessManager,
+    ) : ViewModel() {
+        private val shared =
+            SharedLibraryViewModel(
+                coroutineScope = viewModelScope,
+                downloadRepository = downloadRepository,
+                fileManager = fileManager,
+            )
 
-    private val shared = SharedLibraryViewModel(
-        coroutineScope = viewModelScope,
-        downloadRepository = downloadRepository,
-        fileManager = fileManager,
-    )
+        val uiState: StateFlow<LibraryUiState> = shared.uiState
+        val effect: Flow<LibraryEffect> = shared.effect
 
-    val uiState: StateFlow<LibraryUiState> = shared.uiState
-    val effect: Flow<LibraryEffect> = shared.effect
-
-    fun onIntent(intent: LibraryIntent) = shared.onIntent(intent)
-}
+        fun onIntent(intent: LibraryIntent) = shared.onIntent(intent)
+    }

@@ -15,7 +15,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 
 @ExtendWith(MainDispatcherRule::class)
 class ObserveLibraryItemsUseCaseTest {
-
     private lateinit var repository: FakeDownloadRepository
     private lateinit var fileManager: FakeFileAccessManager
     private lateinit var useCase: ObserveLibraryItemsUseCase
@@ -46,109 +45,117 @@ class ObserveLibraryItemsUseCaseTest {
     )
 
     @Test
-    fun `empty list emits empty flow`() = runTest {
-        useCase().test {
-            repository.recordsFlow.emit(emptyList())
-            val items = awaitItem()
-            assertTrue(items.isEmpty())
-            cancelAndIgnoreRemainingEvents()
+    fun `empty list emits empty flow`() =
+        runTest {
+            useCase().test {
+                repository.recordsFlow.emit(emptyList())
+                val items = awaitItem()
+                assertTrue(items.isEmpty())
+                cancelAndIgnoreRemainingEvents()
+            }
         }
-    }
 
     @Test
-    fun `filters out records where file is not accessible`() = runTest {
-        val accessible = completedRecord(id = 1L, title = "Accessible")
-        val inaccessible = completedRecord(id = 2L, title = "Inaccessible")
-        fileManager.resolveContentUriResult = { record ->
-            if (record.id == 1L) "content://media/1" else "content://media/2"
-        }
-        fileManager.isFileAccessibleResult = { uri -> uri == "content://media/1" }
+    fun `filters out records where file is not accessible`() =
+        runTest {
+            val accessible = completedRecord(id = 1L, title = "Accessible")
+            val inaccessible = completedRecord(id = 2L, title = "Inaccessible")
+            fileManager.resolveContentUriResult = { record ->
+                if (record.id == 1L) "content://media/1" else "content://media/2"
+            }
+            fileManager.isFileAccessibleResult = { uri -> uri == "content://media/1" }
 
-        useCase().test {
-            repository.recordsFlow.emit(listOf(accessible, inaccessible))
-            val items = awaitItem()
-            assertEquals(1, items.size)
-            assertEquals(1L, items[0].id)
-            assertEquals("Accessible", items[0].title)
-            cancelAndIgnoreRemainingEvents()
+            useCase().test {
+                repository.recordsFlow.emit(listOf(accessible, inaccessible))
+                val items = awaitItem()
+                assertEquals(1, items.size)
+                assertEquals(1L, items[0].id)
+                assertEquals("Accessible", items[0].title)
+                cancelAndIgnoreRemainingEvents()
+            }
         }
-    }
 
     @Test
-    fun `filters out records where contentUri is null`() = runTest {
-        val record = completedRecord(id = 1L)
-        fileManager.resolveContentUriResult = { null }
+    fun `filters out records where contentUri is null`() =
+        runTest {
+            val record = completedRecord(id = 1L)
+            fileManager.resolveContentUriResult = { null }
 
-        useCase().test {
-            repository.recordsFlow.emit(listOf(record))
-            val items = awaitItem()
-            assertTrue(items.isEmpty())
-            cancelAndIgnoreRemainingEvents()
+            useCase().test {
+                repository.recordsFlow.emit(listOf(record))
+                val items = awaitItem()
+                assertTrue(items.isEmpty())
+                cancelAndIgnoreRemainingEvents()
+            }
         }
-    }
 
     @Test
-    fun `maps DownloadRecord correctly to LibraryListItem`() = runTest {
-        val record = completedRecord(
-            id = 42L,
-            title = "My Video",
-            sourceUrl = "https://youtube.com/watch?v=xyz",
-            fileSizeBytes = 99999L,
-            completedAt = 5000L,
-        )
-        fileManager.resolveContentUriResult = { "content://media/42" }
-        fileManager.isFileAccessibleResult = { true }
+    fun `maps DownloadRecord correctly to LibraryListItem`() =
+        runTest {
+            val record =
+                completedRecord(
+                    id = 42L,
+                    title = "My Video",
+                    sourceUrl = "https://youtube.com/watch?v=xyz",
+                    fileSizeBytes = 99999L,
+                    completedAt = 5000L,
+                )
+            fileManager.resolveContentUriResult = { "content://media/42" }
+            fileManager.isFileAccessibleResult = { true }
 
-        useCase().test {
-            repository.recordsFlow.emit(listOf(record))
-            val items = awaitItem()
-            assertEquals(1, items.size)
-            val item = items[0]
-            assertEquals(42L, item.id)
-            assertEquals("My Video", item.title)
-            assertEquals("1080p", item.formatLabel)
-            assertEquals("https://example.com/thumb.jpg", item.thumbnailUrl)
-            assertEquals("YouTube", item.platformName)
-            assertEquals(5000L, item.completedAt)
-            assertEquals(99999L, item.fileSizeBytes)
-            assertEquals("content://media/42", item.contentUri)
-            cancelAndIgnoreRemainingEvents()
+            useCase().test {
+                repository.recordsFlow.emit(listOf(record))
+                val items = awaitItem()
+                assertEquals(1, items.size)
+                val item = items[0]
+                assertEquals(42L, item.id)
+                assertEquals("My Video", item.title)
+                assertEquals("1080p", item.formatLabel)
+                assertEquals("https://example.com/thumb.jpg", item.thumbnailUrl)
+                assertEquals("YouTube", item.platformName)
+                assertEquals(5000L, item.completedAt)
+                assertEquals(99999L, item.fileSizeBytes)
+                assertEquals("content://media/42", item.contentUri)
+                cancelAndIgnoreRemainingEvents()
+            }
         }
-    }
 
     @Test
-    fun `uses createdAt as fallback when completedAt is null`() = runTest {
-        val record = completedRecord(completedAt = null)
-        fileManager.resolveContentUriResult = { "content://media/1" }
-        fileManager.isFileAccessibleResult = { true }
+    fun `uses createdAt as fallback when completedAt is null`() =
+        runTest {
+            val record = completedRecord(completedAt = null)
+            fileManager.resolveContentUriResult = { "content://media/1" }
+            fileManager.isFileAccessibleResult = { true }
 
-        useCase().test {
-            repository.recordsFlow.emit(listOf(record))
-            val items = awaitItem()
-            assertEquals(1000L, items[0].completedAt)
-            cancelAndIgnoreRemainingEvents()
+            useCase().test {
+                repository.recordsFlow.emit(listOf(record))
+                val items = awaitItem()
+                assertEquals(1000L, items[0].completedAt)
+                cancelAndIgnoreRemainingEvents()
+            }
         }
-    }
 
     @Test
-    fun `only returns completed downloads`() = runTest {
-        val completed = completedRecord(id = 1L)
-        val failed = DownloadRecord(
-            id = 2L,
-            sourceUrl = "https://youtube.com/x",
-            videoTitle = "Failed",
-            status = DownloadStatus.FAILED,
-            createdAt = 1000L,
-        )
-        fileManager.resolveContentUriResult = { "content://media/${it.id}" }
-        fileManager.isFileAccessibleResult = { true }
+    fun `only returns completed downloads`() =
+        runTest {
+            val completed = completedRecord(id = 1L)
+            val failed =
+                DownloadRecord(
+                    id = 2L,
+                    sourceUrl = "https://youtube.com/x",
+                    videoTitle = "Failed",
+                    status = DownloadStatus.FAILED,
+                    createdAt = 1000L,
+                )
+            fileManager.resolveContentUriResult = { "content://media/${it.id}" }
+            fileManager.isFileAccessibleResult = { true }
 
-        useCase().test {
-            repository.recordsFlow.emit(listOf(completed, failed))
-            val items = awaitItem()
-            assertEquals(1, items.size)
-            assertEquals(1L, items[0].id)
-            cancelAndIgnoreRemainingEvents()
+            useCase().test {
+                repository.recordsFlow.emit(listOf(completed, failed))
+                val items = awaitItem()
+                assertEquals(1, items.size)
+                assertEquals(1L, items[0].id)
+                cancelAndIgnoreRemainingEvents()
+            }
         }
-    }
 }

@@ -8,7 +8,6 @@ import platform.Foundation.NSURL
 
 @OptIn(ExperimentalForeignApi::class)
 class IosFileAccessManager : FileAccessManager {
-
     override suspend fun resolveContentUri(record: DownloadRecord): String? {
         return record.mediaStoreUri ?: record.filePath
     }

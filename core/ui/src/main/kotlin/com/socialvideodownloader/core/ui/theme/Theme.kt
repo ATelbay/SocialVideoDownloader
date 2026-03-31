@@ -12,9 +12,7 @@ val MaterialTheme.extendedColors: ExtendedColors
     get() = LocalExtendedColors.current
 
 @Composable
-fun SocialVideoDownloaderTheme(
-    content: @Composable () -> Unit,
-) {
+fun SocialVideoDownloaderTheme(content: @Composable () -> Unit) {
     CompositionLocalProvider(
         LocalExtendedColors provides SvdExtendedColors,
     ) {

@@ -29,201 +29,222 @@ import kotlin.coroutines.resume
 // and description "Unlock 10,000 cloud record capacity".
 
 @Singleton
-class PlayBillingRepository @Inject constructor(
-    @ApplicationContext private val context: Context,
-) : BillingRepository {
+class PlayBillingRepository
+    @Inject
+    constructor(
+        @ApplicationContext private val context: Context,
+    ) : BillingRepository {
+        internal val _tier = MutableStateFlow(CloudTier.FREE)
+        internal var billingClient: BillingClient? = null
 
-    internal val _tier = MutableStateFlow(CloudTier.FREE)
-    internal var billingClient: BillingClient? = null
+        init {
+            setupBillingClient()
+        }
 
-    init {
-        setupBillingClient()
-    }
-
-    private fun setupBillingClient() {
-        billingClient = BillingClient.newBuilder(context)
-            .setListener { billingResult, purchases ->
-                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
-                    for (purchase in purchases) {
-                        handlePurchase(purchase)
+        private fun setupBillingClient() {
+            billingClient =
+                BillingClient.newBuilder(context)
+                    .setListener { billingResult, purchases ->
+                        if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
+                            for (purchase in purchases) {
+                                handlePurchase(purchase)
+                            }
+                        }
                     }
-                }
-            }
-            .enablePendingPurchases(
-                com.android.billingclient.api.PendingPurchasesParams.newBuilder()
-                    .enableOneTimeProducts()
-                    .build(),
-            )
-            .build()
-
-        startConnection()
-    }
-
-    internal fun startConnection() {
-        billingClient?.startConnection(object : BillingClientStateListener {
-            override fun onBillingSetupFinished(billingResult: com.android.billingclient.api.BillingResult) {
-                // Connection established; restorePurchases() is called explicitly on app launch
-            }
-
-            override fun onBillingServiceDisconnected() {
-                // Retry connection on disconnect
-                startConnection()
-            }
-        })
-    }
-
-    private fun handlePurchase(purchase: Purchase) {
-        if (purchase.products.contains(PRODUCT_ID) &&
-            purchase.purchaseState == Purchase.PurchaseState.PURCHASED
-        ) {
-            if (!purchase.isAcknowledged) {
-                val params = AcknowledgePurchaseParams.newBuilder()
-                    .setPurchaseToken(purchase.purchaseToken)
+                    .enablePendingPurchases(
+                        com.android.billingclient.api.PendingPurchasesParams.newBuilder()
+                            .enableOneTimeProducts()
+                            .build(),
+                    )
                     .build()
-                billingClient?.acknowledgePurchase(params) { result ->
-                    if (result.responseCode == BillingClient.BillingResponseCode.OK) {
-                        _tier.value = CloudTier.PAID
+
+            startConnection()
+        }
+
+        internal fun startConnection() {
+            billingClient?.startConnection(
+                object : BillingClientStateListener {
+                    override fun onBillingSetupFinished(billingResult: com.android.billingclient.api.BillingResult) {
+                        // Connection established; restorePurchases() is called explicitly on app launch
                     }
-                }
-            } else {
-                _tier.value = CloudTier.PAID
-            }
-        }
-    }
 
-    override fun observeTier(): Flow<CloudTier> = _tier.asStateFlow()
-
-    override suspend fun restorePurchases(): CloudTier {
-        val client = billingClient ?: return CloudTier.FREE
-        if (!client.isReady) {
-            awaitConnection(client) ?: return CloudTier.FREE
-        }
-        return restorePurchasesInternal(client)
-    }
-
-    private suspend fun awaitConnection(client: BillingClient): BillingClient? =
-        suspendCancellableCoroutine { cont ->
-            client.startConnection(object : BillingClientStateListener {
-                override fun onBillingSetupFinished(result: com.android.billingclient.api.BillingResult) {
-                    if (result.responseCode == BillingClient.BillingResponseCode.OK) {
-                        cont.resume(client)
-                    } else {
-                        cont.resume(null)
+                    override fun onBillingServiceDisconnected() {
+                        // Retry connection on disconnect
+                        startConnection()
                     }
-                }
-
-                override fun onBillingServiceDisconnected() {
-                    if (cont.isActive) cont.resume(null)
-                }
-            })
+                },
+            )
         }
 
-    private suspend fun restorePurchasesInternal(client: BillingClient): CloudTier {
-        val params = QueryPurchasesParams.newBuilder()
-            .setProductType(BillingClient.ProductType.INAPP)
-            .build()
-        val result = client.queryPurchasesAsync(params)
-        return restorePurchasesFromList(result.purchasesList)
-    }
-
-    /**
-     * Determines tier from a purchase list and updates internal state.
-     * Exposed as internal for testing.
-     */
-    internal fun restorePurchasesFromList(purchases: List<Purchase>): CloudTier {
-        val paid = purchases.any { purchase ->
-            purchase.products.contains(PRODUCT_ID) &&
-                purchase.purchaseState == Purchase.PurchaseState.PURCHASED &&
-                purchase.isAcknowledged
-        }
-        val tier = if (paid) CloudTier.PAID else CloudTier.FREE
-        _tier.value = tier
-        return tier
-    }
-
-    override suspend fun launchPurchaseFlow(activityRef: Any): BillingResult {
-        val activity = activityRef as? Activity
-            ?: return BillingResult.Error("Invalid activity reference")
-
-        val client = billingClient ?: return BillingResult.Error("Billing client not initialized")
-
-        if (!client.isReady) {
-            awaitConnection(client) ?: return BillingResult.Error("Billing service unavailable")
-        }
-
-        val productList = listOf(
-            QueryProductDetailsParams.Product.newBuilder()
-                .setProductId(PRODUCT_ID)
-                .setProductType(BillingClient.ProductType.INAPP)
-                .build(),
-        )
-
-        val queryParams = QueryProductDetailsParams.newBuilder()
-            .setProductList(productList)
-            .build()
-
-        val detailsResult = client.queryProductDetails(queryParams)
-        if (detailsResult.billingResult.responseCode != BillingClient.BillingResponseCode.OK) {
-            return mapBillingResponseCode(detailsResult.billingResult.responseCode)
-        }
-
-        val productDetails = detailsResult.productDetailsList?.firstOrNull()
-            ?: return BillingResult.Error("Product not found. Ensure '$PRODUCT_ID' is configured in Google Play Console.")
-
-        val productDetailsParams = BillingFlowParams.ProductDetailsParams.newBuilder()
-            .setProductDetails(productDetails)
-            .build()
-
-        val billingFlowParams = BillingFlowParams.newBuilder()
-            .setProductDetailsParamsList(listOf(productDetailsParams))
-            .build()
-
-        return suspendCancellableCoroutine { cont ->
-            val purchasesUpdatedListener = com.android.billingclient.api.PurchasesUpdatedListener { result, purchases ->
-                val mappedResult = if (result.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
-                    for (purchase in purchases) {
-                        handlePurchase(purchase)
+        private fun handlePurchase(purchase: Purchase) {
+            if (purchase.products.contains(PRODUCT_ID) &&
+                purchase.purchaseState == Purchase.PurchaseState.PURCHASED
+            ) {
+                if (!purchase.isAcknowledged) {
+                    val params =
+                        AcknowledgePurchaseParams.newBuilder()
+                            .setPurchaseToken(purchase.purchaseToken)
+                            .build()
+                    billingClient?.acknowledgePurchase(params) { result ->
+                        if (result.responseCode == BillingClient.BillingResponseCode.OK) {
+                            _tier.value = CloudTier.PAID
+                        }
                     }
-                    BillingResult.Success
                 } else {
-                    mapBillingResponseCode(result.responseCode)
+                    _tier.value = CloudTier.PAID
                 }
-                if (cont.isActive) cont.resume(mappedResult)
+            }
+        }
+
+        override fun observeTier(): Flow<CloudTier> = _tier.asStateFlow()
+
+        override suspend fun restorePurchases(): CloudTier {
+            val client = billingClient ?: return CloudTier.FREE
+            if (!client.isReady) {
+                awaitConnection(client) ?: return CloudTier.FREE
+            }
+            return restorePurchasesInternal(client)
+        }
+
+        private suspend fun awaitConnection(client: BillingClient): BillingClient? =
+            suspendCancellableCoroutine { cont ->
+                client.startConnection(
+                    object : BillingClientStateListener {
+                        override fun onBillingSetupFinished(result: com.android.billingclient.api.BillingResult) {
+                            if (result.responseCode == BillingClient.BillingResponseCode.OK) {
+                                cont.resume(client)
+                            } else {
+                                cont.resume(null)
+                            }
+                        }
+
+                        override fun onBillingServiceDisconnected() {
+                            if (cont.isActive) cont.resume(null)
+                        }
+                    },
+                )
             }
 
-            // Re-build client with one-shot listener for this flow
-            val flowClient = BillingClient.newBuilder(context)
-                .setListener(purchasesUpdatedListener)
-                .enablePendingPurchases(
-                    com.android.billingclient.api.PendingPurchasesParams.newBuilder()
-                        .enableOneTimeProducts()
+        private suspend fun restorePurchasesInternal(client: BillingClient): CloudTier {
+            val params =
+                QueryPurchasesParams.newBuilder()
+                    .setProductType(BillingClient.ProductType.INAPP)
+                    .build()
+            val result = client.queryPurchasesAsync(params)
+            return restorePurchasesFromList(result.purchasesList)
+        }
+
+        /**
+         * Determines tier from a purchase list and updates internal state.
+         * Exposed as internal for testing.
+         */
+        internal fun restorePurchasesFromList(purchases: List<Purchase>): CloudTier {
+            val paid =
+                purchases.any { purchase ->
+                    purchase.products.contains(PRODUCT_ID) &&
+                        purchase.purchaseState == Purchase.PurchaseState.PURCHASED &&
+                        purchase.isAcknowledged
+                }
+            val tier = if (paid) CloudTier.PAID else CloudTier.FREE
+            _tier.value = tier
+            return tier
+        }
+
+        override suspend fun launchPurchaseFlow(activityRef: Any): BillingResult {
+            val activity =
+                activityRef as? Activity
+                    ?: return BillingResult.Error("Invalid activity reference")
+
+            val client = billingClient ?: return BillingResult.Error("Billing client not initialized")
+
+            if (!client.isReady) {
+                awaitConnection(client) ?: return BillingResult.Error("Billing service unavailable")
+            }
+
+            val productList =
+                listOf(
+                    QueryProductDetailsParams.Product.newBuilder()
+                        .setProductId(PRODUCT_ID)
+                        .setProductType(BillingClient.ProductType.INAPP)
                         .build(),
                 )
-                .build()
 
-            flowClient.startConnection(object : BillingClientStateListener {
-                override fun onBillingSetupFinished(setupResult: com.android.billingclient.api.BillingResult) {
-                    if (setupResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                        flowClient.launchBillingFlow(activity, billingFlowParams)
-                    } else {
-                        if (cont.isActive) cont.resume(mapBillingResponseCode(setupResult.responseCode))
+            val queryParams =
+                QueryProductDetailsParams.newBuilder()
+                    .setProductList(productList)
+                    .build()
+
+            val detailsResult = client.queryProductDetails(queryParams)
+            if (detailsResult.billingResult.responseCode != BillingClient.BillingResponseCode.OK) {
+                return mapBillingResponseCode(detailsResult.billingResult.responseCode)
+            }
+
+            val productDetails =
+                detailsResult.productDetailsList?.firstOrNull()
+                    ?: return BillingResult.Error("Product not found. Ensure '$PRODUCT_ID' is configured in Google Play Console.")
+
+            val productDetailsParams =
+                BillingFlowParams.ProductDetailsParams.newBuilder()
+                    .setProductDetails(productDetails)
+                    .build()
+
+            val billingFlowParams =
+                BillingFlowParams.newBuilder()
+                    .setProductDetailsParamsList(listOf(productDetailsParams))
+                    .build()
+
+            return suspendCancellableCoroutine { cont ->
+                val purchasesUpdatedListener =
+                    com.android.billingclient.api.PurchasesUpdatedListener { result, purchases ->
+                        val mappedResult =
+                            if (result.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
+                                for (purchase in purchases) {
+                                    handlePurchase(purchase)
+                                }
+                                BillingResult.Success
+                            } else {
+                                mapBillingResponseCode(result.responseCode)
+                            }
+                        if (cont.isActive) cont.resume(mappedResult)
                     }
-                }
 
-                override fun onBillingServiceDisconnected() {
-                    if (cont.isActive) cont.resume(BillingResult.Error("Billing service disconnected"))
+                // Re-build client with one-shot listener for this flow
+                val flowClient =
+                    BillingClient.newBuilder(context)
+                        .setListener(purchasesUpdatedListener)
+                        .enablePendingPurchases(
+                            com.android.billingclient.api.PendingPurchasesParams.newBuilder()
+                                .enableOneTimeProducts()
+                                .build(),
+                        )
+                        .build()
+
+                flowClient.startConnection(
+                    object : BillingClientStateListener {
+                        override fun onBillingSetupFinished(setupResult: com.android.billingclient.api.BillingResult) {
+                            if (setupResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                                flowClient.launchBillingFlow(activity, billingFlowParams)
+                            } else {
+                                if (cont.isActive) cont.resume(mapBillingResponseCode(setupResult.responseCode))
+                            }
+                        }
+
+                        override fun onBillingServiceDisconnected() {
+                            if (cont.isActive) cont.resume(BillingResult.Error("Billing service disconnected"))
+                        }
+                    },
+                )
+            }
+        }
+
+        companion object {
+            const val PRODUCT_ID = "cloud_history_10k"
+
+            fun mapBillingResponseCode(responseCode: Int): BillingResult =
+                when (responseCode) {
+                    BillingClient.BillingResponseCode.OK -> BillingResult.Success
+                    BillingClient.BillingResponseCode.USER_CANCELED -> BillingResult.Cancelled
+                    else -> BillingResult.Error("Billing error code: $responseCode")
                 }
-            })
         }
     }
-
-    companion object {
-        const val PRODUCT_ID = "cloud_history_10k"
-
-        fun mapBillingResponseCode(responseCode: Int): BillingResult = when (responseCode) {
-            BillingClient.BillingResponseCode.OK -> BillingResult.Success
-            BillingClient.BillingResponseCode.USER_CANCELED -> BillingResult.Cancelled
-            else -> BillingResult.Error("Billing error code: $responseCode")
-        }
-    }
-}

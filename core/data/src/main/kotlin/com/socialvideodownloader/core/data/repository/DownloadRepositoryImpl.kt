@@ -15,68 +15,65 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
-class DownloadRepositoryImpl @Inject constructor(
-    private val downloadDao: DownloadDao,
-    private val syncQueueDao: SyncQueueDao,
-    private val backupPreferences: BackupPreferences,
-    private val syncManager: dagger.Lazy<SyncManager>,
-) : DownloadRepository {
+class DownloadRepositoryImpl
+    @Inject
+    constructor(
+        private val downloadDao: DownloadDao,
+        private val syncQueueDao: SyncQueueDao,
+        private val backupPreferences: BackupPreferences,
+        private val syncManager: dagger.Lazy<SyncManager>,
+    ) : DownloadRepository {
+        override fun getAll(): Flow<List<DownloadRecord>> = downloadDao.getAll().map { entities -> entities.map { it.toDomain() } }
 
-    override fun getAll(): Flow<List<DownloadRecord>> =
-        downloadDao.getAll().map { entities -> entities.map { it.toDomain() } }
+        override fun getCompletedDownloads(): Flow<List<DownloadRecord>> =
+            downloadDao.getCompleted().map { entities -> entities.map { it.toDomain() } }
 
-    override fun getCompletedDownloads(): Flow<List<DownloadRecord>> =
-        downloadDao.getCompleted().map { entities -> entities.map { it.toDomain() } }
+        override suspend fun getById(id: Long): DownloadRecord? = downloadDao.getById(id)?.toDomain()
 
-    override suspend fun getById(id: Long): DownloadRecord? =
-        downloadDao.getById(id)?.toDomain()
+        override suspend fun getCompletedSnapshot(): List<DownloadRecord> = downloadDao.getCompletedSnapshot().map { it.toDomain() }
 
-    override suspend fun getCompletedSnapshot(): List<DownloadRecord> =
-        downloadDao.getCompletedSnapshot().map { it.toDomain() }
-
-    override suspend fun insert(record: DownloadRecord): Long {
-        val id = downloadDao.insert(record.toEntity())
-        if (record.status == DownloadStatus.COMPLETED && backupPreferences.observeIsBackupEnabled().first()) {
-            syncQueueDao.insert(
-                SyncQueueEntity(
-                    downloadId = id,
-                    operation = "UPLOAD",
-                    createdAt = System.currentTimeMillis(),
-                ),
-            )
-            syncManager.get().processPendingOperations()
+        override suspend fun insert(record: DownloadRecord): Long {
+            val id = downloadDao.insert(record.toEntity())
+            if (record.status == DownloadStatus.COMPLETED && backupPreferences.observeIsBackupEnabled().first()) {
+                syncQueueDao.insert(
+                    SyncQueueEntity(
+                        downloadId = id,
+                        operation = "UPLOAD",
+                        createdAt = System.currentTimeMillis(),
+                    ),
+                )
+                syncManager.get().processPendingOperations()
+            }
+            return id
         }
-        return id
-    }
 
-    override suspend fun update(record: DownloadRecord) {
-        downloadDao.update(record.toEntity())
-        if (record.status == DownloadStatus.COMPLETED && backupPreferences.observeIsBackupEnabled().first()) {
-            syncQueueDao.insert(
-                SyncQueueEntity(
-                    downloadId = record.id,
-                    operation = "UPLOAD",
-                    createdAt = System.currentTimeMillis(),
-                ),
-            )
-            syncManager.get().processPendingOperations()
+        override suspend fun update(record: DownloadRecord) {
+            downloadDao.update(record.toEntity())
+            if (record.status == DownloadStatus.COMPLETED && backupPreferences.observeIsBackupEnabled().first()) {
+                syncQueueDao.insert(
+                    SyncQueueEntity(
+                        downloadId = record.id,
+                        operation = "UPLOAD",
+                        createdAt = System.currentTimeMillis(),
+                    ),
+                )
+                syncManager.get().processPendingOperations()
+            }
         }
-    }
 
-    override suspend fun delete(record: DownloadRecord) {
-        if (record.syncStatus == "SYNCED" && backupPreferences.observeIsBackupEnabled().first()) {
-            syncQueueDao.insert(
-                SyncQueueEntity(
-                    downloadId = record.id,
-                    operation = "DELETE",
-                    createdAt = System.currentTimeMillis(),
-                ),
-            )
-            syncManager.get().processPendingOperations()
+        override suspend fun delete(record: DownloadRecord) {
+            if (record.syncStatus == "SYNCED" && backupPreferences.observeIsBackupEnabled().first()) {
+                syncQueueDao.insert(
+                    SyncQueueEntity(
+                        downloadId = record.id,
+                        operation = "DELETE",
+                        createdAt = System.currentTimeMillis(),
+                    ),
+                )
+                syncManager.get().processPendingOperations()
+            }
+            downloadDao.delete(record.toEntity())
         }
-        downloadDao.delete(record.toEntity())
-    }
 
-    override suspend fun deleteAll() =
-        downloadDao.deleteAll()
-}
+        override suspend fun deleteAll() = downloadDao.deleteAll()
+    }

@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test
  * to verify what happens when isKeyValid() returns false.
  */
 class KeystoreEncryptionServiceTest {
-
     // We test the decision logic by mocking the EncryptionService interface.
     // The actual Keystore integration is exercised on-device / in instrumentation tests.
     private val encryptionService = mockk<EncryptionService>(relaxed = true)

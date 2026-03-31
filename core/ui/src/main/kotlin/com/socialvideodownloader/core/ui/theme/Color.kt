@@ -28,37 +28,38 @@ val SvdError = Color(0xFFD9534F)
 val SvdErrorSoft = Color(0xFFFDE5E3)
 val SvdShadow = Color(0x1A000000)
 
-val SvdColorScheme = lightColorScheme(
-    background = SvdBg,
-    surface = SvdSurface,
-    surfaceContainer = SvdSurfaceAlt,
-    surfaceContainerHigh = SvdSurfaceStrong,
-    surfaceContainerHighest = SvdSurfaceStrong,
-    primary = SvdPrimary,
-    onPrimary = Color.White,
-    primaryContainer = SvdPrimarySoft,
-    onPrimaryContainer = SvdPrimaryStrong,
-    secondary = SvdAccent,
-    onSecondary = Color.White,
-    secondaryContainer = SvdAccentSoft,
-    onSecondaryContainer = SvdAccent,
-    tertiary = SvdWarning,
-    onTertiary = Color.White,
-    tertiaryContainer = Color(0xFFFFF3D6),
-    onTertiaryContainer = Color(0xFF8B6914),
-    onBackground = SvdForeground,
-    onSurface = SvdForeground,
-    onSurfaceVariant = SvdMutedForeground,
-    outline = SvdSubtleForeground,
-    outlineVariant = SvdBorder,
-    error = SvdError,
-    onError = Color.White,
-    errorContainer = SvdErrorSoft,
-    onErrorContainer = SvdError,
-    inverseSurface = SvdForeground,
-    inverseOnSurface = SvdBg,
-    scrim = Color.Black,
-)
+val SvdColorScheme =
+    lightColorScheme(
+        background = SvdBg,
+        surface = SvdSurface,
+        surfaceContainer = SvdSurfaceAlt,
+        surfaceContainerHigh = SvdSurfaceStrong,
+        surfaceContainerHighest = SvdSurfaceStrong,
+        primary = SvdPrimary,
+        onPrimary = Color.White,
+        primaryContainer = SvdPrimarySoft,
+        onPrimaryContainer = SvdPrimaryStrong,
+        secondary = SvdAccent,
+        onSecondary = Color.White,
+        secondaryContainer = SvdAccentSoft,
+        onSecondaryContainer = SvdAccent,
+        tertiary = SvdWarning,
+        onTertiary = Color.White,
+        tertiaryContainer = Color(0xFFFFF3D6),
+        onTertiaryContainer = Color(0xFF8B6914),
+        onBackground = SvdForeground,
+        onSurface = SvdForeground,
+        onSurfaceVariant = SvdMutedForeground,
+        outline = SvdSubtleForeground,
+        outlineVariant = SvdBorder,
+        error = SvdError,
+        onError = Color.White,
+        errorContainer = SvdErrorSoft,
+        onErrorContainer = SvdError,
+        inverseSurface = SvdForeground,
+        inverseOnSurface = SvdBg,
+        scrim = Color.Black,
+    )
 
 // Extended colors beyond M3
 @Immutable
@@ -81,23 +82,24 @@ data class ExtendedColors(
     val shadow: Color,
 )
 
-val SvdExtendedColors = ExtendedColors(
-    surfaceAlt = SvdSurfaceAlt,
-    surfaceStrong = SvdSurfaceStrong,
-    card = SvdCard,
-    primaryStrong = SvdPrimaryStrong,
-    primarySoft = SvdPrimarySoft,
-    warning = SvdWarning,
-    accent = SvdAccent,
-    accentSoft = SvdAccentSoft,
-    mutedForeground = SvdMutedForeground,
-    subtleForeground = SvdSubtleForeground,
-    border = SvdBorder,
-    borderStrong = SvdBorderStrong,
-    success = SvdSuccess,
-    successSoft = SvdSuccessSoft,
-    errorSoft = SvdErrorSoft,
-    shadow = SvdShadow,
-)
+val SvdExtendedColors =
+    ExtendedColors(
+        surfaceAlt = SvdSurfaceAlt,
+        surfaceStrong = SvdSurfaceStrong,
+        card = SvdCard,
+        primaryStrong = SvdPrimaryStrong,
+        primarySoft = SvdPrimarySoft,
+        warning = SvdWarning,
+        accent = SvdAccent,
+        accentSoft = SvdAccentSoft,
+        mutedForeground = SvdMutedForeground,
+        subtleForeground = SvdSubtleForeground,
+        border = SvdBorder,
+        borderStrong = SvdBorderStrong,
+        success = SvdSuccess,
+        successSoft = SvdSuccessSoft,
+        errorSoft = SvdErrorSoft,
+        shadow = SvdShadow,
+    )
 
 val LocalExtendedColors = staticCompositionLocalOf { SvdExtendedColors }

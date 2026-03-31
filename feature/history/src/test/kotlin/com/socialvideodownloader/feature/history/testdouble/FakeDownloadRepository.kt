@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.map
 
 class FakeDownloadRepository : DownloadRepository {
-
     val recordsFlow = MutableSharedFlow<List<DownloadRecord>>(replay = 1)
 
     val deletedRecords = mutableListOf<DownloadRecord>()

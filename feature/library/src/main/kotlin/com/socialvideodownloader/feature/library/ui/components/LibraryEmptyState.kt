@@ -33,17 +33,19 @@ fun LibraryEmptyState(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 40.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(horizontal = 40.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
-            modifier = Modifier
-                .size(88.dp)
-                .clip(CircleShape)
-                .background(SvdSurfaceStrong),
+            modifier =
+                Modifier
+                    .size(88.dp)
+                    .clip(CircleShape)
+                    .background(SvdSurfaceStrong),
             contentAlignment = Alignment.Center,
         ) {
             Icon(

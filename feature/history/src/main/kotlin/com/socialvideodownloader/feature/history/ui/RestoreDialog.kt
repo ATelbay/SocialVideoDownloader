@@ -35,11 +35,12 @@ fun RestoreDialog(
                     ) {
                         if (restoreState.total > 0) {
                             Text(
-                                text = stringResource(
-                                    R.string.cloud_restore_progress,
-                                    restoreState.current,
-                                    restoreState.total,
-                                ),
+                                text =
+                                    stringResource(
+                                        R.string.cloud_restore_progress,
+                                        restoreState.current,
+                                        restoreState.total,
+                                    ),
                                 modifier = Modifier.padding(top = 8.dp),
                             )
                         } else {
@@ -55,11 +56,12 @@ fun RestoreDialog(
                 onDismissRequest = onDismiss,
                 text = {
                     Text(
-                        text = stringResource(
-                            R.string.cloud_restore_complete,
-                            restoreState.restored,
-                            restoreState.skipped,
-                        ),
+                        text =
+                            stringResource(
+                                R.string.cloud_restore_complete,
+                                restoreState.restored,
+                                restoreState.skipped,
+                            ),
                     )
                 },
                 confirmButton = {
@@ -74,11 +76,12 @@ fun RestoreDialog(
                 onDismissRequest = onDismiss,
                 text = {
                     Text(
-                        text = if (restoreState.message.contains("key", ignoreCase = true)) {
-                            stringResource(R.string.cloud_restore_key_lost)
-                        } else {
-                            restoreState.message
-                        },
+                        text =
+                            if (restoreState.message.contains("key", ignoreCase = true)) {
+                                stringResource(R.string.cloud_restore_key_lost)
+                            } else {
+                                restoreState.message
+                            },
                     )
                 },
                 confirmButton = {

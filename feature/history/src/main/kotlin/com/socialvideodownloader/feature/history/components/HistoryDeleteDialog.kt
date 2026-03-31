@@ -59,9 +59,10 @@ fun HistoryDeleteDialog(
             color = SvdSurfaceAlt,
             tonalElevation = 6.dp,
             shadowElevation = 6.dp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -70,10 +71,11 @@ fun HistoryDeleteDialog(
                 // Trash icon in errorSoft circle
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(52.dp)
-                        .clip(CircleShape)
-                        .background(SvdErrorSoft),
+                    modifier =
+                        Modifier
+                            .size(52.dp)
+                            .clip(CircleShape)
+                            .background(SvdErrorSoft),
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Delete,
@@ -104,12 +106,13 @@ fun HistoryDeleteDialog(
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(AppShapesInstance.control)
-                            .background(SvdSurfaceAlt)
-                            .clickable { onDeleteFilesSelectionChanged(!state.deleteFilesSelected) }
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clip(AppShapesInstance.control)
+                                .background(SvdSurfaceAlt)
+                                .clickable { onDeleteFilesSelectionChanged(!state.deleteFilesSelected) }
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
                     ) {
                         Checkbox(
                             checked = state.deleteFilesSelected,

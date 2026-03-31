@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
 class LibraryViewModelTest {
-
     @RegisterExtension
     val mainDispatcherRule = MainDispatcherRule()
 
@@ -54,121 +53,130 @@ class LibraryViewModelTest {
     )
 
     @Test
-    fun `initial state is Loading before repository emits`() = runTest {
-        val vm = LibraryViewModel(repository, fileManager)
-        assertEquals(Loading, vm.uiState.value)
-    }
-
-    @Test
-    fun `when repository emits no completed records state becomes Empty`() = runTest {
-        viewModel.uiState.test {
-            awaitItem() // Loading
-            emitCompleted(emptyList())
-            val state = awaitItem()
-            assertTrue(state is Empty)
-            cancelAndIgnoreRemainingEvents()
+    fun `initial state is Loading before repository emits`() =
+        runTest {
+            val vm = LibraryViewModel(repository, fileManager)
+            assertEquals(Loading, vm.uiState.value)
         }
-    }
 
     @Test
-    fun `when repository emits completed accessible records state becomes Content`() = runTest {
-        val records = listOf(
-            completedRecord(1L, contentUri = "content://media/1"),
-            completedRecord(2L, contentUri = "content://media/2"),
-        )
-        fileManager.resolveContentUriResult = { record -> record.mediaStoreUri }
-        fileManager.isFileAccessibleResult = { true }
-
-        viewModel.uiState.test {
-            awaitItem() // Loading
-            emitCompleted(records)
-            val state = awaitItem()
-            assertTrue(state is Content)
-            assertEquals(2, (state as Content).items.size)
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun `inaccessible files are excluded from Content`() = runTest {
-        val records = listOf(
-            completedRecord(1L, contentUri = "content://media/1"),
-            completedRecord(2L, contentUri = "content://media/2"),
-        )
-        fileManager.resolveContentUriResult = { record -> record.mediaStoreUri }
-        // Only record 1 is accessible
-        fileManager.isFileAccessibleResult = { uri -> uri == "content://media/1" }
-
-        viewModel.uiState.test {
-            awaitItem() // Loading
-            emitCompleted(records)
-            val state = awaitItem()
-            assertTrue(state is Content)
-            assertEquals(1, (state as Content).items.size)
-            assertEquals(1L, state.items.first().id)
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun `ItemClicked emits OpenContent effect`() = runTest {
-        val record = completedRecord(id = 10L, contentUri = "content://media/10")
-        fileManager.resolveContentUriResult = { it.mediaStoreUri }
-        fileManager.isFileAccessibleResult = { true }
-
-        viewModel.uiState.test {
-            awaitItem() // Loading
-            emitCompleted(listOf(record))
-            awaitItem() // Content
-            viewModel.effect.test {
-                viewModel.onIntent(ItemClicked(10L))
-                val effect = awaitItem()
-                assertTrue(effect is OpenContent)
-                assertEquals("content://media/10", (effect as OpenContent).contentUri)
+    fun `when repository emits no completed records state becomes Empty`() =
+        runTest {
+            viewModel.uiState.test {
+                awaitItem() // Loading
+                emitCompleted(emptyList())
+                val state = awaitItem()
+                assertTrue(state is Empty)
                 cancelAndIgnoreRemainingEvents()
             }
-            cancelAndIgnoreRemainingEvents()
         }
-    }
 
     @Test
-    fun `ItemLongPressed emits ShareContent effect`() = runTest {
-        val record = completedRecord(id = 20L, contentUri = "content://media/20")
-        fileManager.resolveContentUriResult = { it.mediaStoreUri }
-        fileManager.isFileAccessibleResult = { true }
+    fun `when repository emits completed accessible records state becomes Content`() =
+        runTest {
+            val records =
+                listOf(
+                    completedRecord(1L, contentUri = "content://media/1"),
+                    completedRecord(2L, contentUri = "content://media/2"),
+                )
+            fileManager.resolveContentUriResult = { record -> record.mediaStoreUri }
+            fileManager.isFileAccessibleResult = { true }
 
-        viewModel.uiState.test {
-            awaitItem() // Loading
-            emitCompleted(listOf(record))
-            awaitItem() // Content
-            viewModel.effect.test {
-                viewModel.onIntent(ItemLongPressed(20L))
-                val effect = awaitItem()
-                assertTrue(effect is ShareContent)
-                assertEquals("content://media/20", (effect as ShareContent).contentUri)
+            viewModel.uiState.test {
+                awaitItem() // Loading
+                emitCompleted(records)
+                val state = awaitItem()
+                assertTrue(state is Content)
+                assertEquals(2, (state as Content).items.size)
                 cancelAndIgnoreRemainingEvents()
             }
-            cancelAndIgnoreRemainingEvents()
         }
-    }
 
     @Test
-    fun `ItemClicked with unknown id emits ShowMessage`() = runTest {
-        val record = completedRecord(id = 1L, contentUri = "content://media/1")
-        fileManager.resolveContentUriResult = { it.mediaStoreUri }
-        fileManager.isFileAccessibleResult = { true }
+    fun `inaccessible files are excluded from Content`() =
+        runTest {
+            val records =
+                listOf(
+                    completedRecord(1L, contentUri = "content://media/1"),
+                    completedRecord(2L, contentUri = "content://media/2"),
+                )
+            fileManager.resolveContentUriResult = { record -> record.mediaStoreUri }
+            // Only record 1 is accessible
+            fileManager.isFileAccessibleResult = { uri -> uri == "content://media/1" }
 
-        viewModel.uiState.test {
-            awaitItem() // Loading
-            emitCompleted(listOf(record))
-            awaitItem() // Content
-            viewModel.effect.test {
-                viewModel.onIntent(ItemClicked(999L))
-                val effect = awaitItem()
-                assertTrue(effect is ShowMessage)
+            viewModel.uiState.test {
+                awaitItem() // Loading
+                emitCompleted(records)
+                val state = awaitItem()
+                assertTrue(state is Content)
+                assertEquals(1, (state as Content).items.size)
+                assertEquals(1L, state.items.first().id)
                 cancelAndIgnoreRemainingEvents()
             }
-            cancelAndIgnoreRemainingEvents()
         }
-    }
+
+    @Test
+    fun `ItemClicked emits OpenContent effect`() =
+        runTest {
+            val record = completedRecord(id = 10L, contentUri = "content://media/10")
+            fileManager.resolveContentUriResult = { it.mediaStoreUri }
+            fileManager.isFileAccessibleResult = { true }
+
+            viewModel.uiState.test {
+                awaitItem() // Loading
+                emitCompleted(listOf(record))
+                awaitItem() // Content
+                viewModel.effect.test {
+                    viewModel.onIntent(ItemClicked(10L))
+                    val effect = awaitItem()
+                    assertTrue(effect is OpenContent)
+                    assertEquals("content://media/10", (effect as OpenContent).contentUri)
+                    cancelAndIgnoreRemainingEvents()
+                }
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `ItemLongPressed emits ShareContent effect`() =
+        runTest {
+            val record = completedRecord(id = 20L, contentUri = "content://media/20")
+            fileManager.resolveContentUriResult = { it.mediaStoreUri }
+            fileManager.isFileAccessibleResult = { true }
+
+            viewModel.uiState.test {
+                awaitItem() // Loading
+                emitCompleted(listOf(record))
+                awaitItem() // Content
+                viewModel.effect.test {
+                    viewModel.onIntent(ItemLongPressed(20L))
+                    val effect = awaitItem()
+                    assertTrue(effect is ShareContent)
+                    assertEquals("content://media/20", (effect as ShareContent).contentUri)
+                    cancelAndIgnoreRemainingEvents()
+                }
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `ItemClicked with unknown id emits ShowMessage`() =
+        runTest {
+            val record = completedRecord(id = 1L, contentUri = "content://media/1")
+            fileManager.resolveContentUriResult = { it.mediaStoreUri }
+            fileManager.isFileAccessibleResult = { true }
+
+            viewModel.uiState.test {
+                awaitItem() // Loading
+                emitCompleted(listOf(record))
+                awaitItem() // Content
+                viewModel.effect.test {
+                    viewModel.onIntent(ItemClicked(999L))
+                    val effect = awaitItem()
+                    assertTrue(effect is ShowMessage)
+                    cancelAndIgnoreRemainingEvents()
+                }
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
 }

@@ -48,9 +48,15 @@ fun IdleContent(
     onDismissExistingBanner: () -> Unit = {},
 ) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(top = Spacing.ContentTopPadding, start = Spacing.ScreenPadding, end = Spacing.ScreenPadding, bottom = Spacing.ScreenPadding),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(
+                    top = Spacing.ContentTopPadding,
+                    start = Spacing.ScreenPadding,
+                    end = Spacing.ScreenPadding,
+                    bottom = Spacing.ScreenPadding,
+                ),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Spacing.SectionGapIdle),
     ) {
@@ -60,10 +66,11 @@ fun IdleContent(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Box(
-                modifier = Modifier
-                    .size(Spacing.HeroIconSize)
-                    .clip(CircleShape)
-                    .background(SvdPrimarySoft),
+                modifier =
+                    Modifier
+                        .size(Spacing.HeroIconSize)
+                        .clip(CircleShape)
+                        .background(SvdPrimarySoft),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -76,20 +83,22 @@ fun IdleContent(
 
             Text(
                 text = stringResource(R.string.download_hero_title),
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = SvdForeground,
-                ),
+                style =
+                    MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = SvdForeground,
+                    ),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.widthIn(max = 280.dp),
             )
 
             Text(
                 text = stringResource(R.string.download_hero_subtitle),
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.Normal,
-                    color = SvdMutedForeground,
-                ),
+                style =
+                    MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Normal,
+                        color = SvdMutedForeground,
+                    ),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.widthIn(max = 300.dp),
             )
@@ -130,10 +139,11 @@ fun IdleContent(
         // Footer text
         Text(
             text = stringResource(R.string.download_footer_text),
-            style = MaterialTheme.typography.labelMedium.copy(
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-            ),
+            style =
+                MaterialTheme.typography.labelMedium.copy(
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                ),
             color = SvdMutedForeground,
             textAlign = TextAlign.Center,
         )

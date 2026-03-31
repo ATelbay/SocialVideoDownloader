@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class DownloadNotificationManagerTest {
-
     // These tests verify the contract for notification tap actions.
     // Full PendingIntent verification requires Android instrumentation tests.
 

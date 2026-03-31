@@ -35,7 +35,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
 class HistoryViewModelCloudTest {
-
     @RegisterExtension
     val mainDispatcherRule = MainDispatcherRule()
 
@@ -64,152 +63,164 @@ class HistoryViewModelCloudTest {
         every { cloudAuthService.getPhotoUrl() } returns null
     }
 
-    private fun createViewModel() = HistoryViewModel(
-        downloadRepository = repository,
-        fileManager = fileManager,
-        observeCloudCapacity = observeCloudCapacity,
-        billingRepository = billingRepository,
-        enableCloudBackupUseCase = enableCloudBackupUseCase,
-        disableCloudBackupUseCase = disableCloudBackupUseCase,
-        syncManager = syncManager,
-        backupPreferences = backupPreferences,
-        restoreFromCloudUseCase = restoreFromCloudUseCase,
-        cloudAuthService = cloudAuthService,
-        clipboard = clipboard,
-    )
+    private fun createViewModel() =
+        HistoryViewModel(
+            downloadRepository = repository,
+            fileManager = fileManager,
+            observeCloudCapacity = observeCloudCapacity,
+            billingRepository = billingRepository,
+            enableCloudBackupUseCase = enableCloudBackupUseCase,
+            disableCloudBackupUseCase = disableCloudBackupUseCase,
+            syncManager = syncManager,
+            backupPreferences = backupPreferences,
+            restoreFromCloudUseCase = restoreFromCloudUseCase,
+            cloudAuthService = cloudAuthService,
+            clipboard = clipboard,
+        )
 
     @Test
-    fun `initial state has isCloudBackupEnabled false`() = runTest {
-        val vm = createViewModel()
-        val state = vm.cloudBackupState.value
-        assertFalse(state.isCloudBackupEnabled)
-    }
-
-    @Test
-    fun `initial state has syncStatus Idle`() = runTest {
-        val vm = createViewModel()
-        val state = vm.cloudBackupState.value
-        assertEquals(SyncStatus.Idle, state.syncStatus)
-    }
-
-    @Test
-    fun `initial state has isSignedIn false when not authenticated`() = runTest {
-        val vm = createViewModel()
-        val state = vm.cloudBackupState.value
-        assertFalse(state.isSignedIn)
-    }
-
-    @Test
-    fun `ToggleCloudBackup when not signed in emits LaunchGoogleSignIn effect`() = runTest {
-        every { cloudAuthService.isAuthenticated() } returns false
-        val vm = createViewModel()
-
-        vm.effect.test {
-            vm.onIntent(ToggleCloudBackup)
-            assertEquals(LaunchGoogleSignIn, awaitItem())
-            cancelAndIgnoreRemainingEvents()
+    fun `initial state has isCloudBackupEnabled false`() =
+        runTest {
+            val vm = createViewModel()
+            val state = vm.cloudBackupState.value
+            assertFalse(state.isCloudBackupEnabled)
         }
-    }
 
     @Test
-    fun `ToggleCloudBackup when signed in and enabled calls DisableCloudBackupUseCase`() = runTest {
-        every { cloudAuthService.isAuthenticated() } returns true
-        isBackupEnabledFlow.value = true
-        val vm = createViewModel()
-
-        vm.onIntent(ToggleCloudBackup)
-
-        coVerify { disableCloudBackupUseCase() }
-    }
-
-    @Test
-    fun `SignInWithGoogle calls enableCloudBackupUseCase with idToken`() = runTest {
-        every { cloudAuthService.isAuthenticated() } returns false
-        coEvery { enableCloudBackupUseCase(any()) } coAnswers {
-            every { cloudAuthService.isAuthenticated() } returns true
+    fun `initial state has syncStatus Idle`() =
+        runTest {
+            val vm = createViewModel()
+            val state = vm.cloudBackupState.value
+            assertEquals(SyncStatus.Idle, state.syncStatus)
         }
-        val vm = createViewModel()
-
-        vm.onIntent(SignInWithGoogle("test-token"))
-
-        coVerify { enableCloudBackupUseCase("test-token") }
-    }
 
     @Test
-    fun `SignInWithGoogle on failure sets signInError`() = runTest {
-        every { cloudAuthService.isAuthenticated() } returns false
-        coEvery { enableCloudBackupUseCase(any()) } throws RuntimeException("auth failed")
-        val vm = createViewModel()
-
-        vm.onIntent(SignInWithGoogle("bad-token"))
-
-        vm.cloudBackupState.test {
-            val state = awaitItem()
-            assertFalse(state.isSigningIn)
-            assertEquals("auth failed", state.signInError)
-            cancelAndIgnoreRemainingEvents()
+    fun `initial state has isSignedIn false when not authenticated`() =
+        runTest {
+            val vm = createViewModel()
+            val state = vm.cloudBackupState.value
+            assertFalse(state.isSignedIn)
         }
-    }
 
     @Test
-    fun `SignOutCloud calls disableCloudBackupUseCase and updates auth state`() = runTest {
-        every { cloudAuthService.isAuthenticated() } returns true
-        val vm = createViewModel()
-
-        coEvery { disableCloudBackupUseCase() } coAnswers {
+    fun `ToggleCloudBackup when not signed in emits LaunchGoogleSignIn effect`() =
+        runTest {
             every { cloudAuthService.isAuthenticated() } returns false
+            val vm = createViewModel()
+
+            vm.effect.test {
+                vm.onIntent(ToggleCloudBackup)
+                assertEquals(LaunchGoogleSignIn, awaitItem())
+                cancelAndIgnoreRemainingEvents()
+            }
         }
 
-        vm.onIntent(SignOutCloud)
-
-        coVerify { disableCloudBackupUseCase() }
-    }
-
     @Test
-    fun `DismissSignInError clears signInError`() = runTest {
-        every { cloudAuthService.isAuthenticated() } returns false
-        coEvery { enableCloudBackupUseCase(any()) } throws RuntimeException("auth failed")
-        val vm = createViewModel()
-
-        vm.onIntent(SignInWithGoogle("bad-token"))
-        vm.onIntent(DismissSignInError)
-
-        vm.cloudBackupState.test {
-            val state = awaitItem()
-            assertNull(state.signInError)
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun `cloudBackupState updates isCloudBackupEnabled from BackupPreferences`() = runTest {
-        val vm = createViewModel()
-
-        vm.cloudBackupState.test {
-            assertFalse(awaitItem().isCloudBackupEnabled)
-
+    fun `ToggleCloudBackup when signed in and enabled calls DisableCloudBackupUseCase`() =
+        runTest {
+            every { cloudAuthService.isAuthenticated() } returns true
             isBackupEnabledFlow.value = true
-            assertTrue(awaitItem().isCloudBackupEnabled)
+            val vm = createViewModel()
 
-            cancelAndIgnoreRemainingEvents()
+            vm.onIntent(ToggleCloudBackup)
+
+            coVerify { disableCloudBackupUseCase() }
         }
-    }
 
     @Test
-    fun `cloudBackupState updates syncStatus from SyncManager observation`() = runTest {
-        val vm = createViewModel()
+    fun `SignInWithGoogle calls enableCloudBackupUseCase with idToken`() =
+        runTest {
+            every { cloudAuthService.isAuthenticated() } returns false
+            coEvery { enableCloudBackupUseCase(any()) } coAnswers {
+                every { cloudAuthService.isAuthenticated() } returns true
+            }
+            val vm = createViewModel()
 
-        vm.cloudBackupState.test {
-            assertEquals(SyncStatus.Idle, awaitItem().syncStatus)
+            vm.onIntent(SignInWithGoogle("test-token"))
 
-            syncStatusFlow.value = SyncStatus.Syncing
-            assertEquals(SyncStatus.Syncing, awaitItem().syncStatus)
-
-            val syncedStatus = SyncStatus.Synced(lastSyncTimestamp = 12345L)
-            syncStatusFlow.value = syncedStatus
-            assertEquals(syncedStatus, awaitItem().syncStatus)
-
-            cancelAndIgnoreRemainingEvents()
+            coVerify { enableCloudBackupUseCase("test-token") }
         }
-    }
+
+    @Test
+    fun `SignInWithGoogle on failure sets signInError`() =
+        runTest {
+            every { cloudAuthService.isAuthenticated() } returns false
+            coEvery { enableCloudBackupUseCase(any()) } throws RuntimeException("auth failed")
+            val vm = createViewModel()
+
+            vm.onIntent(SignInWithGoogle("bad-token"))
+
+            vm.cloudBackupState.test {
+                val state = awaitItem()
+                assertFalse(state.isSigningIn)
+                assertEquals("auth failed", state.signInError)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `SignOutCloud calls disableCloudBackupUseCase and updates auth state`() =
+        runTest {
+            every { cloudAuthService.isAuthenticated() } returns true
+            val vm = createViewModel()
+
+            coEvery { disableCloudBackupUseCase() } coAnswers {
+                every { cloudAuthService.isAuthenticated() } returns false
+            }
+
+            vm.onIntent(SignOutCloud)
+
+            coVerify { disableCloudBackupUseCase() }
+        }
+
+    @Test
+    fun `DismissSignInError clears signInError`() =
+        runTest {
+            every { cloudAuthService.isAuthenticated() } returns false
+            coEvery { enableCloudBackupUseCase(any()) } throws RuntimeException("auth failed")
+            val vm = createViewModel()
+
+            vm.onIntent(SignInWithGoogle("bad-token"))
+            vm.onIntent(DismissSignInError)
+
+            vm.cloudBackupState.test {
+                val state = awaitItem()
+                assertNull(state.signInError)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `cloudBackupState updates isCloudBackupEnabled from BackupPreferences`() =
+        runTest {
+            val vm = createViewModel()
+
+            vm.cloudBackupState.test {
+                assertFalse(awaitItem().isCloudBackupEnabled)
+
+                isBackupEnabledFlow.value = true
+                assertTrue(awaitItem().isCloudBackupEnabled)
+
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `cloudBackupState updates syncStatus from SyncManager observation`() =
+        runTest {
+            val vm = createViewModel()
+
+            vm.cloudBackupState.test {
+                assertEquals(SyncStatus.Idle, awaitItem().syncStatus)
+
+                syncStatusFlow.value = SyncStatus.Syncing
+                assertEquals(SyncStatus.Syncing, awaitItem().syncStatus)
+
+                val syncedStatus = SyncStatus.Synced(lastSyncTimestamp = 12345L)
+                syncStatusFlow.value = syncedStatus
+                assertEquals(syncedStatus, awaitItem().syncStatus)
+
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
 }

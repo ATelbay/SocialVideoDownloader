@@ -72,9 +72,10 @@ fun DownloadCompleteContent(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Box(
-                modifier = Modifier
-                    .size(Spacing.HeroIconSize)
-                    .background(SvdSuccessSoft, CircleShape),
+                modifier =
+                    Modifier
+                        .size(Spacing.HeroIconSize)
+                        .background(SvdSuccessSoft, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -102,12 +103,13 @@ fun DownloadCompleteContent(
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             // Open button (outlined)
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(Spacing.SecondaryButtonHeight)
-                    .clip(AppShapesInstance.control)
-                    .border(1.dp, SvdPrimaryStrong, AppShapesInstance.control)
-                    .clickable(onClick = onOpenClicked),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(Spacing.SecondaryButtonHeight)
+                        .clip(AppShapesInstance.control)
+                        .border(1.dp, SvdPrimaryStrong, AppShapesInstance.control)
+                        .clickable(onClick = onOpenClicked),
                 contentAlignment = Alignment.Center,
             ) {
                 Row(
@@ -130,12 +132,13 @@ fun DownloadCompleteContent(
 
             // Share button (gradient fill)
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(Spacing.SecondaryButtonHeight)
-                    .clip(AppShapesInstance.control)
-                    .background(Brush.verticalGradient(listOf(SvdPrimary, SvdWarning)))
-                    .clickable(onClick = onShareClicked),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(Spacing.SecondaryButtonHeight)
+                        .clip(AppShapesInstance.control)
+                        .background(Brush.verticalGradient(listOf(SvdPrimary, SvdWarning)))
+                        .clickable(onClick = onShareClicked),
                 contentAlignment = Alignment.Center,
             ) {
                 Row(

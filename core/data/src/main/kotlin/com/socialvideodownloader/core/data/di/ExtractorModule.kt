@@ -13,17 +13,11 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ExtractorModule {
+    @Binds
+    @Singleton
+    abstract fun bindVideoExtractorRepository(impl: FallbackVideoExtractorRepository): VideoExtractorRepository
 
     @Binds
     @Singleton
-    abstract fun bindVideoExtractorRepository(
-        impl: FallbackVideoExtractorRepository,
-    ): VideoExtractorRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindMediaStoreRepository(
-        impl: MediaStoreRepositoryImpl,
-    ): MediaStoreRepository
-
+    abstract fun bindMediaStoreRepository(impl: MediaStoreRepositoryImpl): MediaStoreRepository
 }

@@ -41,36 +41,39 @@ fun PillNavigationBar(
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val tabs = listOf(
-        TabData(label = stringResource(R.string.nav_tab_download), icon = Icons.Outlined.Download),
-        TabData(label = stringResource(R.string.nav_tab_library), icon = Icons.Outlined.FolderOpen),
-        TabData(label = stringResource(R.string.nav_tab_history), icon = Icons.Outlined.History),
-    )
+    val tabs =
+        listOf(
+            TabData(label = stringResource(R.string.nav_tab_download), icon = Icons.Outlined.Download),
+            TabData(label = stringResource(R.string.nav_tab_library), icon = Icons.Outlined.FolderOpen),
+            TabData(label = stringResource(R.string.nav_tab_history), icon = Icons.Outlined.History),
+        )
 
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(
-                top = Spacing.NavBarPaddingTop,
-                start = Spacing.NavBarPaddingH,
-                end = Spacing.NavBarPaddingH,
-                bottom = Spacing.NavBarPaddingBottom,
-            )
-            .height(Spacing.NavBarHeight)
-            .clip(AppShapesInstance.pill)
-            .background(SvdSurface)
-            .border(width = 1.dp, color = SvdBorder, shape = AppShapesInstance.pill)
-            .padding(Spacing.NavBarInternalPadding),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(
+                    top = Spacing.NavBarPaddingTop,
+                    start = Spacing.NavBarPaddingH,
+                    end = Spacing.NavBarPaddingH,
+                    bottom = Spacing.NavBarPaddingBottom,
+                )
+                .height(Spacing.NavBarHeight)
+                .clip(AppShapesInstance.pill)
+                .background(SvdSurface)
+                .border(width = 1.dp, color = SvdBorder, shape = AppShapesInstance.pill)
+                .padding(Spacing.NavBarInternalPadding),
     ) {
         tabs.forEachIndexed { index, tab ->
             val isSelected = index == selectedIndex
             Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(54.dp)
-                    .clip(AppShapesInstance.navTab)
-                    .background(if (isSelected) SvdPrimarySoft else Color.Transparent)
-                    .clickable { onSelect(index) },
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .height(54.dp)
+                        .clip(AppShapesInstance.navTab)
+                        .background(if (isSelected) SvdPrimarySoft else Color.Transparent)
+                        .clickable { onSelect(index) },
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
             ) {

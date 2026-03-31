@@ -15,10 +15,11 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
-
     @Provides
     @Singleton
-    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase =
+    fun provideAppDatabase(
+        @ApplicationContext context: Context,
+    ): AppDatabase =
         Room.databaseBuilder(
             context,
             AppDatabase::class.java,
@@ -26,10 +27,8 @@ object DatabaseModule {
         ).addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4, AppDatabase.MIGRATION_4_5).build()
 
     @Provides
-    fun provideDownloadDao(database: AppDatabase): DownloadDao =
-        database.downloadDao()
+    fun provideDownloadDao(database: AppDatabase): DownloadDao = database.downloadDao()
 
     @Provides
-    fun provideSyncQueueDao(database: AppDatabase): SyncQueueDao =
-        database.syncQueueDao()
+    fun provideSyncQueueDao(database: AppDatabase): SyncQueueDao = database.syncQueueDao()
 }

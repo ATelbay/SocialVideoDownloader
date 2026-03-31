@@ -9,12 +9,13 @@ import android.util.Log
 fun Context.shareVideo(contentUri: String) {
     try {
         val shareUri = Uri.parse(contentUri)
-        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-            type = "video/*"
-            putExtra(Intent.EXTRA_STREAM, shareUri)
-            clipData = ClipData.newRawUri(null, shareUri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
+        val shareIntent =
+            Intent(Intent.ACTION_SEND).apply {
+                type = "video/*"
+                putExtra(Intent.EXTRA_STREAM, shareUri)
+                clipData = ClipData.newRawUri(null, shareUri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
         startActivity(
             Intent.createChooser(shareIntent, null).apply {
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -28,11 +29,12 @@ fun Context.shareVideo(contentUri: String) {
 
 fun Context.openVideo(contentUri: String) {
     try {
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            setDataAndType(Uri.parse(contentUri), "video/*")
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
+        val intent =
+            Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(Uri.parse(contentUri), "video/*")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
         startActivity(intent)
     } catch (e: Exception) {
         Log.e("IntentUtils", "Failed to open video", e)
