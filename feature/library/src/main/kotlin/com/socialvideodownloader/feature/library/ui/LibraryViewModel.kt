@@ -26,7 +26,7 @@ class LibraryViewModel
         downloadRepository: DownloadRepository,
         fileManager: FileAccessManager,
     ) : ViewModel() {
-        private val shared =
+        val shared =
             SharedLibraryViewModel(
                 coroutineScope = viewModelScope,
                 downloadRepository = downloadRepository,
