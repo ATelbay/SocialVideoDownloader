@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -21,6 +22,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.socialvideodownloader.shared.ui.theme.LocalAppShapes
@@ -96,9 +101,13 @@ fun ExtractingContent(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .height(Spacing.SecondaryButtonHeight)
+                    .heightIn(min = Spacing.SecondaryButtonHeight)
                     .clip(shapes.control)
                     .border(1.dp, SvdBorderStrong, shapes.control)
+                    .semantics(mergeDescendants = true) {
+                        role = Role.Button
+                        contentDescription = "Cancel"
+                    }
                     .clickable(onClick = onCancelClicked),
             contentAlignment = Alignment.Center,
         ) {

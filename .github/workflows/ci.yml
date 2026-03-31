@@ -138,6 +138,13 @@ jobs:
           distribution: 'temurin'
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+      - name: Validate Compose shared modules
+        run: |
+          ./gradlew \
+            :shared:ui:compileKotlinIosArm64 \
+            :shared:ui:compileKotlinIosSimulatorArm64 \
+            :shared:di:compileKotlinIosArm64 \
+            :shared:di:compileKotlinIosSimulatorArm64
       - name: Build KMP frameworks
         run: ./gradlew linkDebugFrameworkIosSimulatorArm64
       - name: Build iOS app
@@ -145,9 +152,11 @@ jobs:
           xcodebuild -project iosApp/iosApp.xcodeproj \
             -scheme iosApp \
             -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,OS=latest,name=iPhone 16 Pro' \
+            -destination 'generic/platform=iOS Simulator' \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO \
+            ONLY_ACTIVE_ARCH=YES \
+            ARCHS=arm64 \
             build
       - name: Upload build logs on failure
         if: failure()

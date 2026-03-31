@@ -27,6 +27,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.socialvideodownloader.shared.ui.theme.SvdBorder
@@ -91,6 +95,10 @@ fun HistoryBottomSheet(
                 modifier =
                     Modifier
                         .fillMaxWidth()
+                        .semantics(mergeDescendants = true) {
+                            role = Role.Button
+                            contentDescription = copyLinkLabel
+                        }
                         .clickable(onClick = onCopyLink)
                         .padding(horizontal = 16.dp, vertical = 16.dp),
             ) {
@@ -115,6 +123,10 @@ fun HistoryBottomSheet(
                     modifier =
                         Modifier
                             .fillMaxWidth()
+                            .semantics(mergeDescendants = true) {
+                                role = Role.Button
+                                contentDescription = shareLabel
+                            }
                             .clickable(onClick = onShare)
                             .padding(horizontal = 16.dp, vertical = 16.dp),
                 ) {
@@ -139,6 +151,10 @@ fun HistoryBottomSheet(
                 modifier =
                     Modifier
                         .fillMaxWidth()
+                        .semantics(mergeDescendants = true) {
+                            role = Role.Button
+                            contentDescription = deleteLabel
+                        }
                         .clickable(onClick = onDelete)
                         .padding(horizontal = 16.dp, vertical = 16.dp),
             ) {

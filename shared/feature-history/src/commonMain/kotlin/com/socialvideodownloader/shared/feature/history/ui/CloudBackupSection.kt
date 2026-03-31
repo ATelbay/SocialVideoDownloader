@@ -20,6 +20,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.socialvideodownloader.core.domain.model.SyncStatus
@@ -110,18 +112,23 @@ fun CloudBackupSection(
                 Switch(
                     checked = state.isCloudBackupEnabled,
                     onCheckedChange = { onToggleBackup() },
+                    modifier =
+                        Modifier.semantics {
+                            contentDescription = backupToggleLabel
+                        },
                 )
             }
-            val statusText = syncStatusText(
-                isEnabled = state.isCloudBackupEnabled,
-                syncStatus = state.syncStatus,
-                backupDisabledText = backupDisabledText,
-                backupNeverText = backupNeverText,
-                backupSyncingText = backupSyncingText,
-                backupSyncedText = backupSyncedText,
-                backupPausedText = backupPausedText,
-                backupErrorText = backupErrorText,
-            )
+            val statusText =
+                syncStatusText(
+                    isEnabled = state.isCloudBackupEnabled,
+                    syncStatus = state.syncStatus,
+                    backupDisabledText = backupDisabledText,
+                    backupNeverText = backupNeverText,
+                    backupSyncingText = backupSyncingText,
+                    backupSyncedText = backupSyncedText,
+                    backupPausedText = backupPausedText,
+                    backupErrorText = backupErrorText,
+                )
             if (statusText != null) {
                 Text(
                     text = statusText,

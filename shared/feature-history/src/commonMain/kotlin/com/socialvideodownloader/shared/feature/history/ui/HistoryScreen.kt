@@ -37,21 +37,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.socialvideodownloader.core.domain.model.DownloadStatus
 import com.socialvideodownloader.shared.feature.history.HistoryEffect
 import com.socialvideodownloader.shared.feature.history.HistoryIntent
+import com.socialvideodownloader.shared.feature.history.HistoryMessageType
 import com.socialvideodownloader.shared.feature.history.HistoryUiState
 import com.socialvideodownloader.shared.feature.history.RestoreState
 import com.socialvideodownloader.shared.feature.history.SharedHistoryViewModel
 import com.socialvideodownloader.shared.ui.components.SvdTopBar
 import com.socialvideodownloader.shared.ui.theme.LocalAppShapes
+import com.socialvideodownloader.shared.ui.theme.Spacing
 import com.socialvideodownloader.shared.ui.theme.SvdBg
 import com.socialvideodownloader.shared.ui.theme.SvdBorder
 import com.socialvideodownloader.shared.ui.theme.SvdForeground
 import com.socialvideodownloader.shared.ui.theme.SvdSubtleForeground
 import com.socialvideodownloader.shared.ui.theme.SvdSurface
-import com.socialvideodownloader.shared.ui.theme.Spacing
 
 data class HistoryStrings(
     val screenTitle: String,
@@ -132,12 +135,12 @@ fun HistoryScreen(
                 is HistoryEffect.ShowMessage -> {
                     val msg =
                         when (effect.messageType) {
-                            com.socialvideodownloader.shared.feature.history.HistoryMessageType.DELETE_SUCCESS -> strings.msgDeleted
-                            com.socialvideodownloader.shared.feature.history.HistoryMessageType.DELETE_ALL_SUCCESS -> strings.msgAllDeleted
-                            com.socialvideodownloader.shared.feature.history.HistoryMessageType.COPY_URL_SUCCESS -> strings.msgLinkCopied
-                            com.socialvideodownloader.shared.feature.history.HistoryMessageType.CLOUD_SYNC_ERROR -> strings.msgCloudSyncError
-                            com.socialvideodownloader.shared.feature.history.HistoryMessageType.FILE_UNAVAILABLE -> strings.msgFileUnavailable
-                            com.socialvideodownloader.shared.feature.history.HistoryMessageType.DELETE_FILE_FAILED -> strings.msgDeleteFileFailed
+                            HistoryMessageType.DELETE_SUCCESS -> strings.msgDeleted
+                            HistoryMessageType.DELETE_ALL_SUCCESS -> strings.msgAllDeleted
+                            HistoryMessageType.COPY_URL_SUCCESS -> strings.msgLinkCopied
+                            HistoryMessageType.CLOUD_SYNC_ERROR -> strings.msgCloudSyncError
+                            HistoryMessageType.FILE_UNAVAILABLE -> strings.msgFileUnavailable
+                            HistoryMessageType.DELETE_FILE_FAILED -> strings.msgDeleteFileFailed
                         }
                     snackbarHostState.showSnackbar(msg)
                 }
@@ -213,7 +216,10 @@ fun HistoryScreen(
                             modifier =
                                 Modifier
                                     .weight(1f)
-                                    .border(1.dp, SvdBorder, shapes.control),
+                                    .border(1.dp, SvdBorder, shapes.control)
+                                    .semantics {
+                                        contentDescription = strings.searchHint
+                                    },
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Box(

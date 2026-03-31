@@ -2,8 +2,8 @@ package com.socialvideodownloader.shared.feature.history.ui
 
 import platform.Foundation.NSDate
 import platform.Foundation.NSDateFormatter
-import platform.Foundation.NSDateFormatterShortStyle
 import platform.Foundation.NSDateFormatterNoStyle
+import platform.Foundation.NSDateFormatterShortStyle
 import platform.Foundation.dateWithTimeIntervalSince1970
 
 actual fun formatTimestamp(epochMillis: Long): String {

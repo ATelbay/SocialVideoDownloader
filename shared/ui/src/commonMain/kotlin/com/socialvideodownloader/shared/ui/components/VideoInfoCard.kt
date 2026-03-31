@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.socialvideodownloader.shared.ui.theme.LocalAppShapes
+import com.socialvideodownloader.shared.ui.theme.Spacing
 import com.socialvideodownloader.shared.ui.theme.SvdAccent
 import com.socialvideodownloader.shared.ui.theme.SvdBorder
 import com.socialvideodownloader.shared.ui.theme.SvdForeground
@@ -39,7 +40,6 @@ import com.socialvideodownloader.shared.ui.theme.SvdMutedForeground
 import com.socialvideodownloader.shared.ui.theme.SvdPrimarySoft
 import com.socialvideodownloader.shared.ui.theme.SvdPrimaryStrong
 import com.socialvideodownloader.shared.ui.theme.SvdSurface
-import com.socialvideodownloader.shared.ui.theme.Spacing
 
 @Composable
 fun VideoInfoCard(

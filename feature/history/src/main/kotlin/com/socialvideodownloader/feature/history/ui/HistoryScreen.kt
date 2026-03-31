@@ -39,61 +39,62 @@ fun HistoryScreen(
     val restoreCompletedFmt = stringResource(R.string.cloud_restore_complete)
     val cloudBackupSyncedFmt = stringResource(R.string.cloud_backup_synced)
 
-    val strings = HistoryStrings(
-        screenTitle = stringResource(R.string.history_screen_title_full),
-        filterActionLabel = stringResource(R.string.history_action_filter),
-        searchHint = stringResource(R.string.history_search_hint),
-        emptyTitle = stringResource(R.string.history_empty_title),
-        emptyDescription = stringResource(R.string.history_empty_description_new),
-        noResultsDescription = stringResource(R.string.history_no_results_description),
-        startDownloadingLabel = stringResource(R.string.history_start_downloading),
-        startNewDownloadLabel = stringResource(R.string.history_start_new_download),
-        restoreButtonLabel = stringResource(R.string.cloud_restore_button),
-        capacityBannerText = { used, limit ->
-            String.format(capacityBannerFmt, used, limit)
-        },
-        capacityUpgradeLabel = stringResource(R.string.cloud_capacity_upgrade),
-        okLabel = stringResource(android.R.string.ok),
-        restoreProgressText = { current, total ->
-            String.format(restoreProgressFmt, current, total)
-        },
-        restoreCompletedText = { restored, skipped ->
-            String.format(restoreCompletedFmt, restored, skipped)
-        },
-        restoreKeyLostText = stringResource(R.string.cloud_restore_key_lost),
-        deleteTitle = stringResource(R.string.history_delete_single_title),
-        deleteBodyText = stringResource(R.string.history_delete_message_single),
-        deleteFilesLabel = stringResource(R.string.history_delete_checkbox_label),
-        deleteCancelLabel = stringResource(R.string.history_delete_cancel),
-        deleteConfirmLabel = stringResource(R.string.history_delete_confirm),
-        bottomSheetCopyLinkLabel = stringResource(R.string.history_bottom_sheet_copy_link),
-        bottomSheetShareLabel = stringResource(R.string.history_bottom_sheet_share),
-        bottomSheetDeleteLabel = stringResource(R.string.history_bottom_sheet_delete),
-        upgradeTitle = stringResource(R.string.upgrade_title),
-        upgradeDescription = stringResource(R.string.upgrade_description),
-        upgradePriceLabel = stringResource(R.string.upgrade_price),
-        upgradeBuyLabel = stringResource(R.string.upgrade_buy_button),
-        upgradeCancelLabel = stringResource(R.string.history_delete_cancel),
-        cloudBackupToggleLabel = stringResource(R.string.cloud_backup_toggle_label),
-        cloudSignInLabel = stringResource(R.string.cloud_sign_in_google),
-        cloudSignOutLabel = stringResource(R.string.cloud_sign_out),
-        cloudSignedInAs = stringResource(R.string.cloud_signed_in_as, ""),
-        cloudSignInFailedMessage = stringResource(R.string.cloud_sign_in_failed),
-        cloudBackupDisabledText = stringResource(R.string.cloud_backup_disabled),
-        cloudBackupNeverText = stringResource(R.string.cloud_backup_never),
-        cloudBackupSyncingText = stringResource(R.string.cloud_backup_syncing),
-        cloudBackupSyncedText = { time -> String.format(cloudBackupSyncedFmt, time) },
-        cloudBackupPausedText = stringResource(R.string.cloud_backup_paused),
-        cloudBackupErrorText = stringResource(R.string.cloud_backup_error),
-        msgDeleted = stringResource(R.string.history_deleted),
-        msgAllDeleted = stringResource(R.string.history_all_deleted),
-        msgLinkCopied = stringResource(R.string.history_link_copied),
-        msgCloudSyncError = stringResource(R.string.history_cloud_sync_error),
-        msgFileUnavailable = stringResource(R.string.history_file_unavailable),
-        msgDeleteFileFailed = stringResource(R.string.history_delete_single_file_failed),
-        msgOpenError = stringResource(R.string.history_open_error),
-        msgShareError = stringResource(R.string.history_share_error),
-    )
+    val strings =
+        HistoryStrings(
+            screenTitle = stringResource(R.string.history_screen_title_full),
+            filterActionLabel = stringResource(R.string.history_action_filter),
+            searchHint = stringResource(R.string.history_search_hint),
+            emptyTitle = stringResource(R.string.history_empty_title),
+            emptyDescription = stringResource(R.string.history_empty_description_new),
+            noResultsDescription = stringResource(R.string.history_no_results_description),
+            startDownloadingLabel = stringResource(R.string.history_start_downloading),
+            startNewDownloadLabel = stringResource(R.string.history_start_new_download),
+            restoreButtonLabel = stringResource(R.string.cloud_restore_button),
+            capacityBannerText = { used, limit ->
+                String.format(capacityBannerFmt, used, limit)
+            },
+            capacityUpgradeLabel = stringResource(R.string.cloud_capacity_upgrade),
+            okLabel = stringResource(android.R.string.ok),
+            restoreProgressText = { current, total ->
+                String.format(restoreProgressFmt, current, total)
+            },
+            restoreCompletedText = { restored, skipped ->
+                String.format(restoreCompletedFmt, restored, skipped)
+            },
+            restoreKeyLostText = stringResource(R.string.cloud_restore_key_lost),
+            deleteTitle = stringResource(R.string.history_delete_single_title),
+            deleteBodyText = stringResource(R.string.history_delete_message_single),
+            deleteFilesLabel = stringResource(R.string.history_delete_checkbox_label),
+            deleteCancelLabel = stringResource(R.string.history_delete_cancel),
+            deleteConfirmLabel = stringResource(R.string.history_delete_confirm),
+            bottomSheetCopyLinkLabel = stringResource(R.string.history_bottom_sheet_copy_link),
+            bottomSheetShareLabel = stringResource(R.string.history_bottom_sheet_share),
+            bottomSheetDeleteLabel = stringResource(R.string.history_bottom_sheet_delete),
+            upgradeTitle = stringResource(R.string.upgrade_title),
+            upgradeDescription = stringResource(R.string.upgrade_description),
+            upgradePriceLabel = stringResource(R.string.upgrade_price),
+            upgradeBuyLabel = stringResource(R.string.upgrade_buy_button),
+            upgradeCancelLabel = stringResource(R.string.history_delete_cancel),
+            cloudBackupToggleLabel = stringResource(R.string.cloud_backup_toggle_label),
+            cloudSignInLabel = stringResource(R.string.cloud_sign_in_google),
+            cloudSignOutLabel = stringResource(R.string.cloud_sign_out),
+            cloudSignedInAs = stringResource(R.string.cloud_signed_in_as, ""),
+            cloudSignInFailedMessage = stringResource(R.string.cloud_sign_in_failed),
+            cloudBackupDisabledText = stringResource(R.string.cloud_backup_disabled),
+            cloudBackupNeverText = stringResource(R.string.cloud_backup_never),
+            cloudBackupSyncingText = stringResource(R.string.cloud_backup_syncing),
+            cloudBackupSyncedText = { time -> String.format(cloudBackupSyncedFmt, time) },
+            cloudBackupPausedText = stringResource(R.string.cloud_backup_paused),
+            cloudBackupErrorText = stringResource(R.string.cloud_backup_error),
+            msgDeleted = stringResource(R.string.history_deleted),
+            msgAllDeleted = stringResource(R.string.history_all_deleted),
+            msgLinkCopied = stringResource(R.string.history_link_copied),
+            msgCloudSyncError = stringResource(R.string.history_cloud_sync_error),
+            msgFileUnavailable = stringResource(R.string.history_file_unavailable),
+            msgDeleteFileFailed = stringResource(R.string.history_delete_single_file_failed),
+            msgOpenError = stringResource(R.string.history_open_error),
+            msgShareError = stringResource(R.string.history_share_error),
+        )
 
     HistoryScreen(
         viewModel = viewModel.shared,

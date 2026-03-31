@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,12 +23,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.socialvideodownloader.shared.ui.theme.LocalAppShapes
+import com.socialvideodownloader.shared.ui.theme.Spacing
 import com.socialvideodownloader.shared.ui.theme.SvdBorder
 import com.socialvideodownloader.shared.ui.theme.SvdForeground
 import com.socialvideodownloader.shared.ui.theme.SvdPrimarySoft
 import com.socialvideodownloader.shared.ui.theme.SvdPrimaryStrong
 import com.socialvideodownloader.shared.ui.theme.SvdSurfaceAlt
-import com.socialvideodownloader.shared.ui.theme.Spacing
 
 @Composable
 fun SvdTopBar(
@@ -42,7 +42,7 @@ fun SvdTopBar(
         modifier =
             modifier
                 .fillMaxWidth()
-                .height(Spacing.TopBarHeight)
+                .heightIn(min = Spacing.TopBarHeight)
                 .clip(shapes.control)
                 .background(SvdSurfaceAlt)
                 .border(1.dp, SvdBorder, shapes.control)
@@ -68,7 +68,7 @@ fun SvdTopBar(
                         .then(
                             if (onActionClick != null) {
                                 Modifier
-                                    .semantics {
+                                    .semantics(mergeDescendants = true) {
                                         role = Role.Button
                                         contentDescription = actionLabel
                                     }
@@ -77,7 +77,7 @@ fun SvdTopBar(
                                 Modifier
                             },
                         )
-                        .height(Spacing.ActionChipHeight)
+                        .heightIn(min = Spacing.ActionChipHeight)
                         .padding(horizontal = 12.dp),
                 contentAlignment = Alignment.Center,
             ) {

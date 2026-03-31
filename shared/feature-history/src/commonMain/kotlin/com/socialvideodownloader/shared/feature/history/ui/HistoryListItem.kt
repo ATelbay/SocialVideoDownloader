@@ -20,6 +20,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
@@ -53,6 +57,17 @@ fun HistoryListItemRow(
                 .clip(shapes.card)
                 .background(SvdSurface)
                 .border(1.dp, SvdBorder, shapes.card)
+                .semantics(mergeDescendants = true) {
+                    role = Role.Button
+                    contentDescription =
+                        historyItemDescription(
+                            title = item.title,
+                            host = extractHost(item.sourceUrl),
+                            formattedDate = formattedDate,
+                            formattedSize = formattedSize,
+                            status = item.status.name,
+                        )
+                }
                 .combinedClickable(onClick = onClick, onLongClick = onLongClick)
                 .padding(Spacing.CardInnerPaddingCompact),
     ) {
@@ -137,3 +152,18 @@ private fun extractHost(url: String): String? {
         null
     }
 }
+
+private fun historyItemDescription(
+    title: String,
+    host: String?,
+    formattedDate: String,
+    formattedSize: String?,
+    status: String,
+): String =
+    listOfNotNull(
+        title.takeIf { it.isNotBlank() },
+        host?.takeIf { it.isNotBlank() },
+        formattedDate.takeIf { it.isNotBlank() },
+        formattedSize?.takeIf { it.isNotBlank() },
+        status.lowercase().replace('_', ' '),
+    ).joinToString(separator = ", ")

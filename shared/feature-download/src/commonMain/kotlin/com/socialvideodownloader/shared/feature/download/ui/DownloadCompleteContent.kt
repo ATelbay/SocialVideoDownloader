@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -23,6 +23,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.socialvideodownloader.core.domain.model.VideoMetadata
@@ -102,9 +106,13 @@ fun DownloadCompleteContent(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .height(Spacing.SecondaryButtonHeight)
+                        .heightIn(min = Spacing.SecondaryButtonHeight)
                         .clip(shapes.control)
                         .border(1.dp, SvdPrimaryStrong, shapes.control)
+                        .semantics(mergeDescendants = true) {
+                            role = Role.Button
+                            contentDescription = "Open"
+                        }
                         .clickable(onClick = onOpenClicked),
                 contentAlignment = Alignment.Center,
             ) {
@@ -131,9 +139,13 @@ fun DownloadCompleteContent(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .height(Spacing.SecondaryButtonHeight)
+                        .heightIn(min = Spacing.SecondaryButtonHeight)
                         .clip(shapes.control)
                         .background(Brush.verticalGradient(listOf(SvdPrimary, SvdWarning)))
+                        .semantics(mergeDescendants = true) {
+                            role = Role.Button
+                            contentDescription = "Share"
+                        }
                         .clickable(onClick = onShareClicked),
                 contentAlignment = Alignment.Center,
             ) {

@@ -9,7 +9,6 @@ dependencies {
     compileOnly(libs.jetbrainsCompose.gradlePlugin)
     compileOnly(libs.ksp.gradlePlugin)
     compileOnly(libs.room.gradlePlugin)
-    compileOnly(libs.skie.gradlePlugin)
 }
 
 gradlePlugin {

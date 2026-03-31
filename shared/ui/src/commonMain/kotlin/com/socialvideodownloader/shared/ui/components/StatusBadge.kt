@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.socialvideodownloader.shared.ui.theme.LocalAppShapes
+import com.socialvideodownloader.shared.ui.theme.Spacing
 import com.socialvideodownloader.shared.ui.theme.SvdAccent
 import com.socialvideodownloader.shared.ui.theme.SvdAccentSoft
 import com.socialvideodownloader.shared.ui.theme.SvdError
@@ -34,7 +35,6 @@ import com.socialvideodownloader.shared.ui.theme.SvdPrimarySoft
 import com.socialvideodownloader.shared.ui.theme.SvdPrimaryStrong
 import com.socialvideodownloader.shared.ui.theme.SvdSuccess
 import com.socialvideodownloader.shared.ui.theme.SvdSuccessSoft
-import com.socialvideodownloader.shared.ui.theme.Spacing
 
 /**
  * Displays a colored status chip.

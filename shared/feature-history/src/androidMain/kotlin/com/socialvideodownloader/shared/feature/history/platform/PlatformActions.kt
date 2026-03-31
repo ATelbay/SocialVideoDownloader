@@ -35,8 +35,9 @@ actual fun shareFile(uri: String) {
  * which requires an Activity context not available here. This stub returns a failure
  * so callers fall back to the screen-level sign-in flow via [HistoryEffect.LaunchGoogleSignIn].
  */
-actual fun triggerGoogleSignIn(): Result<String> =
-    Result.failure(UnsupportedOperationException("Use LaunchGoogleSignIn effect on Android"))
+actual fun triggerGoogleSignIn(): Result<String> {
+    return Result.failure(UnsupportedOperationException("Use LaunchGoogleSignIn effect on Android"))
+}
 
 actual fun openUpgradeFlow() {
     // Upgrade flow requires Activity context — handled via LaunchUpgradeFlow effect in the screen

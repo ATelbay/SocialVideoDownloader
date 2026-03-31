@@ -6,14 +6,14 @@ Built on yt-dlp via youtubedl-android. Personal tool.
 
 ## Architecture
 - **Pattern:** MVI (Model-View-Intent)
-- **UI:** Jetpack Compose + Material 3 + Dynamic Color
-- **Navigation:** Single Activity, Compose Navigation (composable destinations, no fragments)
-- **DI:** Hilt (with KSP, NOT kapt)
+- **UI:** Jetpack Compose on Android + Compose Multiplatform shared UI/iOS shell + Material 3 + Dynamic Color
+- **Navigation:** Single Activity on Android, Compose Navigation / JetBrains Navigation Compose in the shared shell (composable destinations, no fragments)
+- **DI:** Hilt on Android + Koin in shared/iOS shell (with KSP, NOT kapt)
 - **Async:** Coroutines + StateFlow/SharedFlow
 - **DB:** Room (KSP) for download history
 - **Extraction:** youtubedl-android (yt-dlp wrapper) + FFmpeg + aria2c
 - **Images:** Coil for thumbnails
-- **Min SDK:** 26 | **Target SDK:** 36 | **Kotlin:** 2.0+
+- **Min SDK:** 26 | **Target SDK:** 36 | **Kotlin:** 2.2.10
 
 ## Module structure
 ```
@@ -29,6 +29,8 @@ Android-only modules:
 :core:billing              — Android: Play Billing (Pro tier)
 
 KMP Shared modules (Android + iOS):
+:shared:ui              — Compose Multiplatform design system, theme, shared UI components
+:shared:di              — Compose Multiplatform app shell, Koin init, iOS bridge
 :shared:network            — Ktor HTTP client, yt-dlp API models, server communication
 :shared:data               — Room KMP DB, DAOs, platform abstractions (FileStorage, DownloadManager, Clipboard)
 :shared:feature-download   — SharedDownloadViewModel: state machine, format selection, retry logic
@@ -36,12 +38,13 @@ KMP Shared modules (Android + iOS):
 :shared:feature-library    — SharedLibraryViewModel: offline library, file access
 
 iOS-only:
-iosApp/                    — SwiftUI app: Download, History, Library, Cloud Backup, Share Extension screens
+iosApp/                    — SwiftUI shell hosting the Compose Multiplatform root, plus Share Extension screens
 ```
 
 ### KMP Convention Plugins (build-logic)
 - `svd.kmp.library` — multiplatform library with Android + iOS targets, Room KMP, Ktor
 - `svd.kmp.feature` — KMP feature module with shared ViewModel dependencies
+- `svd.kmp.compose` — KMP Compose module with shared UI/runtime/material/resources
 - `svd.android.library` — Android-only library (Compose off by default)
 - `svd.android.feature` — Android feature module (Compose + Hilt)
 
@@ -51,7 +54,7 @@ iosApp/                    — SwiftUI app: Download, History, Library, Cloud Ba
 ./gradlew assembleRelease        # Release build
 ./gradlew test                   # Unit tests
 ./gradlew connectedAndroidTest   # Instrumentation tests
-# ktlint: exclude iOS native compilation due to Koin 4.2.0 / Kotlin 2.2.x ABI mismatch
+# ktlint: exclude iOS native compilation due to Koin 4.1.0 / Kotlin 2.2.x ABI mismatch
 ./gradlew ktlintCheck -x compileKotlinIosArm64 -x compileKotlinIosSimulatorArm64
 ```
 
@@ -127,7 +130,7 @@ io.github.junkfood02.youtubedl-android:aria2c:0.18.+
 - Room KMP (shared DB schema in commonMain, platform builders), MediaStore (Android), Documents directory (iOS), Multiplatform Settings (preferences) (011-kmp-ios-migration)
 - Kotlin 2.2.10 (Android + KMP shared), Swift 6.x (iOS) + GitHub Actions, Gradle KTS, Xcode 16.x, KMP framework binaries, SKIE 0.10.10 (012-cicd-github-actions)
 - N/A (CI/CD infrastructure — no data model changes) (012-cicd-github-actions)
-- Kotlin 2.2.10 (shared + Android), Swift 6.x (iOS app shell + Share Extension) + Compose Multiplatform 1.9.3, JetBrains Navigation Compose 2.9.1, Coil 3.x (KMP), Koin 4.x, SKIE 0.10.10 (retained for Share Extension) (013-compose-multiplatform-migration)
+- Kotlin 2.2.10 (shared + Android), Swift 6.x (iOS shell + Share Extension) + Compose Multiplatform 1.9.3, JetBrains Navigation Compose 2.9.1, Coil 3.1.0 (KMP), Koin 4.1.0, Ktor 3.3.0 (013-compose-multiplatform-migration)
 - No changes — Room KMP (shared DB), MediaStore (Android), Documents (iOS) (013-compose-multiplatform-migration)
 
 ## Recent Changes

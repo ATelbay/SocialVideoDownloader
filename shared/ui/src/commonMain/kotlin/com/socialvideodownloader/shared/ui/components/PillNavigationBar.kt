@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -31,12 +31,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.socialvideodownloader.shared.ui.theme.LocalAppShapes
+import com.socialvideodownloader.shared.ui.theme.Spacing
 import com.socialvideodownloader.shared.ui.theme.SvdBorder
 import com.socialvideodownloader.shared.ui.theme.SvdPrimarySoft
 import com.socialvideodownloader.shared.ui.theme.SvdPrimaryStrong
 import com.socialvideodownloader.shared.ui.theme.SvdSubtleForeground
 import com.socialvideodownloader.shared.ui.theme.SvdSurface
-import com.socialvideodownloader.shared.ui.theme.Spacing
 
 @Composable
 fun PillNavigationBar(
@@ -62,7 +62,7 @@ fun PillNavigationBar(
                     end = Spacing.NavBarPaddingH,
                     bottom = Spacing.NavBarPaddingBottom,
                 )
-                .height(Spacing.NavBarHeight)
+                .heightIn(min = Spacing.NavBarHeight)
                 .clip(shapes.pill)
                 .background(SvdSurface)
                 .border(width = 1.dp, color = SvdBorder, shape = shapes.pill)
@@ -74,10 +74,10 @@ fun PillNavigationBar(
                 modifier =
                     Modifier
                         .weight(1f)
-                        .height(54.dp)
+                        .heightIn(min = 54.dp)
                         .clip(shapes.navTab)
                         .background(if (isSelected) SvdPrimarySoft else Color.Transparent)
-                        .semantics {
+                        .semantics(mergeDescendants = true) {
                             role = Role.Tab
                             contentDescription = tab.label
                             selected = isSelected
@@ -88,7 +88,7 @@ fun PillNavigationBar(
             ) {
                 Icon(
                     imageVector = tab.icon,
-                    contentDescription = tab.label,
+                    contentDescription = null,
                     tint = if (isSelected) SvdPrimaryStrong else SvdSubtleForeground,
                     modifier = Modifier.size(18.dp),
                 )

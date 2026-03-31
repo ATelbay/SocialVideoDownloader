@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.MaterialTheme
@@ -18,18 +18,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.socialvideodownloader.shared.ui.theme.LocalAppShapes
+import com.socialvideodownloader.shared.ui.theme.Spacing
 import com.socialvideodownloader.shared.ui.theme.SvdBorder
 import com.socialvideodownloader.shared.ui.theme.SvdForeground
 import com.socialvideodownloader.shared.ui.theme.SvdPrimary
 import com.socialvideodownloader.shared.ui.theme.SvdSubtleForeground
 import com.socialvideodownloader.shared.ui.theme.SvdSurface
 import com.socialvideodownloader.shared.ui.theme.SvdSurfaceAlt
-import com.socialvideodownloader.shared.ui.theme.Spacing
 
 @Composable
 fun UrlInputContent(
@@ -39,6 +43,7 @@ fun UrlInputContent(
 ) {
     val shapes = LocalAppShapes.current
     val clipboardManager = LocalClipboardManager.current
+    val hintText = "Paste a video link"
 
     val urlTextStyle =
         TextStyle(
@@ -51,7 +56,7 @@ fun UrlInputContent(
         modifier =
             modifier
                 .fillMaxWidth()
-                .height(Spacing.InputHeight)
+                .heightIn(min = Spacing.InputHeight)
                 .clip(shapes.control)
                 .background(SvdSurface)
                 .border(1.dp, SvdBorder, shapes.control)
@@ -65,12 +70,17 @@ fun UrlInputContent(
             singleLine = true,
             textStyle = urlTextStyle,
             cursorBrush = SolidColor(SvdPrimary),
-            modifier = Modifier.weight(1f),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .semantics {
+                        contentDescription = hintText
+                    },
             decorationBox = { innerTextField ->
                 Box {
                     if (url.isEmpty()) {
                         Text(
-                            text = "Paste a video link",
+                            text = hintText,
                             style =
                                 urlTextStyle.copy(
                                     color = SvdSubtleForeground,
@@ -88,12 +98,16 @@ fun UrlInputContent(
                 Modifier
                     .clip(shapes.pill)
                     .background(SvdSurfaceAlt)
+                    .semantics(mergeDescendants = true) {
+                        role = Role.Button
+                        contentDescription = "Paste"
+                    }
                     .clickable {
                         clipboardManager.getText()?.text?.let { text ->
                             if (text.isNotBlank()) onUrlChanged(text)
                         }
                     }
-                    .height(32.dp)
+                    .heightIn(min = 32.dp)
                     .padding(horizontal = 12.dp),
             contentAlignment = Alignment.Center,
         ) {

@@ -20,6 +20,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
@@ -28,12 +32,12 @@ import com.socialvideodownloader.shared.feature.library.platform.formatFileSize
 import com.socialvideodownloader.shared.feature.library.platform.formatRelativeTime
 import com.socialvideodownloader.shared.ui.components.PlatformBadge
 import com.socialvideodownloader.shared.ui.theme.LocalAppShapes
+import com.socialvideodownloader.shared.ui.theme.Spacing
 import com.socialvideodownloader.shared.ui.theme.SvdBorder
 import com.socialvideodownloader.shared.ui.theme.SvdForeground
 import com.socialvideodownloader.shared.ui.theme.SvdSubtleForeground
 import com.socialvideodownloader.shared.ui.theme.SvdSurface
 import com.socialvideodownloader.shared.ui.theme.SvdSurfaceStrong
-import com.socialvideodownloader.shared.ui.theme.Spacing
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -54,6 +58,17 @@ fun LibraryListItemRow(
                 .clip(shapes.card)
                 .background(SvdSurface)
                 .border(1.dp, SvdBorder, shapes.card)
+                .semantics(mergeDescendants = true) {
+                    role = Role.Button
+                    contentDescription =
+                        libraryItemDescription(
+                            title = item.title,
+                            platformName = item.platformName,
+                            formatLabel = item.formatLabel,
+                            formattedSize = formattedSize,
+                            formattedDate = formattedDate,
+                        )
+                }
                 .combinedClickable(onClick = onClick, onLongClick = onLongClick)
                 .padding(Spacing.CardInnerPaddingCompact),
     ) {
@@ -134,3 +149,19 @@ fun LibraryListItemRow(
         }
     }
 }
+
+private fun libraryItemDescription(
+    title: String,
+    platformName: String,
+    formatLabel: String?,
+    formattedSize: String?,
+    formattedDate: String,
+): String =
+    listOfNotNull(
+        title.takeIf { it.isNotBlank() },
+        platformName.takeIf { it.isNotBlank() },
+        formatLabel?.takeIf { it.isNotBlank() },
+        formattedSize?.takeIf { it.isNotBlank() },
+        formattedDate.takeIf { it.isNotBlank() },
+    )
+        .joinToString(separator = ", ")

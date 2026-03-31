@@ -33,7 +33,7 @@ fun TextActionLink(
         modifier =
             modifier
                 .fillMaxWidth()
-                .semantics {
+                .semantics(mergeDescendants = true) {
                     role = Role.Button
                     contentDescription = text
                 }

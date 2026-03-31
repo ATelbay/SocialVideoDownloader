@@ -3,7 +3,7 @@ package com.socialvideodownloader.shared.ui.components
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,9 +18,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.socialvideodownloader.shared.ui.theme.LocalAppShapes
+import com.socialvideodownloader.shared.ui.theme.Spacing
 import com.socialvideodownloader.shared.ui.theme.SvdBorder
 import com.socialvideodownloader.shared.ui.theme.SvdForeground
-import com.socialvideodownloader.shared.ui.theme.Spacing
 
 @Composable
 fun SecondaryButton(
@@ -33,11 +33,11 @@ fun SecondaryButton(
     Box(
         modifier =
             modifier
-                .height(Spacing.PrimaryButtonHeight)
+                .heightIn(min = Spacing.PrimaryButtonHeight)
                 .clip(shapes.control)
                 .alpha(if (enabled) 1f else 0.5f)
                 .border(1.dp, SvdBorder, shapes.control)
-                .semantics {
+                .semantics(mergeDescendants = true) {
                     role = Role.Button
                     contentDescription = text
                 }

@@ -28,10 +28,11 @@ actual class PlatformActions {
 
     actual fun shareFile(uri: String) {
         val url = platform.Foundation.NSURL.URLWithString(uri) ?: return
-        val activityVc = UIActivityViewController(
-            activityItems = listOf(url),
-            applicationActivities = null,
-        )
+        val activityVc =
+            UIActivityViewController(
+                activityItems = listOf(url),
+                applicationActivities = null,
+            )
         val rootVc = UIApplication.sharedApplication.keyWindow?.rootViewController ?: return
         rootVc.presentViewController(activityVc, animated = true, completion = null)
     }

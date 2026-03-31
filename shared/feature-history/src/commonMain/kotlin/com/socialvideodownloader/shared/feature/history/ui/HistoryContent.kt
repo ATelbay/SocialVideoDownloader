@@ -14,8 +14,8 @@ import androidx.compose.ui.unit.dp
 import com.socialvideodownloader.shared.feature.history.HistoryIntent
 import com.socialvideodownloader.shared.feature.history.HistoryUiState
 import com.socialvideodownloader.shared.ui.components.TextActionLink
-import com.socialvideodownloader.shared.ui.theme.SvdPrimary
 import com.socialvideodownloader.shared.ui.theme.Spacing
+import com.socialvideodownloader.shared.ui.theme.SvdPrimary
 
 @Composable
 fun HistoryContent(
