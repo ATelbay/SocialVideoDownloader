@@ -233,7 +233,7 @@ fun HistoryScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
-                                    contentDescription = null,
+                                    contentDescription = "Clear search",
                                     tint = SvdForeground,
                                     modifier = Modifier.size(18.dp),
                                 )

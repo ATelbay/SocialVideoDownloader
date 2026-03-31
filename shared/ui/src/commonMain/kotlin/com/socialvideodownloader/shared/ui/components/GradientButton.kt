@@ -18,6 +18,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.socialvideodownloader.shared.ui.theme.LocalAppShapes
@@ -41,6 +45,10 @@ fun GradientButton(
                 .clip(shapes.control)
                 .alpha(if (enabled) 1f else 0.5f)
                 .background(Brush.verticalGradient(listOf(SvdPrimary, SvdWarning)))
+                .semantics {
+                    role = Role.Button
+                    contentDescription = text
+                }
                 .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {

@@ -11,6 +11,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.socialvideodownloader.shared.ui.theme.LocalAppShapes
@@ -33,6 +37,10 @@ fun SecondaryButton(
                 .clip(shapes.control)
                 .alpha(if (enabled) 1f else 0.5f)
                 .border(1.dp, SvdBorder, shapes.control)
+                .semantics {
+                    role = Role.Button
+                    contentDescription = text
+                }
                 .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
