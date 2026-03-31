@@ -127,6 +127,8 @@ io.github.junkfood02.youtubedl-android:aria2c:0.18.+
 - Room KMP (shared DB schema in commonMain, platform builders), MediaStore (Android), Documents directory (iOS), Multiplatform Settings (preferences) (011-kmp-ios-migration)
 - Kotlin 2.2.10 (Android + KMP shared), Swift 6.x (iOS) + GitHub Actions, Gradle KTS, Xcode 16.x, KMP framework binaries, SKIE 0.10.10 (012-cicd-github-actions)
 - N/A (CI/CD infrastructure — no data model changes) (012-cicd-github-actions)
+- Kotlin 2.2.10 (shared + Android), Swift 6.x (iOS app shell + Share Extension) + Compose Multiplatform 1.9.3, JetBrains Navigation Compose 2.9.1, Coil 3.x (KMP), Koin 4.x, SKIE 0.10.10 (retained for Share Extension) (013-compose-multiplatform-migration)
+- No changes — Room KMP (shared DB), MediaStore (Android), Documents (iOS) (013-compose-multiplatform-migration)
 
 ## Recent Changes
 - 005-ui-redesign-dark-theme: Added Kotlin 2.2.10 + Jetpack Compose (BOM 2026.03.00), Material 3, Hilt (KSP), Navigation Compose 2.9.7, Coil
