@@ -53,7 +53,7 @@ class DownloadViewModel
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
         private val androidDownloadManager: AndroidDownloadManager,
     ) : ViewModel() {
-        private val shared =
+        val shared =
             SharedDownloadViewModel(
                 coroutineScope = viewModelScope,
                 extractVideoInfo = extractVideoInfo,
