@@ -50,17 +50,13 @@ class IosCloudBackupRepository(
         return "${hash.toString(16)}_${sourceUrl.length}"
     }
 
-    private fun downloadsPath(): String {
-        val uid =
-            firestoreProvider.currentUid()
-                ?: throw IllegalStateException("User not authenticated — cannot access cloud backup")
+    private fun downloadsPath(): String? {
+        val uid = firestoreProvider.currentUid() ?: return null
         return "users/$uid/downloads"
     }
 
-    private fun metaPath(): String {
-        val uid =
-            firestoreProvider.currentUid()
-                ?: throw IllegalStateException("User not authenticated — cannot access cloud backup")
+    private fun metaPath(): String? {
+        val uid = firestoreProvider.currentUid() ?: return null
         return "users/$uid/meta"
     }
 
@@ -80,9 +76,10 @@ class IosCloudBackupRepository(
         //   val base64 = encrypted.toBase64String()
         //   val documentId = record.sourceUrl.sha256()
         //   firestoreProvider.setDocument(downloadsPath(), documentId, base64)
+        val path = downloadsPath() ?: return false
         val documentId = documentIdFor(record.sourceUrl)
         val stubJson = buildRecordJson(record)
-        return firestoreProvider.setDocument(downloadsPath(), documentId, stubJson)
+        return firestoreProvider.setDocument(path, documentId, stubJson)
     }
 
     /**
@@ -92,7 +89,8 @@ class IosCloudBackupRepository(
      * used by [uploadRecord] — so the document ID is consistent.
      */
     override suspend fun deleteRecord(sourceUrlHash: String): Boolean {
-        return firestoreProvider.deleteDocument(downloadsPath(), sourceUrlHash)
+        val path = downloadsPath() ?: return false
+        return firestoreProvider.deleteDocument(path, sourceUrlHash)
     }
 
     /**
@@ -102,26 +100,30 @@ class IosCloudBackupRepository(
      */
     override suspend fun fetchAllRecords(): List<DownloadRecord> {
         // TODO: Decrypt each document via encryptionService.decrypt(base64.fromBase64())
-        val documents = firestoreProvider.fetchCollection(downloadsPath())
+        val path = downloadsPath() ?: return emptyList()
+        val documents = firestoreProvider.fetchCollection(path)
         return documents.mapNotNull { json -> parseRecordJson(json) }
     }
 
     override suspend fun getCloudRecordCount(): Int {
         // TODO: Read from meta document field record_count for efficiency.
         // Fallback: count documents in the collection.
-        val metaJson = firestoreProvider.getDocument(metaPath(), META_DOC_ID)
+        val path = metaPath() ?: return 0
+        val metaJson = firestoreProvider.getDocument(path, META_DOC_ID)
         return metaJson?.let { parseIntField(it, META_FIELD_COUNT) } ?: 0
     }
 
     override suspend fun getTierLimit(): Int {
-        val metaJson = firestoreProvider.getDocument(metaPath(), META_DOC_ID)
+        val path = metaPath() ?: return DEFAULT_TIER_LIMIT
+        val metaJson = firestoreProvider.getDocument(path, META_DOC_ID)
         return metaJson?.let { parseIntField(it, META_FIELD_TIER) } ?: DEFAULT_TIER_LIMIT
     }
 
     override suspend fun updateTierLimit(limit: Int) {
         // TODO: Merge-update the meta document field tier_limit.
+        val path = metaPath() ?: return
         val json = "{\"$META_FIELD_TIER\": $limit}"
-        firestoreProvider.setDocument(metaPath(), META_DOC_ID, json)
+        firestoreProvider.setDocument(path, META_DOC_ID, json)
     }
 
     override suspend fun evictOldestRecords(count: Int) {
@@ -130,8 +132,9 @@ class IosCloudBackupRepository(
     }
 
     override suspend fun setRecordCount(count: Int) {
+        val path = metaPath() ?: return
         val json = "{\"$META_FIELD_COUNT\": $count}"
-        firestoreProvider.setDocument(metaPath(), META_DOC_ID, json)
+        firestoreProvider.setDocument(path, META_DOC_ID, json)
     }
 
     // ---------------------------------------------------------------------------
