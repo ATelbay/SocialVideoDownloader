@@ -25,8 +25,12 @@ import com.socialvideodownloader.shared.data.cloud.IosSyncManager
 import com.socialvideodownloader.shared.data.cloud.StubAuthProvider
 import com.socialvideodownloader.shared.data.cloud.StubConnectivityProvider
 import com.socialvideodownloader.shared.data.cloud.StubFirestoreProvider
+import com.socialvideodownloader.core.domain.file.FileAccessManager
+import com.socialvideodownloader.core.domain.usecase.ExtractVideoInfoUseCase
+import com.socialvideodownloader.core.domain.usecase.FindExistingDownloadUseCase
 import com.socialvideodownloader.shared.data.platform.IosClipboard
 import com.socialvideodownloader.shared.data.platform.IosDownloadManager
+import com.socialvideodownloader.shared.data.platform.IosFileAccessManager
 import com.socialvideodownloader.shared.data.platform.IosFileStorage
 import com.socialvideodownloader.shared.data.platform.IosStringProvider
 import com.socialvideodownloader.shared.data.platform.PlatformClipboard
@@ -66,6 +70,11 @@ val iosDataModule =
         single<PlatformFileStorage> { IosFileStorage() }
         single<PlatformClipboard> { IosClipboard() }
         single<PlatformStringProvider> { IosStringProvider() }
+
+        // FileAccessManager + shared use cases — needed by shared feature ViewModels
+        single<FileAccessManager> { IosFileAccessManager() }
+        single { ExtractVideoInfoUseCase(repository = get()) }
+        single { FindExistingDownloadUseCase(downloadRepository = get(), fileAccessManager = get()) }
 
         // -------------------------------------------------------------------------
         // Phase 10: Cloud backup, billing, and authentication

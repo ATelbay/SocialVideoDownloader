@@ -119,9 +119,9 @@ class HistoryViewModelTest {
     @Test
     fun `when repository emits empty list state becomes Empty with isFiltering false`() = runTest {
         viewModel.uiState.test {
-            awaitItem() // Loading
-            emitRecords(emptyList())
-            val state = awaitItem()
+            // combine fires immediately with _allItems=emptyList() → may emit Loading then Empty,
+            // or just Empty depending on timing. Use expectMostRecentItem to handle both cases.
+            val state = expectMostRecentItem()
             assertTrue(state is Empty)
             state as Empty
             assertEquals("", state.query)

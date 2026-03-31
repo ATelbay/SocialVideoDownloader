@@ -6,6 +6,14 @@ import com.socialvideodownloader.core.domain.model.DownloadStatus
 import com.socialvideodownloader.feature.library.testdouble.FakeDownloadRepository
 import com.socialvideodownloader.feature.library.testdouble.FakeFileAccessManager
 import com.socialvideodownloader.feature.library.testutil.MainDispatcherRule
+import com.socialvideodownloader.shared.feature.library.LibraryEffect.OpenContent
+import com.socialvideodownloader.shared.feature.library.LibraryEffect.ShareContent
+import com.socialvideodownloader.shared.feature.library.LibraryEffect.ShowMessage
+import com.socialvideodownloader.shared.feature.library.LibraryIntent.ItemClicked
+import com.socialvideodownloader.shared.feature.library.LibraryIntent.ItemLongPressed
+import com.socialvideodownloader.shared.feature.library.LibraryUiState.Content
+import com.socialvideodownloader.shared.feature.library.LibraryUiState.Empty
+import com.socialvideodownloader.shared.feature.library.LibraryUiState.Loading
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -48,7 +56,7 @@ class LibraryViewModelTest {
     @Test
     fun `initial state is Loading before repository emits`() = runTest {
         val vm = LibraryViewModel(repository, fileManager)
-        assertEquals(LibraryUiState.Loading, vm.uiState.value)
+        assertEquals(Loading, vm.uiState.value)
     }
 
     @Test
@@ -57,7 +65,7 @@ class LibraryViewModelTest {
             awaitItem() // Loading
             emitCompleted(emptyList())
             val state = awaitItem()
-            assertTrue(state is LibraryUiState.Empty)
+            assertTrue(state is Empty)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -75,8 +83,8 @@ class LibraryViewModelTest {
             awaitItem() // Loading
             emitCompleted(records)
             val state = awaitItem()
-            assertTrue(state is LibraryUiState.Content)
-            assertEquals(2, (state as LibraryUiState.Content).items.size)
+            assertTrue(state is Content)
+            assertEquals(2, (state as Content).items.size)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -95,8 +103,8 @@ class LibraryViewModelTest {
             awaitItem() // Loading
             emitCompleted(records)
             val state = awaitItem()
-            assertTrue(state is LibraryUiState.Content)
-            assertEquals(1, (state as LibraryUiState.Content).items.size)
+            assertTrue(state is Content)
+            assertEquals(1, (state as Content).items.size)
             assertEquals(1L, state.items.first().id)
             cancelAndIgnoreRemainingEvents()
         }
@@ -113,10 +121,10 @@ class LibraryViewModelTest {
             emitCompleted(listOf(record))
             awaitItem() // Content
             viewModel.effect.test {
-                viewModel.onIntent(LibraryIntent.ItemClicked(10L))
+                viewModel.onIntent(ItemClicked(10L))
                 val effect = awaitItem()
-                assertTrue(effect is LibraryEffect.OpenContent)
-                assertEquals("content://media/10", (effect as LibraryEffect.OpenContent).contentUri)
+                assertTrue(effect is OpenContent)
+                assertEquals("content://media/10", (effect as OpenContent).contentUri)
                 cancelAndIgnoreRemainingEvents()
             }
             cancelAndIgnoreRemainingEvents()
@@ -134,10 +142,10 @@ class LibraryViewModelTest {
             emitCompleted(listOf(record))
             awaitItem() // Content
             viewModel.effect.test {
-                viewModel.onIntent(LibraryIntent.ItemLongPressed(20L))
+                viewModel.onIntent(ItemLongPressed(20L))
                 val effect = awaitItem()
-                assertTrue(effect is LibraryEffect.ShareContent)
-                assertEquals("content://media/20", (effect as LibraryEffect.ShareContent).contentUri)
+                assertTrue(effect is ShareContent)
+                assertEquals("content://media/20", (effect as ShareContent).contentUri)
                 cancelAndIgnoreRemainingEvents()
             }
             cancelAndIgnoreRemainingEvents()
@@ -155,9 +163,9 @@ class LibraryViewModelTest {
             emitCompleted(listOf(record))
             awaitItem() // Content
             viewModel.effect.test {
-                viewModel.onIntent(LibraryIntent.ItemClicked(999L))
+                viewModel.onIntent(ItemClicked(999L))
                 val effect = awaitItem()
-                assertTrue(effect is LibraryEffect.ShowMessage)
+                assertTrue(effect is ShowMessage)
                 cancelAndIgnoreRemainingEvents()
             }
             cancelAndIgnoreRemainingEvents()
