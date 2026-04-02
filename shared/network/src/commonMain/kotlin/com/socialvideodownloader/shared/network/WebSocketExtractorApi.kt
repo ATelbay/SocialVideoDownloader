@@ -73,7 +73,7 @@ class WebSocketExtractorApi(
                                 }
                             }
                             val responseBody = Base64.Default.encode(response.bodyAsBytes())
-                            val finalUrl = response.request.url.toString()
+                            val finalUrl = response.call.request.url.toString()
                             val responseHeaders = response.headers.entries()
                                 .associate { it.key to it.value.first() }
 
