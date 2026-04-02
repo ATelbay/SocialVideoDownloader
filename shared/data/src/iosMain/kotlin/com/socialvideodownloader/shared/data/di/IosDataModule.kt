@@ -63,7 +63,7 @@ val iosDataModule =
 
         // iOS always uses the server API for video extraction — no local yt-dlp.
         single<VideoExtractorRepository> {
-            ServerOnlyVideoExtractorRepository(serverApi = get())
+            ServerOnlyVideoExtractorRepository(serverApi = get(), wsApi = get())
         }
 
         single<PlatformDownloadManager> { IosDownloadManager() }
