@@ -8,6 +8,10 @@ REMOTE_DIR="/opt/ytdlp-api"
 
 echo "=== Deploying to EC2 $EC2_HOST ==="
 
+# Ensure SSH is allowed from current IP (dynamic IP workaround)
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+"$SCRIPT_DIR/update-ssh-ip.sh"
+
 # Ensure remote directory exists
 ssh -i "$KEY_PATH" "$EC2_USER@$EC2_HOST" \
   "sudo mkdir -p $REMOTE_DIR && sudo chown $EC2_USER:$EC2_USER $REMOTE_DIR"

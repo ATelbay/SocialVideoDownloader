@@ -11,7 +11,7 @@ echo "=== yt-dlp API Server Bootstrap ==="
 # Update system and install dependencies
 apt-get update -y
 apt-get upgrade -y
-apt-get install -y python3 python3-venv python3-pip
+apt-get install -y python3 python3-venv python3-pip nodejs npm
 
 # Create system user with no login shell
 useradd --system --no-create-home --shell /usr/sbin/nologin ytdlp || echo "User ytdlp already exists"

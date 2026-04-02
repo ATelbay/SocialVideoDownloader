@@ -51,6 +51,19 @@ async def extract_video_info(
         "quiet": True,
         "no_warnings": True,
         "socket_timeout": 30,
+        "http_headers": {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/131.0.0.0 Safari/537.36"
+            ),
+        },
+        "extractor_args": {
+            "youtube": ["player_client=web", "po_token=web+bgutil"],
+        },
+        "js_runtimes": {
+            "node": {},
+        },
     }
 
     def _extract():
@@ -60,9 +73,9 @@ async def extract_video_info(
     try:
         info = await asyncio.to_thread(_extract)
     except yt_dlp.utils.DownloadError as exc:
-        raise HTTPException(status_code=422, detail="Extraction failed for the provided URL") from exc
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     except yt_dlp.utils.ExtractorError as exc:
-        raise HTTPException(status_code=422, detail="Extraction failed for the provided URL") from exc
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail="An unexpected server error occurred") from exc
 

@@ -132,6 +132,8 @@ io.github.junkfood02.youtubedl-android:aria2c:0.18.+
 - N/A (CI/CD infrastructure — no data model changes) (012-cicd-github-actions)
 - Kotlin 2.2.10 (shared + Android), Swift 6.x (iOS shell + Share Extension) + Compose Multiplatform 1.9.3, JetBrains Navigation Compose 2.9.1, Coil 3.1.0 (KMP), Koin 4.1.0, Ktor 3.3.0 (013-compose-multiplatform-migration)
 - No changes — Room KMP (shared DB), MediaStore (Android), Documents (iOS) (013-compose-multiplatform-migration)
+- Python 3.9+ (server), Kotlin 2.2.10 (KMP/shared), Swift 6.x (iOS shell) + FastAPI + uvicorn (server), yt-dlp >= 2025.1.1, Ktor 3.3.0 + ktor-client-websockets (KMP), Koin 4.1.0 (shared DI) (014-ws-proxy-extraction)
+- N/A — no persistent storage changes. All data is transient within WebSocket session lifetime. (014-ws-proxy-extraction)
 
 ## Recent Changes
 - 005-ui-redesign-dark-theme: Added Kotlin 2.2.10 + Jetpack Compose (BOM 2026.03.00), Material 3, Hilt (KSP), Navigation Compose 2.9.7, Coil

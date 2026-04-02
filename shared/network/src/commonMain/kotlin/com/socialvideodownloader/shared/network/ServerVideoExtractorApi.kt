@@ -11,11 +11,15 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.utils.io.readAvailable
 import kotlinx.coroutines.CancellationException
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 class ServerVideoExtractorApi(
     private val client: HttpClient,
@@ -33,9 +37,16 @@ class ServerVideoExtractorApi(
             }
 
         if (response.status != HttpStatusCode.OK) {
+            val detail = try {
+                val bodyText = response.bodyAsText()
+                Json.parseToJsonElement(bodyText)
+                    .jsonObject["detail"]?.jsonPrimitive?.content
+            } catch (_: Exception) {
+                null
+            }
             throw ServerExtractionException(
-                "Server extraction failed (${response.status.value})",
-                response.status.value,
+                message = detail ?: "Server extraction failed (${response.status.value})",
+                statusCode = response.status.value,
             )
         }
 
