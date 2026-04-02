@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routes import extract, health
+from app.routes import extract, health, proxy_ws
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -31,6 +31,7 @@ app.add_middleware(
 
 app.include_router(extract.router, prefix="/extract")
 app.include_router(health.router, prefix="")
+app.include_router(proxy_ws.router, prefix="/ws")
 
 
 @app.get("/")
