@@ -54,6 +54,7 @@ class WebSocketExtractorApi(
 
                 when (type) {
                     "http_request" -> {
+                        val reqId = json["id"]?.jsonPrimitive?.content ?: continue
                         val reqUrl = json["url"]?.jsonPrimitive?.content ?: continue
                         val reqMethod = json["method"]?.jsonPrimitive?.content ?: "GET"
                         val reqHeaders = json["headers"]?.jsonObject
@@ -78,6 +79,7 @@ class WebSocketExtractorApi(
 
                             buildJsonObject {
                                 put("type", "http_response")
+                                put("id", reqId)
                                 put("status", response.status.value)
                                 put("url", finalUrl)
                                 put("body", responseBody)
@@ -88,6 +90,7 @@ class WebSocketExtractorApi(
                         } catch (e: Exception) {
                             buildJsonObject {
                                 put("type", "http_error")
+                                put("id", reqId)
                                 put("error", e.message ?: "Unknown error")
                             }
                         }
