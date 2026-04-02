@@ -2,10 +2,16 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import logging
+import urllib.request
 from concurrent.futures import Future
 from dataclasses import dataclass, field
+from email.message import Message
 from io import BytesIO
 from typing import TYPE_CHECKING
+from urllib.response import addinfourl
+
+logger = logging.getLogger(__name__)
 
 from yt_dlp.networking.common import (
     Request,
@@ -49,6 +55,7 @@ class WebSocketProxyRH(RequestHandler):
 
         request_id = f"req-{ctx.request_counter:03d}"
         ctx.request_counter += 1
+        logger.debug("WS proxy _send %s: %s %s", request_id, request.method, request.url)
 
         body_bytes: bytes | None = None
         if request.data is not None:
@@ -58,12 +65,20 @@ class WebSocketProxyRH(RequestHandler):
             else:
                 body_bytes = b"".join(data)
 
+        # Inject cookies from the cookie jar into headers
+        cookiejar = self._get_cookiejar(request)
+        urllib_req = urllib.request.Request(request.url)
+        for k, v in self._get_headers(request).items():
+            urllib_req.add_unredirected_header(k, v)
+        cookiejar.add_cookie_header(urllib_req)
+        headers = dict(urllib_req.header_items())
+
         msg = {
             "type": "http_request",
             "id": request_id,
             "url": request.url,
             "method": request.method,
-            "headers": self._get_headers(request),
+            "headers": headers,
             "body": base64.b64encode(body_bytes).decode() if body_bytes else None,
         }
 
@@ -80,10 +95,23 @@ class WebSocketProxyRH(RequestHandler):
             raise TransportError(result.get("error", "Unknown WS proxy error"))
 
         response_body = base64.b64decode(result.get("body") or "")
+        response_url = result.get("url", request.url)
+        response_headers = result.get("headers") or {}
+
+        # Extract Set-Cookie headers from response into the cookie jar
+        msg_headers = Message()
+        for k, v in response_headers.items():
+            msg_headers[k] = v
+        mock_resp = addinfourl(
+            BytesIO(response_body), msg_headers, response_url
+        )
+        mock_resp.status = result.get("status", 200)
+        cookiejar.extract_cookies(mock_resp, urllib_req)
+
         return Response(
             fp=BytesIO(response_body),
-            url=result.get("url", request.url),
-            headers=result.get("headers") or {},
+            url=response_url,
+            headers=response_headers,
             status=result.get("status", 200),
         )
 
@@ -94,7 +122,12 @@ def inject_ws_handler(ydl, ctx: WSContext) -> None:
 
     logger = _YDLLogger(ydl)
     director = RequestDirector(logger=logger)
-    handler = WebSocketProxyRH(ctx=ctx, logger=logger)
+    handler = WebSocketProxyRH(
+        ctx=ctx,
+        logger=logger,
+        cookiejar=ydl.cookiejar,
+        headers=ydl.params.get("http_headers", {}),
+    )
     director.add_handler(handler)
 
     # Shadow the functools.cached_property by writing to instance __dict__
