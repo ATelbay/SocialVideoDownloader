@@ -136,20 +136,30 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+      - name: Cache Kotlin/Native toolchain
+        uses: actions/cache@v4
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-kotlin-2.2.10
+          restore-keys: |
+            konan-${{ runner.os }}-kotlin-
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-      - name: Validate Compose shared modules
+      - name: Build KMP frameworks
         run: |
           ./gradlew \
-            :shared:ui:compileKotlinIosArm64 \
-            :shared:ui:compileKotlinIosSimulatorArm64 \
-            :shared:di:compileKotlinIosArm64 \
-            :shared:di:compileKotlinIosSimulatorArm64
-      - name: Build KMP frameworks
-        run: ./gradlew linkDebugFrameworkIosSimulatorArm64
+            :shared:di:linkDebugFrameworkIosSimulatorArm64 \
+            :shared:data:linkDebugFrameworkIosSimulatorArm64 \
+            :shared:feature-download:linkDebugFrameworkIosSimulatorArm64 \
+            :shared:feature-history:linkDebugFrameworkIosSimulatorArm64 \
+            :shared:feature-library:linkDebugFrameworkIosSimulatorArm64 \
+            :shared:network:linkDebugFrameworkIosSimulatorArm64 \
+            :core:domain:linkDebugFrameworkIosSimulatorArm64 \
+            -Pkotlin.native.binary.linkParallelism=1
       - name: Build iOS app
         run: |
-          xcodebuild -project iosApp/iosApp.xcodeproj \
+          xcodebuild \
+            -project iosApp/iosApp.xcodeproj \
             -scheme iosApp \
             -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' \
