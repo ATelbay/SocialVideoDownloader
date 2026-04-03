@@ -2,15 +2,14 @@ plugins {
     id("svd.kmp.feature")
 }
 
+val composeExt = the<org.jetbrains.compose.ComposeExtension>()
+
 kotlin {
     sourceSets {
         commonMain.dependencies {
+            implementation(composeExt.dependencies.materialIconsExtended)
             implementation(project(":shared:data"))
-        }
-        iosMain.dependencies {
-            implementation(project(":shared:feature-download"))
-            implementation(project(":shared:feature-history"))
-            implementation(project(":shared:network"))
+            implementation(project(":shared:ui"))
         }
     }
 }

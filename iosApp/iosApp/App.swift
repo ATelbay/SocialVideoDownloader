@@ -1,29 +1,24 @@
 import SwiftUI
-import shared_feature_library
+import shared_di
 
-// Shared state for the URL received via the Share Extension or URL scheme.
-// ContentView injects this as an EnvironmentObject so DownloadView can observe it.
-@MainActor
-final class SharedURLState: ObservableObject {
-    @Published var pendingURL: String? = nil
-
-    private let suiteName = "group.com.socialvideodownloader.shared"
-    private let key = "SharedURL"
-
-    /// Reads and clears any URL written by the Share Extension.
-    func consumeSharedURL() {
-        guard let defaults = UserDefaults(suiteName: suiteName),
-              let urlString = defaults.string(forKey: key) else { return }
-        defaults.removeObject(forKey: key)
-        defaults.synchronize()
-        pendingURL = urlString
+/// UIViewControllerRepresentable that hosts the Compose Multiplatform root.
+struct ComposeView: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> UIViewController {
+        SharedAppViewControllerKt.SharedAppViewController()
     }
+
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
 }
 
 @main
 struct SocialVideoDownloaderApp: App {
-    @StateObject private var sharedURLState = SharedURLState()
     @Environment(\.scenePhase) private var scenePhase
+
+    private let appBackground = Color(
+        red: 246.0 / 255.0,
+        green: 243.0 / 255.0,
+        blue: 236.0 / 255.0,
+    )
 
     init() {
         KoinInitializerKt.doInitKoin()
@@ -31,22 +26,25 @@ struct SocialVideoDownloaderApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environmentObject(sharedURLState)
-                // Handle socialvideodownloader:// URLs opened by the system
-                .onOpenURL { url in
-                    if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-                       components.scheme == "socialvideodownloader",
-                       let queryItems = components.queryItems,
-                       let urlParam = queryItems.first(where: { $0.name == "url" })?.value {
-                        sharedURLState.pendingURL = urlParam
-                    }
+            ZStack {
+                appBackground.ignoresSafeArea()
+                ComposeView()
+            }
+            // Handle socialvideodownloader:// URLs opened by the system
+            .onOpenURL { url in
+                if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+                   components.scheme == "socialvideodownloader",
+                   let queryItems = components.queryItems,
+                   let urlParam = queryItems.first(where: { $0.name == "url" })?.value {
+                    KoinHelper.shared.pushSharedUrl(url: urlParam)
                 }
+            }
+            .background(appBackground)
         }
         .onChange(of: scenePhase) { newPhase in
             if newPhase == .active {
                 // Check for URLs deposited by the Share Extension while the app was backgrounded
-                sharedURLState.consumeSharedURL()
+                KoinHelper.shared.consumeSharedUrl()
             }
         }
     }

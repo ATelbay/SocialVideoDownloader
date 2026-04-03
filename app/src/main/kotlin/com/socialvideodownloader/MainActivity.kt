@@ -15,13 +15,13 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.socialvideodownloader.core.ui.components.PillNavigationBar
-import com.socialvideodownloader.core.ui.theme.SocialVideoDownloaderTheme
-import com.socialvideodownloader.core.ui.theme.SvdBg
 import com.socialvideodownloader.feature.download.navigation.DownloadRoute
 import com.socialvideodownloader.feature.history.navigation.HistoryRoute
 import com.socialvideodownloader.feature.library.navigation.LibraryRoute
 import com.socialvideodownloader.navigation.AppNavHost
+import com.socialvideodownloader.shared.ui.components.PillNavigationBar
+import com.socialvideodownloader.shared.ui.theme.SvdBg
+import com.socialvideodownloader.shared.ui.theme.SvdThemeAndroid
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
         )
         val sharedUrl = getSharedUrl(intent)
         setContent {
-            SocialVideoDownloaderTheme {
+            SvdThemeAndroid(dynamicColor = true) {
                 val navController = rememberNavController().also { this@MainActivity.navController = it }
                 val currentBackStack by navController.currentBackStackEntryAsState()
                 val currentDestination = currentBackStack?.destination

@@ -75,6 +75,7 @@ dependencies {
     implementation(project(":core:billing"))
     implementation(project(":shared:data"))
     implementation(project(":shared:network"))
+    implementation(project(":shared:ui"))
     implementation(project(":shared:feature-download"))
     implementation(project(":shared:feature-history"))
     implementation(project(":shared:feature-library"))

@@ -7,6 +7,7 @@ import com.socialvideodownloader.core.domain.usecase.FindExistingDownloadUseCase
 import com.socialvideodownloader.shared.data.platform.DownloadErrorType
 import com.socialvideodownloader.shared.data.platform.DownloadServiceState
 import com.socialvideodownloader.shared.data.platform.PlatformDownloadManager
+import com.socialvideodownloader.shared.network.ServerExtractionException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -471,6 +472,9 @@ class SharedDownloadViewModel(
     }
 
     private fun mapErrorToType(error: Throwable): DownloadErrorType {
+        if (error is ServerExtractionException) {
+            return DownloadErrorType.EXTRACTION_FAILED
+        }
         val message = error.message ?: return DownloadErrorType.UNKNOWN
         return when {
             message.contains("Unsupported URL", ignoreCase = true) -> DownloadErrorType.UNSUPPORTED_URL

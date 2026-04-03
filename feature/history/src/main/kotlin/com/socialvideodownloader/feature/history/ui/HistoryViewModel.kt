@@ -49,7 +49,7 @@ class HistoryViewModel
         private val cloudAuthService: CloudAuthService,
         private val clipboard: PlatformClipboard,
     ) : ViewModel() {
-        private val shared =
+        internal val shared =
             SharedHistoryViewModel(
                 coroutineScope = viewModelScope,
                 downloadRepository = downloadRepository,

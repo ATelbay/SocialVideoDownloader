@@ -4,6 +4,7 @@ import com.socialvideodownloader.core.domain.model.DownloadRequest
 import com.socialvideodownloader.core.domain.model.VideoMetadata
 import com.socialvideodownloader.core.domain.repository.VideoExtractorRepository
 import com.socialvideodownloader.shared.network.ServerVideoExtractorApi
+import com.socialvideodownloader.shared.network.WebSocketExtractorApi
 
 /**
  * iOS implementation of [VideoExtractorRepository].
@@ -13,9 +14,15 @@ import com.socialvideodownloader.shared.network.ServerVideoExtractorApi
  */
 class ServerOnlyVideoExtractorRepository(
     private val serverApi: ServerVideoExtractorApi,
+    private val wsApi: WebSocketExtractorApi,
 ) : VideoExtractorRepository {
     override suspend fun extractInfo(url: String): VideoMetadata {
-        return serverApi.extractInfo(url)
+        return try {
+            wsApi.extractViaProxy(url)
+        } catch (e: Exception) {
+            println("WebSocket extraction failed, falling back to REST: ${e.message}")
+            serverApi.extractInfo(url)
+        }
     }
 
     override suspend fun download(

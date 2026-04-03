@@ -8,52 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		AA000001 /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100001 /* App.swift */; };
-		AA000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100002 /* ContentView.swift */; };
-		AA000010 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100010 /* Colors.swift */; };
-		AA000011 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100011 /* Typography.swift */; };
-		AA000012 /* Shapes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100012 /* Shapes.swift */; };
-		AA000020 /* DownloadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100020 /* DownloadView.swift */; };
-		AA000021 /* UrlInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100021 /* UrlInputView.swift */; };
-		AA000022 /* FormatSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100022 /* FormatSelectionView.swift */; };
-		AA000023 /* DownloadProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100023 /* DownloadProgressView.swift */; };
-		AA000024 /* DownloadCompleteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100024 /* DownloadCompleteView.swift */; };
-		AA000025 /* DownloadErrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100025 /* DownloadErrorView.swift */; };
-		AA000030 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100030 /* LibraryView.swift */; };
-		AA000040 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100040 /* HistoryView.swift */; };
-		AA000050 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100050 /* NotificationService.swift */; };
-		AA000060 /* KoinHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100060 /* KoinHelper.swift */; };
 		AA000070 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = AA100070 /* Localizable.strings */; };
-		AA000041 /* HistoryItemRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100041 /* HistoryItemRow.swift */; };
-		AA000042 /* HistoryDeleteDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100042 /* HistoryDeleteDialog.swift */; };
-		AA000043 /* CloudBackupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100043 /* CloudBackupView.swift */; };
-		AA000044 /* UpgradeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100044 /* UpgradeView.swift */; };
-		AA000031 /* LibraryItemRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100031 /* LibraryItemRow.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		AA100001 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
-		AA100002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		AA100003 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		AA100010 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
-		AA100011 /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
-		AA100012 /* Shapes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shapes.swift; sourceTree = "<group>"; };
-		AA100020 /* DownloadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadView.swift; sourceTree = "<group>"; };
-		AA100021 /* UrlInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UrlInputView.swift; sourceTree = "<group>"; };
-		AA100022 /* FormatSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormatSelectionView.swift; sourceTree = "<group>"; };
-		AA100023 /* DownloadProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadProgressView.swift; sourceTree = "<group>"; };
-		AA100024 /* DownloadCompleteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadCompleteView.swift; sourceTree = "<group>"; };
-		AA100025 /* DownloadErrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadErrorView.swift; sourceTree = "<group>"; };
-		AA100030 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
-		AA100040 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
-		AA100050 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
-		AA100060 /* KoinHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KoinHelper.swift; sourceTree = "<group>"; };
-		AA100070 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = Localizable.strings; sourceTree = "<group>"; };
-		AA100041 /* HistoryItemRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryItemRow.swift; sourceTree = "<group>"; };
-		AA100042 /* HistoryDeleteDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryDeleteDialog.swift; sourceTree = "<group>"; };
-		AA100043 /* CloudBackupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudBackupView.swift; sourceTree = "<group>"; };
-		AA100044 /* UpgradeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpgradeView.swift; sourceTree = "<group>"; };
-		AA100031 /* LibraryItemRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryItemRow.swift; sourceTree = "<group>"; };
 		AA100004 /* iosApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iosApp.entitlements; sourceTree = "<group>"; };
+		AA100070 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = Localizable.strings; sourceTree = "<group>"; };
 		AA200001 /* iosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -68,80 +30,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		AA410000 /* Theme */ = {
+		AA400000 = {
 			isa = PBXGroup;
 			children = (
-				AA100010 /* Colors.swift */,
-				AA100011 /* Typography.swift */,
-				AA100012 /* Shapes.swift */,
+				AA400001 /* iosApp */,
+				AA400002 /* Products */,
 			);
-			path = Theme;
-			sourceTree = "<group>";
-		};
-		AA420000 /* Download */ = {
-			isa = PBXGroup;
-			children = (
-				AA100020 /* DownloadView.swift */,
-				AA100021 /* UrlInputView.swift */,
-				AA100022 /* FormatSelectionView.swift */,
-				AA100023 /* DownloadProgressView.swift */,
-				AA100024 /* DownloadCompleteView.swift */,
-				AA100025 /* DownloadErrorView.swift */,
-			);
-			path = Download;
-			sourceTree = "<group>";
-		};
-		AA430000 /* Library */ = {
-			isa = PBXGroup;
-			children = (
-				AA100030 /* LibraryView.swift */,
-				AA100031 /* LibraryItemRow.swift */,
-			);
-			path = Library;
-			sourceTree = "<group>";
-		};
-		AA440000 /* History */ = {
-			isa = PBXGroup;
-			children = (
-				AA100040 /* HistoryView.swift */,
-				AA100041 /* HistoryItemRow.swift */,
-				AA100042 /* HistoryDeleteDialog.swift */,
-				AA100043 /* CloudBackupView.swift */,
-				AA100044 /* UpgradeView.swift */,
-			);
-			path = History;
-			sourceTree = "<group>";
-		};
-		AA450000 /* Services */ = {
-			isa = PBXGroup;
-			children = (
-				AA100050 /* NotificationService.swift */,
-			);
-			path = Services;
-			sourceTree = "<group>";
-		};
-		AA460000 /* Helpers */ = {
-			isa = PBXGroup;
-			children = (
-				AA100060 /* KoinHelper.swift */,
-			);
-			path = Helpers;
 			sourceTree = "<group>";
 		};
 		AA400001 /* iosApp */ = {
 			isa = PBXGroup;
 			children = (
 				AA100001 /* App.swift */,
-				AA100002 /* ContentView.swift */,
 				AA100003 /* Info.plist */,
 				AA100004 /* iosApp.entitlements */,
 				AA100070 /* Localizable.strings */,
-				AA410000 /* Theme */,
-				AA420000 /* Download */,
-				AA430000 /* Library */,
-				AA440000 /* History */,
-				AA450000 /* Services */,
-				AA460000 /* Helpers */,
 			);
 			path = iosApp;
 			sourceTree = "<group>";
@@ -152,14 +55,6 @@
 				AA200001 /* iosApp.app */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		AA400000 /* root */ = {
-			isa = PBXGroup;
-			children = (
-				AA400001 /* iosApp */,
-				AA400002 /* Products */,
-			);
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -207,7 +102,7 @@
 				en,
 				Base,
 			);
-			mainGroup = AA400000 /* root */;
+			mainGroup = AA400000;
 			productRefGroup = AA400002 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -242,7 +137,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd \"$SRCROOT/..\"\n./gradlew \\\n  :shared:data:embedAndSignAppleFrameworkForXcode \\\n  :shared:feature-download:embedAndSignAppleFrameworkForXcode \\\n  :shared:feature-history:embedAndSignAppleFrameworkForXcode \\\n  :shared:feature-library:embedAndSignAppleFrameworkForXcode \\\n  :shared:network:embedAndSignAppleFrameworkForXcode \\\n  :core:domain:embedAndSignAppleFrameworkForXcode\n\ntouch \"$DERIVED_FILE_DIR/kmp-frameworks.stamp\"\n";
+			shellScript = "cd \"$SRCROOT/..\"\n./gradlew \\\n  :shared:di:embedAndSignAppleFrameworkForXcode \\\n  :shared:data:embedAndSignAppleFrameworkForXcode \\\n  :shared:feature-download:embedAndSignAppleFrameworkForXcode \\\n  :shared:feature-history:embedAndSignAppleFrameworkForXcode \\\n  :shared:feature-library:embedAndSignAppleFrameworkForXcode \\\n  :shared:network:embedAndSignAppleFrameworkForXcode \\\n  :core:domain:embedAndSignAppleFrameworkForXcode\n\ntouch \"$DERIVED_FILE_DIR/kmp-frameworks.stamp\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -252,25 +147,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA000001 /* App.swift in Sources */,
-				AA000002 /* ContentView.swift in Sources */,
-				AA000010 /* Colors.swift in Sources */,
-				AA000011 /* Typography.swift in Sources */,
-				AA000012 /* Shapes.swift in Sources */,
-				AA000020 /* DownloadView.swift in Sources */,
-				AA000021 /* UrlInputView.swift in Sources */,
-				AA000022 /* FormatSelectionView.swift in Sources */,
-				AA000023 /* DownloadProgressView.swift in Sources */,
-				AA000024 /* DownloadCompleteView.swift in Sources */,
-				AA000025 /* DownloadErrorView.swift in Sources */,
-				AA000030 /* LibraryView.swift in Sources */,
-				AA000040 /* HistoryView.swift in Sources */,
-				AA000050 /* NotificationService.swift in Sources */,
-				AA000060 /* KoinHelper.swift in Sources */,
-				AA000041 /* HistoryItemRow.swift in Sources */,
-				AA000042 /* HistoryDeleteDialog.swift in Sources */,
-				AA000043 /* CloudBackupView.swift in Sources */,
-				AA000044 /* UpgradeView.swift in Sources */,
-				AA000031 /* LibraryItemRow.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -315,6 +191,16 @@
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/../shared/di/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/data/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/network/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/feature-download/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/feature-history/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/feature-library/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../core/domain/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+				);
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -329,15 +215,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(SRCROOT)/../shared/data/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
-					"$(SRCROOT)/../shared/network/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
-					"$(SRCROOT)/../shared/feature-download/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
-					"$(SRCROOT)/../shared/feature-history/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
-					"$(SRCROOT)/../shared/feature-library/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
-					"$(SRCROOT)/../core/domain/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
-				);
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -386,6 +263,16 @@
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/../shared/di/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/data/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/network/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/feature-download/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/feature-history/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../shared/feature-library/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+					"$(SRCROOT)/../core/domain/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+				);
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -394,15 +281,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(SRCROOT)/../shared/data/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
-					"$(SRCROOT)/../shared/network/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
-					"$(SRCROOT)/../shared/feature-download/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
-					"$(SRCROOT)/../shared/feature-history/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
-					"$(SRCROOT)/../shared/feature-library/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
-					"$(SRCROOT)/../core/domain/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
-				);
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -421,6 +299,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = Y945M8P8QZ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = iosApp/Info.plist;
@@ -447,6 +326,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = Y945M8P8QZ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = iosApp/Info.plist;
@@ -486,7 +366,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
 	};
 	rootObject = AA800001 /* Project object */;
 }

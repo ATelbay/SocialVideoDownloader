@@ -173,6 +173,7 @@ class SharedHistoryViewModel(
             is HistoryIntent.TapUpgrade -> handleTapUpgrade()
             is HistoryIntent.ToggleCloudBackup -> handleToggleCloudBackup()
             is HistoryIntent.SignInWithGoogle -> handleSignInWithGoogle(intent.idToken)
+            is HistoryIntent.SignInCancelled -> _isSigningIn.value = false
             is HistoryIntent.SignOutCloud -> handleSignOut()
             is HistoryIntent.DismissSignInError -> _signInError.value = null
             is HistoryIntent.RestoreFromCloud -> handleRestoreFromCloud()
@@ -200,6 +201,8 @@ class SharedHistoryViewModel(
     private fun handleToggleCloudBackup() {
         coroutineScope.launch {
             if (!_isSignedIn.value) {
+                if (_isSigningIn.value) return@launch
+                _isSigningIn.value = true
                 _effect.emit(HistoryEffect.LaunchGoogleSignIn)
             } else if (_isCloudBackupEnabled.value) {
                 disableCloudBackupUseCase()

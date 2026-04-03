@@ -6,9 +6,9 @@ dependencies {
     compileOnly(libs.android.gradlePlugin)
     compileOnly(libs.kotlin.gradlePlugin)
     compileOnly(libs.compose.gradlePlugin)
+    compileOnly(libs.jetbrainsCompose.gradlePlugin)
     compileOnly(libs.ksp.gradlePlugin)
     compileOnly(libs.room.gradlePlugin)
-    compileOnly(libs.skie.gradlePlugin)
 }
 
 gradlePlugin {
@@ -44,6 +44,10 @@ gradlePlugin {
         register("kmpFeature") {
             id = "svd.kmp.feature"
             implementationClass = "KmpFeatureConventionPlugin"
+        }
+        register("kmpCompose") {
+            id = "svd.kmp.compose"
+            implementationClass = "KmpComposeConventionPlugin"
         }
     }
 }
