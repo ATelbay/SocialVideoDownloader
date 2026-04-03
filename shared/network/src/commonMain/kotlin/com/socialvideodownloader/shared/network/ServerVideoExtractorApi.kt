@@ -37,13 +37,14 @@ class ServerVideoExtractorApi(
             }
 
         if (response.status != HttpStatusCode.OK) {
-            val detail = try {
-                val bodyText = response.bodyAsText()
-                Json.parseToJsonElement(bodyText)
-                    .jsonObject["detail"]?.jsonPrimitive?.content
-            } catch (_: Exception) {
-                null
-            }
+            val detail =
+                try {
+                    val bodyText = response.bodyAsText()
+                    Json.parseToJsonElement(bodyText)
+                        .jsonObject["detail"]?.jsonPrimitive?.content
+                } catch (_: Exception) {
+                    null
+                }
             throw ServerExtractionException(
                 message = detail ?: "Server extraction failed (${response.status.value})",
                 statusCode = response.status.value,

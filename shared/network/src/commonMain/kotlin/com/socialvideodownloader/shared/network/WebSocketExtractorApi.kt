@@ -31,19 +31,21 @@ class WebSocketExtractorApi(
 
     @OptIn(ExperimentalEncodingApi::class)
     suspend fun extractViaProxy(url: String): VideoMetadata {
-        val wsUrl = ServerConfig.baseUrl
-            .replace("https://", "wss://")
-            .replace("http://", "ws://")
+        val wsUrl =
+            ServerConfig.baseUrl
+                .replace("https://", "wss://")
+                .replace("http://", "ws://")
 
         var result: VideoMetadata? = null
         var extractionError: ServerExtractionException? = null
 
         client.webSocket(urlString = "$wsUrl/ws/extract") {
             // Send initial extraction request
-            val initFrame = buildJsonObject {
-                put("type", "extract_request")
-                put("url", url)
-            }.toString()
+            val initFrame =
+                buildJsonObject {
+                    put("type", "extract_request")
+                    put("url", url)
+                }.toString()
             send(Frame.Text(initFrame))
 
             for (frame in incoming) {
@@ -58,61 +60,74 @@ class WebSocketExtractorApi(
                         val reqId = json["id"]?.jsonPrimitive?.content ?: continue
                         val reqUrl = json["url"]?.jsonPrimitive?.content ?: continue
                         val reqMethod = json["method"]?.jsonPrimitive?.content ?: "GET"
-                        val reqHeaders = json["headers"]?.jsonObject
-                            ?.mapValues { it.value.jsonPrimitive.content }
-                            ?: emptyMap()
+                        val reqHeaders =
+                            json["headers"]?.jsonObject
+                                ?.mapValues { it.value.jsonPrimitive.content }
+                                ?: emptyMap()
                         val reqBody = json["body"]?.jsonPrimitive?.contentOrNull
 
-                        val responseFrame = try {
-                            val response = rawClient.request(reqUrl) {
-                                method = HttpMethod.parse(reqMethod)
-                                headers {
-                                    reqHeaders.forEach { (k, v) -> append(k, v) }
-                                }
-                                if (reqBody != null) {
-                                    setBody(Base64.Default.decode(reqBody))
-                                }
-                            }
-                            val responseBody = Base64.Default.encode(response.bodyAsBytes())
-                            val finalUrl = response.call.request.url.toString()
-
-                            buildJsonObject {
-                                put("type", "http_response")
-                                put("id", reqId)
-                                put("status", response.status.value)
-                                put("url", finalUrl)
-                                put("body", responseBody)
-                                put("headers", buildJsonArray {
-                                    response.headers.entries().forEach { (k, values) ->
-                                        values.forEach { v ->
-                                            add(buildJsonArray { add(k); add(v) })
+                        val responseFrame =
+                            try {
+                                val response =
+                                    rawClient.request(reqUrl) {
+                                        method = HttpMethod.parse(reqMethod)
+                                        headers {
+                                            reqHeaders.forEach { (k, v) -> append(k, v) }
+                                        }
+                                        if (reqBody != null) {
+                                            setBody(Base64.Default.decode(reqBody))
                                         }
                                     }
-                                })
+                                val responseBody = Base64.Default.encode(response.bodyAsBytes())
+                                val finalUrl = response.call.request.url.toString()
+
+                                buildJsonObject {
+                                    put("type", "http_response")
+                                    put("id", reqId)
+                                    put("status", response.status.value)
+                                    put("url", finalUrl)
+                                    put("body", responseBody)
+                                    put(
+                                        "headers",
+                                        buildJsonArray {
+                                            response.headers.entries().forEach { (k, values) ->
+                                                values.forEach { v ->
+                                                    add(
+                                                        buildJsonArray {
+                                                            add(k)
+                                                            add(v)
+                                                        },
+                                                    )
+                                                }
+                                            }
+                                        },
+                                    )
+                                }
+                            } catch (e: Exception) {
+                                buildJsonObject {
+                                    put("type", "http_error")
+                                    put("id", reqId)
+                                    put("error", e.message ?: "Unknown error")
+                                }
                             }
-                        } catch (e: Exception) {
-                            buildJsonObject {
-                                put("type", "http_error")
-                                put("id", reqId)
-                                put("error", e.message ?: "Unknown error")
-                            }
-                        }
                         send(Frame.Text(responseFrame.toString()))
                     }
 
                     "extract_result" -> {
                         val data = json["data"] ?: continue
-                        val serverResponse = Json {
-                            ignoreUnknownKeys = true
-                            isLenient = true
-                        }.decodeFromJsonElement(ServerExtractResponse.serializer(), data)
+                        val serverResponse =
+                            Json {
+                                ignoreUnknownKeys = true
+                                isLenient = true
+                            }.decodeFromJsonElement(ServerExtractResponse.serializer(), data)
                         result = mapper.mapToMetadata(serverResponse, url)
                         break
                     }
 
                     "extract_error" -> {
-                        val detail = json["detail"]?.jsonPrimitive?.content
-                            ?: "WebSocket extraction error"
+                        val detail =
+                            json["detail"]?.jsonPrimitive?.content
+                                ?: "WebSocket extraction error"
                         extractionError = ServerExtractionException(detail, 422)
                         break
                     }
