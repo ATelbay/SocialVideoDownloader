@@ -19,7 +19,7 @@ def _extract(url: str, ctx: WSContext) -> dict:
     with yt_dlp.YoutubeDL(get_ydl_opts()) as ydl:
         inject_ws_handler(ydl, ctx)
         rd = ydl._request_director
-        logger.debug("Injected handler. Director handlers: %s", list(rd.handlers.keys()))
+        logger.info("Injected handler. Director handlers: %s", list(rd.handlers.keys()))
         info = ydl.extract_info(url, download=False)
     if info is None:
         raise ValueError("Could not extract video info")

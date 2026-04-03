@@ -12,12 +12,12 @@ import io.ktor.http.HttpMethod
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.put
-import kotlinx.serialization.json.putJsonObject
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -60,7 +60,7 @@ class WebSocketExtractorApi(
                         val reqHeaders = json["headers"]?.jsonObject
                             ?.mapValues { it.value.jsonPrimitive.content }
                             ?: emptyMap()
-                        val reqBody = json["body"]?.jsonPrimitive?.content
+                        val reqBody = json["body"]?.jsonPrimitive?.contentOrNull
 
                         val responseFrame = try {
                             val response = rawClient.request(reqUrl) {
@@ -74,8 +74,6 @@ class WebSocketExtractorApi(
                             }
                             val responseBody = Base64.Default.encode(response.bodyAsBytes())
                             val finalUrl = response.call.request.url.toString()
-                            val responseHeaders = response.headers.entries()
-                                .associate { it.key to it.value.first() }
 
                             buildJsonObject {
                                 put("type", "http_response")
@@ -83,9 +81,13 @@ class WebSocketExtractorApi(
                                 put("status", response.status.value)
                                 put("url", finalUrl)
                                 put("body", responseBody)
-                                putJsonObject("headers") {
-                                    responseHeaders.forEach { (k, v) -> put(k, v) }
-                                }
+                                put("headers", buildJsonArray {
+                                    response.headers.entries().forEach { (k, values) ->
+                                        values.forEach { v ->
+                                            add(buildJsonArray { add(k); add(v) })
+                                        }
+                                    }
+                                })
                             }
                         } catch (e: Exception) {
                             buildJsonObject {
