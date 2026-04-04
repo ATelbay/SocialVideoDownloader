@@ -254,7 +254,7 @@ class SharedDownloadViewModel(
                         _uiState.value =
                             DownloadUiState.Error(
                                 errorType = errorType,
-                                message = error.message,
+                                message = friendlyErrorMessage(error),
                                 retryAction = RetryAction.RetryExtraction(url),
                             )
                         return
@@ -469,6 +469,27 @@ class SharedDownloadViewModel(
     /** Cancel the coroutine scope when the ViewModel is cleared. */
     fun cleanup() {
         coroutineScope.cancel()
+    }
+
+    private fun friendlyErrorMessage(error: Throwable): String {
+        val raw = error.message ?: return "An unexpected error occurred"
+        val lower = raw.lowercase()
+        return when {
+            lower.contains("inappropriate") || lower.contains("age-restricted") ||
+                lower.contains("age restricted") ||
+                lower.contains("sign in") || lower.contains("login required") ->
+                "This video is age-restricted and cannot be downloaded without authentication."
+            lower.contains("private video") || lower.contains("is private") ->
+                "This video is private and cannot be accessed."
+            lower.contains("not available") || lower.contains("not found") ||
+                lower.contains("been removed") || lower.contains("been deleted") ->
+                "This video is unavailable. It may have been removed or is not available in your region."
+            lower.contains("copyright") ->
+                "This video is blocked due to a copyright claim."
+            lower.contains("unsupported url") ->
+                "This URL is not supported. Please try a different link."
+            else -> raw
+        }
     }
 
     private fun mapErrorToType(error: Throwable): DownloadErrorType {
