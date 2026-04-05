@@ -36,9 +36,8 @@ import com.socialvideodownloader.shared.feature.download.DownloadUiState
 import com.socialvideodownloader.shared.feature.download.SharedDownloadViewModel
 import com.socialvideodownloader.shared.feature.download.platform.PlatformActions
 import com.socialvideodownloader.shared.feature.download.platform.PlatformLoginScreen
-import com.socialvideodownloader.shared.network.auth.SecureCookieStore
+import com.socialvideodownloader.shared.network.auth.CookieStore
 import com.socialvideodownloader.shared.network.auth.SupportedPlatform
-import org.koin.mp.KoinPlatform
 import com.socialvideodownloader.shared.ui.components.GradientButton
 import com.socialvideodownloader.shared.ui.components.SecondaryButton
 import com.socialvideodownloader.shared.ui.components.SvdTopBar
@@ -46,6 +45,7 @@ import com.socialvideodownloader.shared.ui.components.VideoInfoCard
 import com.socialvideodownloader.shared.ui.theme.Spacing
 import com.socialvideodownloader.shared.ui.theme.SvdBg
 import com.socialvideodownloader.shared.ui.tokens.PlatformColors
+import org.koin.mp.KoinPlatform
 
 @Composable
 fun DownloadScreen(
@@ -80,7 +80,7 @@ fun DownloadScreen(
     )
 
     showLoginForPlatform?.let { platform ->
-        val secureCookieStore = remember { KoinPlatform.getKoin().get<SecureCookieStore>() }
+        val secureCookieStore = remember { KoinPlatform.getKoin().get<CookieStore>() }
         PlatformLoginScreen(
             platform = platform,
             secureCookieStore = secureCookieStore,

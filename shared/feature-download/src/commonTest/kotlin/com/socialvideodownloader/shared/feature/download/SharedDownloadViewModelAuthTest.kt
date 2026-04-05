@@ -11,6 +11,10 @@ import com.socialvideodownloader.core.domain.usecase.FindExistingDownloadUseCase
 import com.socialvideodownloader.shared.data.platform.DownloadErrorType
 import com.socialvideodownloader.shared.data.platform.DownloadServiceState
 import com.socialvideodownloader.shared.data.platform.PlatformDownloadManager
+import com.socialvideodownloader.shared.network.auth.CookieStore
+import com.socialvideodownloader.shared.network.auth.SupportedPlatform
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,8 +33,7 @@ import kotlin.test.assertTrue
 
 private class FakeVideoExtractorRepository(private val errorMessage: String) :
     VideoExtractorRepository {
-    override suspend fun extractInfo(url: String): VideoMetadata =
-        throw Exception(errorMessage)
+    override suspend fun extractInfo(url: String): VideoMetadata = throw Exception(errorMessage)
 
     override suspend fun download(
         request: DownloadRequest,
@@ -42,18 +45,27 @@ private class FakeVideoExtractorRepository(private val errorMessage: String) :
 
 private class FakeDownloadRepository : DownloadRepository {
     override fun getAll(): Flow<List<DownloadRecord>> = flowOf(emptyList())
+
     override fun getCompletedDownloads(): Flow<List<DownloadRecord>> = flowOf(emptyList())
+
     override suspend fun getById(id: Long): DownloadRecord? = null
+
     override suspend fun getCompletedSnapshot(): List<DownloadRecord> = emptyList()
+
     override suspend fun insert(record: DownloadRecord): Long = 0L
+
     override suspend fun update(record: DownloadRecord) = Unit
+
     override suspend fun delete(record: DownloadRecord) = Unit
+
     override suspend fun deleteAll() = Unit
 }
 
 private class FakeFileAccessManager : FileAccessManager {
     override suspend fun resolveContentUri(record: DownloadRecord): String? = null
+
     override suspend fun isFileAccessible(contentUri: String): Boolean = false
+
     override suspend fun deleteFile(contentUri: String): Boolean = false
 }
 
@@ -61,22 +73,55 @@ private class FakePlatformDownloadManager : PlatformDownloadManager {
     override val downloadState: StateFlow<DownloadServiceState> =
         MutableStateFlow(DownloadServiceState.Idle)
     override val activeRequestId: String? = null
+
     override suspend fun startDownload(request: DownloadRequest) = Unit
+
     override fun cancelDownload(requestId: String) = Unit
+}
+
+private class FakeCookieStore : CookieStore {
+    private val store = mutableMapOf<SupportedPlatform, String>()
+
+    override fun getCookies(platform: SupportedPlatform): String? = store[platform]
+
+    override fun setCookies(
+        platform: SupportedPlatform,
+        cookies: String,
+    ) {
+        store[platform] = cookies
+    }
+
+    override fun clearCookies(platform: SupportedPlatform) {
+        store.remove(platform)
+    }
+
+    override fun isConnected(platform: SupportedPlatform): Boolean = store.containsKey(platform)
+
+    override fun connectedPlatforms(): List<SupportedPlatform> = store.keys.toList()
 }
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-private fun makeVm(scope: TestScope, errorMessage: String): SharedDownloadViewModel {
+/**
+ * Creates a VM backed by a scope tied to the TestScheduler so advanceUntilIdle()
+ * advances its coroutines, but using a child Job so vm.cleanup() cancels it without
+ * cancelling the entire test scope.
+ */
+private fun makeVm(
+    scope: TestScope,
+    errorMessage: String,
+): SharedDownloadViewModel {
     val extractor = ExtractVideoInfoUseCase(FakeVideoExtractorRepository(errorMessage))
     val finder = FindExistingDownloadUseCase(FakeDownloadRepository(), FakeFileAccessManager())
+    val vmScope = CoroutineScope(scope.coroutineContext + SupervisorJob(scope.coroutineContext[kotlinx.coroutines.Job]))
     return SharedDownloadViewModel(
-        coroutineScope = scope,
+        coroutineScope = vmScope,
         extractVideoInfo = extractor,
         findExistingDownload = finder,
         platformDownloadManager = FakePlatformDownloadManager(),
+        secureCookieStore = FakeCookieStore(),
     )
 }
 
@@ -100,7 +145,6 @@ private fun makeVm(scope: TestScope, errorMessage: String): SharedDownloadViewMo
  * They may not compile until the vm-agent's work is merged — that is expected.
  */
 class SharedDownloadViewModelAuthTest {
-
     // ------------------------------------------------------------------
     // Test 1: Auth error on a supported platform → AUTH_REQUIRED
     // ------------------------------------------------------------------
@@ -118,19 +162,22 @@ class SharedDownloadViewModelAuthTest {
      *   and: assertEquals("Instagram", state.platformForAuth?.displayName)
      */
     @Test
-    fun authError_onSupportedPlatform_emitsErrorState() = runTest {
-        val vm = makeVm(this, "[Instagram] This content requires login. Sign in to continue.")
+    fun authError_onSupportedPlatform_emitsErrorState() =
+        runTest {
+            val vm = makeVm(this, "[Instagram] This content requires login. Sign in to continue.")
 
-        vm.onIntent(DownloadIntent.UrlChanged("https://www.instagram.com/reel/xxx"))
-        vm.onIntent(DownloadIntent.ExtractClicked)
-        advanceUntilIdle()
+            vm.onIntent(DownloadIntent.UrlChanged("https://www.instagram.com/reel/xxx"))
+            vm.onIntent(DownloadIntent.ExtractClicked)
+            advanceUntilIdle()
 
-        val state = vm.uiState.value
-        assertTrue(state is DownloadUiState.Error, "Expected Error state but got $state")
+            val state = vm.uiState.value
+            vm.cleanup()
 
-        // TODO (vm-agent T015): assertEquals(DownloadErrorType.AUTH_REQUIRED, state.errorType)
-        assertNotNull((state as DownloadUiState.Error).errorType)
-    }
+            assertTrue(state is DownloadUiState.Error, "Expected Error state but got $state")
+
+            // TODO (vm-agent T015): assertEquals(DownloadErrorType.AUTH_REQUIRED, state.errorType)
+            assertNotNull((state as DownloadUiState.Error).errorType)
+        }
 
     // ------------------------------------------------------------------
     // Test 2: Auth error on unsupported platform → not AUTH_REQUIRED
@@ -145,20 +192,23 @@ class SharedDownloadViewModelAuthTest {
      *   assertNotEquals(DownloadErrorType.AUTH_REQUIRED, errorType)
      */
     @Test
-    fun authError_onUnsupportedPlatform_doesNotEmitAuthRequired() = runTest {
-        val vm = makeVm(this, "sign in required to view this content")
+    fun authError_onUnsupportedPlatform_doesNotEmitAuthRequired() =
+        runTest {
+            val vm = makeVm(this, "sign in required to view this content")
 
-        vm.onIntent(DownloadIntent.UrlChanged("https://tiktok.com/xxx"))
-        vm.onIntent(DownloadIntent.ExtractClicked)
-        advanceUntilIdle()
+            vm.onIntent(DownloadIntent.UrlChanged("https://tiktok.com/xxx"))
+            vm.onIntent(DownloadIntent.ExtractClicked)
+            advanceUntilIdle()
 
-        val state = vm.uiState.value
-        assertTrue(state is DownloadUiState.Error, "Expected Error state but got $state")
+            val state = vm.uiState.value
+            vm.cleanup()
 
-        // tiktok.com is not a SupportedPlatform — AUTH_REQUIRED should not be set
-        // TODO (vm-agent T015): assertNotEquals(DownloadErrorType.AUTH_REQUIRED, state.errorType)
-        assertNotNull((state as DownloadUiState.Error).errorType)
-    }
+            assertTrue(state is DownloadUiState.Error, "Expected Error state but got $state")
+
+            // tiktok.com is not a SupportedPlatform — AUTH_REQUIRED should not be set
+            // TODO (vm-agent T015): assertNotEquals(DownloadErrorType.AUTH_REQUIRED, state.errorType)
+            assertNotNull((state as DownloadUiState.Error).errorType)
+        }
 
     // ------------------------------------------------------------------
     // Test 3: friendlyErrorMessage is non-null for auth errors
@@ -172,20 +222,23 @@ class SharedDownloadViewModelAuthTest {
      *   is updated for AUTH_REQUIRED, assert message contains "Instagram".
      */
     @Test
-    fun authError_friendlyMessage_isNotNull() = runTest {
-        val vm = makeVm(this, "[Instagram] Sign in to continue watching this reel.")
+    fun authError_friendlyMessage_isNotNull() =
+        runTest {
+            val vm = makeVm(this, "[Instagram] Sign in to continue watching this reel.")
 
-        vm.onIntent(DownloadIntent.UrlChanged("https://www.instagram.com/reel/zzz"))
-        vm.onIntent(DownloadIntent.ExtractClicked)
-        advanceUntilIdle()
+            vm.onIntent(DownloadIntent.UrlChanged("https://www.instagram.com/reel/zzz"))
+            vm.onIntent(DownloadIntent.ExtractClicked)
+            advanceUntilIdle()
 
-        val state = vm.uiState.value as? DownloadUiState.Error
-        assertNotNull(state, "Expected Error state")
+            val state = vm.uiState.value as? DownloadUiState.Error
+            vm.cleanup()
 
-        // Verify message is populated — the existing friendlyErrorMessage catches "sign in"
-        assertNotNull(state.message)
-        // TODO (vm-agent T015): assertTrue(state.message!!.contains("Instagram"))
-    }
+            assertNotNull(state, "Expected Error state")
+
+            // Verify message is populated — the existing friendlyErrorMessage catches "sign in"
+            assertNotNull(state.message)
+            // TODO (vm-agent T015): assertTrue(state.message!!.contains("Instagram"))
+        }
 
     // ------------------------------------------------------------------
     // Test 4: Non-auth error → EXTRACTION_FAILED, not AUTH_REQUIRED
@@ -196,49 +249,58 @@ class SharedDownloadViewModelAuthTest {
      * even for a supported-platform URL.
      */
     @Test
-    fun nonAuthError_mapsToExtractionFailed() = runTest {
-        val vm = makeVm(this, "Video unavailable")
+    fun nonAuthError_mapsToExtractionFailed() =
+        runTest {
+            val vm = makeVm(this, "Video unavailable")
 
-        vm.onIntent(DownloadIntent.UrlChanged("https://www.youtube.com/watch?v=xxx"))
-        vm.onIntent(DownloadIntent.ExtractClicked)
-        advanceUntilIdle()
+            vm.onIntent(DownloadIntent.UrlChanged("https://www.youtube.com/watch?v=xxx"))
+            vm.onIntent(DownloadIntent.ExtractClicked)
+            advanceUntilIdle()
 
-        val state = vm.uiState.value
-        assertTrue(state is DownloadUiState.Error, "Expected Error state but got $state")
-        assertEquals(DownloadErrorType.EXTRACTION_FAILED, (state as DownloadUiState.Error).errorType)
-    }
+            val state = vm.uiState.value
+            vm.cleanup()
+
+            assertTrue(state is DownloadUiState.Error, "Expected Error state but got $state")
+            assertEquals(DownloadErrorType.EXTRACTION_FAILED, (state as DownloadUiState.Error).errorType)
+        }
 
     // ------------------------------------------------------------------
     // Test 5: State transitions to Error after extraction failure
     // ------------------------------------------------------------------
 
     @Test
-    fun extractionFailure_transitionsToErrorState() = runTest {
-        val vm = makeVm(this, "login required")
+    fun extractionFailure_transitionsToErrorState() =
+        runTest {
+            val vm = makeVm(this, "login required")
 
-        vm.onIntent(DownloadIntent.UrlChanged("https://www.instagram.com/reel/aaa"))
-        vm.onIntent(DownloadIntent.ExtractClicked)
-        advanceUntilIdle()
+            vm.onIntent(DownloadIntent.UrlChanged("https://www.instagram.com/reel/aaa"))
+            vm.onIntent(DownloadIntent.ExtractClicked)
+            advanceUntilIdle()
 
-        // After coroutine completes, state must be Error (not Extracting or Idle)
-        val state = vm.uiState.value
-        assertTrue(state is DownloadUiState.Error, "Expected Error state but got $state")
-    }
+            // After coroutine completes, state must be Error (not Extracting or Idle)
+            val state = vm.uiState.value
+            vm.cleanup()
+
+            assertTrue(state is DownloadUiState.Error, "Expected Error state but got $state")
+        }
 
     // ------------------------------------------------------------------
     // Test 6: Unsupported URL error message
     // ------------------------------------------------------------------
 
     @Test
-    fun unsupportedUrlError_mapsToUnsupportedUrl() = runTest {
-        val vm = makeVm(this, "Unsupported URL: https://example.com/bad")
+    fun unsupportedUrlError_mapsToUnsupportedUrl() =
+        runTest {
+            val vm = makeVm(this, "Unsupported URL: https://example.com/bad")
 
-        vm.onIntent(DownloadIntent.UrlChanged("https://www.youtube.com/watch?v=xxx"))
-        vm.onIntent(DownloadIntent.ExtractClicked)
-        advanceUntilIdle()
+            vm.onIntent(DownloadIntent.UrlChanged("https://www.youtube.com/watch?v=xxx"))
+            vm.onIntent(DownloadIntent.ExtractClicked)
+            advanceUntilIdle()
 
-        val state = vm.uiState.value as? DownloadUiState.Error
-        assertNotNull(state)
-        assertEquals(DownloadErrorType.UNSUPPORTED_URL, state.errorType)
-    }
+            val state = vm.uiState.value as? DownloadUiState.Error
+            vm.cleanup()
+
+            assertNotNull(state)
+            assertEquals(DownloadErrorType.UNSUPPORTED_URL, state.errorType)
+        }
 }

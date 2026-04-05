@@ -41,22 +41,23 @@ object NetscapeCookieParser {
     /**
      * Format a list of CookieEntry objects into a Netscape cookie file string.
      */
-    fun formatToNetscape(cookies: List<CookieEntry>): String = buildString {
-        appendLine(HEADER)
-        cookies.forEach { cookie ->
-            append(cookie.domain)
-            append("\t")
-            append(if (cookie.includeSubdomains) "TRUE" else "FALSE")
-            append("\t")
-            append(cookie.path)
-            append("\t")
-            append(if (cookie.secure) "TRUE" else "FALSE")
-            append("\t")
-            append(cookie.expiry)
-            append("\t")
-            append(cookie.name)
-            append("\t")
-            appendLine(cookie.value)
+    fun formatToNetscape(cookies: List<CookieEntry>): String =
+        buildString {
+            appendLine(HEADER)
+            cookies.forEach { cookie ->
+                append(cookie.domain)
+                append("\t")
+                append(if (cookie.includeSubdomains) "TRUE" else "FALSE")
+                append("\t")
+                append(cookie.path)
+                append("\t")
+                append(if (cookie.secure) "TRUE" else "FALSE")
+                append("\t")
+                append(cookie.expiry)
+                append("\t")
+                append(cookie.name)
+                append("\t")
+                appendLine(cookie.value)
+            }
         }
-    }
 }

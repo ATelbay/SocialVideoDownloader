@@ -1,8 +1,10 @@
+@file:OptIn(kotlin.io.encoding.ExperimentalEncodingApi::class)
+
 package com.socialvideodownloader.shared.network
 
 import com.socialvideodownloader.core.domain.model.VideoMetadata
+import com.socialvideodownloader.shared.network.auth.CookieStore
 import com.socialvideodownloader.shared.network.auth.NetscapeCookieParser
-import com.socialvideodownloader.shared.network.auth.SecureCookieStore
 import com.socialvideodownloader.shared.network.auth.SupportedPlatform
 import com.socialvideodownloader.shared.network.auth.detectPlatform
 import com.socialvideodownloader.shared.network.dto.ServerExtractResponse
@@ -29,12 +31,11 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 class WebSocketExtractorApi(
     private val client: HttpClient,
     private val mapper: ServerResponseMapper,
-    private val secureCookieStore: SecureCookieStore,
+    private val secureCookieStore: CookieStore,
 ) {
     // Separate plain client for executing proxied HTTP requests — no ContentNegotiation needed.
     private val rawClient = HttpClient { }
 
-    @OptIn(ExperimentalEncodingApi::class)
     suspend fun extractViaProxy(url: String): VideoMetadata {
         val wsUrl =
             ServerConfig.baseUrl
@@ -55,7 +56,7 @@ class WebSocketExtractorApi(
                     if (platform != null) {
                         val cookies = secureCookieStore.getCookies(platform)
                         if (cookies != null) {
-                            put("cookies", Base64.Default.encodeToString(cookies.encodeToByteArray()))
+                            put("cookies", Base64.Default.encode(cookies.encodeToByteArray()))
                         }
                     }
                 }.toString()
@@ -83,13 +84,17 @@ class WebSocketExtractorApi(
                             try {
                                 // Inject platform cookies into proxied request headers
                                 val mergedHeaders = reqHeaders.toMutableMap()
-                                val reqHost = try {
-                                    reqUrl.substringAfter("://").substringBefore("/").substringBefore(":").lowercase()
-                                } catch (_: Exception) { "" }
+                                val reqHost =
+                                    try {
+                                        reqUrl.substringAfter("://").substringBefore("/").substringBefore(":").lowercase()
+                                    } catch (_: Exception) {
+                                        ""
+                                    }
 
-                                val matchedPlatform = SupportedPlatform.entries.firstOrNull { platform ->
-                                    platform.hostMatches.any { host -> reqHost == host || reqHost.endsWith(".$host") }
-                                }
+                                val matchedPlatform =
+                                    SupportedPlatform.entries.firstOrNull { platform ->
+                                        platform.hostMatches.any { host -> reqHost == host || reqHost.endsWith(".$host") }
+                                    }
                                 if (matchedPlatform != null) {
                                     val cookies = secureCookieStore.getCookies(matchedPlatform)
                                     if (cookies != null) {
@@ -97,11 +102,12 @@ class WebSocketExtractorApi(
                                         if (pairs.isNotEmpty()) {
                                             val cookieString = pairs.joinToString("; ") { "${it.first}=${it.second}" }
                                             val existing = mergedHeaders["Cookie"] ?: mergedHeaders["cookie"] ?: ""
-                                            mergedHeaders["Cookie"] = if (existing.isNotBlank()) {
-                                                "$existing; $cookieString"
-                                            } else {
-                                                cookieString
-                                            }
+                                            mergedHeaders["Cookie"] =
+                                                if (existing.isNotBlank()) {
+                                                    "$existing; $cookieString"
+                                                } else {
+                                                    cookieString
+                                                }
                                         }
                                     }
                                 }

@@ -5,7 +5,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class NetscapeCookieParserTest {
-
     // ---- parseToNameValuePairs ----
 
     @Test
@@ -18,10 +17,11 @@ class NetscapeCookieParserTest {
 
     @Test
     fun parse_multipleValidLines_returnsAllPairs() {
-        val input = """
+        val input =
+            """
             .instagram.com${"\t"}TRUE${"\t"}/${"\t"}TRUE${"\t"}0${"\t"}sessionid${"\t"}abc123
             .instagram.com${"\t"}TRUE${"\t"}/${"\t"}FALSE${"\t"}0${"\t"}csrftoken${"\t"}xyz789
-        """.trimIndent()
+            """.trimIndent()
         val result = NetscapeCookieParser.parseToNameValuePairs(input)
         assertEquals(2, result.size)
         assertEquals("sessionid" to "abc123", result[0])
@@ -30,11 +30,12 @@ class NetscapeCookieParserTest {
 
     @Test
     fun parse_commentLinesAreSkipped() {
-        val input = """
+        val input =
+            """
             # Netscape HTTP Cookie File
             # This is another comment
             .instagram.com${"\t"}TRUE${"\t"}/${"\t"}TRUE${"\t"}0${"\t"}sessionid${"\t"}abc123
-        """.trimIndent()
+            """.trimIndent()
         val result = NetscapeCookieParser.parseToNameValuePairs(input)
         assertEquals(1, result.size)
         assertEquals("sessionid" to "abc123", result[0])
@@ -49,7 +50,7 @@ class NetscapeCookieParserTest {
 
     @Test
     fun parse_malformedLineWithFewerThan7Fields_isSkipped() {
-        val input = ".instagram.com\tTRUE\t/\tTRUE\t0\tsessionid"  // only 6 fields
+        val input = ".instagram.com\tTRUE\t/\tTRUE\t0\tsessionid" // only 6 fields
         val result = NetscapeCookieParser.parseToNameValuePairs(input)
         assertTrue(result.isEmpty())
     }
@@ -62,13 +63,14 @@ class NetscapeCookieParserTest {
 
     @Test
     fun parse_mixedValidInvalidAndCommentLines() {
-        val input = """
+        val input =
+            """
             # comment
             .instagram.com${"\t"}TRUE${"\t"}/${"\t"}TRUE${"\t"}0${"\t"}sessionid${"\t"}abc123
             bad_line_no_tabs
 
             .instagram.com${"\t"}TRUE${"\t"}/${"\t"}FALSE${"\t"}0${"\t"}csrftoken${"\t"}xyz789
-        """.trimIndent()
+            """.trimIndent()
         val result = NetscapeCookieParser.parseToNameValuePairs(input)
         assertEquals(2, result.size)
         assertEquals("sessionid" to "abc123", result[0])
@@ -79,15 +81,16 @@ class NetscapeCookieParserTest {
 
     @Test
     fun format_singleEntry_producesValidNetscapeString() {
-        val cookie = CookieEntry(
-            domain = ".instagram.com",
-            includeSubdomains = true,
-            path = "/",
-            secure = true,
-            expiry = 0L,
-            name = "sessionid",
-            value = "abc123",
-        )
+        val cookie =
+            CookieEntry(
+                domain = ".instagram.com",
+                includeSubdomains = true,
+                path = "/",
+                secure = true,
+                expiry = 0L,
+                name = "sessionid",
+                value = "abc123",
+            )
         val result = NetscapeCookieParser.formatToNetscape(listOf(cookie))
         assertTrue(result.contains("# Netscape HTTP Cookie File"))
         assertTrue(result.contains(".instagram.com"))
@@ -98,10 +101,11 @@ class NetscapeCookieParserTest {
 
     @Test
     fun format_multipleEntries_allAppearInOutput() {
-        val cookies = listOf(
-            CookieEntry(".instagram.com", true, "/", true, 0L, "sessionid", "abc123"),
-            CookieEntry(".instagram.com", true, "/", false, 0L, "csrftoken", "xyz789"),
-        )
+        val cookies =
+            listOf(
+                CookieEntry(".instagram.com", true, "/", true, 0L, "sessionid", "abc123"),
+                CookieEntry(".instagram.com", true, "/", false, 0L, "csrftoken", "xyz789"),
+            )
         val result = NetscapeCookieParser.formatToNetscape(cookies)
         assertTrue(result.contains("sessionid"))
         assertTrue(result.contains("csrftoken"))
@@ -111,10 +115,11 @@ class NetscapeCookieParserTest {
 
     @Test
     fun roundTrip_formatThenParse_returnsSameNameValuePairs() {
-        val cookies = listOf(
-            CookieEntry(".instagram.com", true, "/", true, 0L, "sessionid", "abc123"),
-            CookieEntry(".instagram.com", true, "/", false, 1234567890L, "csrftoken", "xyz789"),
-        )
+        val cookies =
+            listOf(
+                CookieEntry(".instagram.com", true, "/", true, 0L, "sessionid", "abc123"),
+                CookieEntry(".instagram.com", true, "/", false, 1234567890L, "csrftoken", "xyz789"),
+            )
         val formatted = NetscapeCookieParser.formatToNetscape(cookies)
         val parsed = NetscapeCookieParser.parseToNameValuePairs(formatted)
 
@@ -131,7 +136,7 @@ class NetscapeCookieParserTest {
         val lines = result.lines().filter { it.isNotBlank() && !it.startsWith("#") }
         assertEquals(1, lines.size)
         val fields = lines[0].split("\t")
-        assertEquals("FALSE", fields[1])  // includeSubdomains
-        assertEquals("FALSE", fields[3])  // secure
+        assertEquals("FALSE", fields[1]) // includeSubdomains
+        assertEquals("FALSE", fields[3]) // secure
     }
 }

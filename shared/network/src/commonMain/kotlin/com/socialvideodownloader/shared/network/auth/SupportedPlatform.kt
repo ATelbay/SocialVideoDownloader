@@ -46,14 +46,15 @@ enum class SupportedPlatform(
 
 /** Detect platform from a video URL by matching the host. */
 fun detectPlatform(url: String): SupportedPlatform? {
-    val host = try {
-        // Simple host extraction — handle URLs with or without protocol
-        val withProtocol = if (url.contains("://")) url else "https://$url"
-        val afterProtocol = withProtocol.substringAfter("://")
-        afterProtocol.substringBefore("/").substringBefore("?").substringBefore(":").lowercase()
-    } catch (_: Exception) {
-        return null
-    }
+    val host =
+        try {
+            // Simple host extraction — handle URLs with or without protocol
+            val withProtocol = if (url.contains("://")) url else "https://$url"
+            val afterProtocol = withProtocol.substringAfter("://")
+            afterProtocol.substringBefore("/").substringBefore("?").substringBefore(":").lowercase()
+        } catch (_: Exception) {
+            return null
+        }
     return SupportedPlatform.entries.firstOrNull { platform ->
         platform.hostMatches.any { hostMatch -> host == hostMatch || host.endsWith(".$hostMatch") }
     }

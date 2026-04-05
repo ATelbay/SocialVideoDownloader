@@ -80,11 +80,12 @@ fun DownloadErrorContent(
 
         if (errorType == DownloadErrorType.AUTH_REQUIRED && platformForAuth != null) {
             GradientButton(
-                text = if (isReconnect) {
-                    DownloadAuthStrings.reconnectLabel(platformForAuth.displayName)
-                } else {
-                    DownloadAuthStrings.connectLabel(platformForAuth.displayName)
-                },
+                text =
+                    if (isReconnect) {
+                        DownloadAuthStrings.reconnectLabel(platformForAuth.displayName)
+                    } else {
+                        DownloadAuthStrings.connectLabel(platformForAuth.displayName)
+                    },
                 onClick = { onConnectPlatformClicked(platformForAuth) },
                 modifier = Modifier.fillMaxWidth(),
             )

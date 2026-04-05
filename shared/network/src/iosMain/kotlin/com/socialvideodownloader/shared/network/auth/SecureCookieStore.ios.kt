@@ -27,55 +27,60 @@ import platform.Security.kSecReturnData
 import platform.Security.kSecValueData
 
 @OptIn(ExperimentalForeignApi::class)
-actual class SecureCookieStore {
-    actual fun getCookies(platform: SupportedPlatform): String? =
-        keychainRead(platform.accountKey)
+actual class SecureCookieStore : CookieStore {
+    actual fun getCookies(platform: SupportedPlatform): String? = keychainRead(platform.accountKey)
 
-    actual fun setCookies(platform: SupportedPlatform, cookies: String) {
+    actual fun setCookies(
+        platform: SupportedPlatform,
+        cookies: String,
+    ) {
         // Upsert pattern: delete then add
         clearCookies(platform)
         val data = NSString.create(string = cookies).dataUsingEncoding(NSUTF8StringEncoding) ?: return
-        val query = mapOf<Any?, Any?>(
-            kSecClass to kSecClassGenericPassword,
-            kSecAttrService to SERVICE_NAME,
-            kSecAttrAccount to platform.accountKey,
-            kSecValueData to data,
-        )
+        val query =
+            mapOf<Any?, Any?>(
+                kSecClass to kSecClassGenericPassword,
+                kSecAttrService to SERVICE_NAME,
+                kSecAttrAccount to platform.accountKey,
+                kSecValueData to data,
+            )
         @Suppress("UNCHECKED_CAST")
         SecItemAdd(CFBridgingRetain(query) as CFDictionaryRef, null)
     }
 
     actual fun clearCookies(platform: SupportedPlatform) {
-        val query = mapOf<Any?, Any?>(
-            kSecClass to kSecClassGenericPassword,
-            kSecAttrService to SERVICE_NAME,
-            kSecAttrAccount to platform.accountKey,
-        )
+        val query =
+            mapOf<Any?, Any?>(
+                kSecClass to kSecClassGenericPassword,
+                kSecAttrService to SERVICE_NAME,
+                kSecAttrAccount to platform.accountKey,
+            )
         @Suppress("UNCHECKED_CAST")
         SecItemDelete(CFBridgingRetain(query) as CFDictionaryRef)
     }
 
-    actual fun isConnected(platform: SupportedPlatform): Boolean =
-        getCookies(platform) != null
+    actual fun isConnected(platform: SupportedPlatform): Boolean = getCookies(platform) != null
 
-    actual fun connectedPlatforms(): List<SupportedPlatform> =
-        SupportedPlatform.entries.filter { isConnected(it) }
+    actual fun connectedPlatforms(): List<SupportedPlatform> = SupportedPlatform.entries.filter { isConnected(it) }
 
     private fun keychainRead(account: String): String? {
-        val query = mapOf<Any?, Any?>(
-            kSecClass to kSecClassGenericPassword,
-            kSecAttrService to SERVICE_NAME,
-            kSecAttrAccount to account,
-            kSecMatchLimit to kSecMatchLimitOne,
-            kSecReturnData to true,
-        )
+        val query =
+            mapOf<Any?, Any?>(
+                kSecClass to kSecClassGenericPassword,
+                kSecAttrService to SERVICE_NAME,
+                kSecAttrAccount to account,
+                kSecMatchLimit to kSecMatchLimitOne,
+                kSecReturnData to true,
+            )
         memScoped {
             val resultRef = alloc<CFTypeRefVar>()
+
             @Suppress("UNCHECKED_CAST")
-            val status = SecItemCopyMatching(
-                CFBridgingRetain(query) as CFDictionaryRef,
-                resultRef.ptr,
-            )
+            val status =
+                SecItemCopyMatching(
+                    CFBridgingRetain(query) as CFDictionaryRef,
+                    resultRef.ptr,
+                )
             if (status != errSecSuccess) return null
             val data = CFBridgingRelease(resultRef.value) as? NSData ?: return null
             return NSString.create(data = data, encoding = NSUTF8StringEncoding) as? String

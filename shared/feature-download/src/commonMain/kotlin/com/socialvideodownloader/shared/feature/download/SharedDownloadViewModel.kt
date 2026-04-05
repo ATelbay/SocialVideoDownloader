@@ -9,7 +9,7 @@ import com.socialvideodownloader.shared.data.platform.DownloadServiceState
 import com.socialvideodownloader.shared.data.platform.PlatformDownloadManager
 import com.socialvideodownloader.shared.feature.download.ui.DownloadAuthStrings
 import com.socialvideodownloader.shared.network.ServerExtractionException
-import com.socialvideodownloader.shared.network.auth.SecureCookieStore
+import com.socialvideodownloader.shared.network.auth.CookieStore
 import com.socialvideodownloader.shared.network.auth.SupportedPlatform
 import com.socialvideodownloader.shared.network.auth.detectPlatform
 import kotlinx.coroutines.CancellationException
@@ -36,7 +36,7 @@ class SharedDownloadViewModel(
     private val extractVideoInfo: ExtractVideoInfoUseCase,
     private val findExistingDownload: FindExistingDownloadUseCase,
     private val platformDownloadManager: PlatformDownloadManager,
-    private val secureCookieStore: SecureCookieStore,
+    private val secureCookieStore: CookieStore,
     private val initialUrl: String? = null,
     private val savedUrl: String? = null,
 ) {
@@ -60,7 +60,8 @@ class SharedDownloadViewModel(
     /** Base delay in milliseconds for exponential backoff between retries. */
     private val retryBaseDelayMs = 1_000L
 
-    private val _uiState = MutableStateFlow<DownloadUiState>(DownloadUiState.Idle(connectedPlatforms = secureCookieStore.connectedPlatforms()))
+    private val _uiState =
+        MutableStateFlow<DownloadUiState>(DownloadUiState.Idle(connectedPlatforms = secureCookieStore.connectedPlatforms()))
     val uiState: StateFlow<DownloadUiState> = _uiState.asStateFlow()
 
     private val _events = Channel<DownloadEvent>(Channel.BUFFERED)
@@ -208,10 +209,11 @@ class SharedDownloadViewModel(
                 val existing = findExistingDownload(url)
                 val current = _uiState.value
                 if (current is DownloadUiState.Idle) {
-                    _uiState.value = DownloadUiState.Idle(
-                        existingDownload = existing,
-                        connectedPlatforms = secureCookieStore.connectedPlatforms(),
-                    )
+                    _uiState.value =
+                        DownloadUiState.Idle(
+                            existingDownload = existing,
+                            connectedPlatforms = secureCookieStore.connectedPlatforms(),
+                        )
                 }
             }
     }
@@ -265,12 +267,13 @@ class SharedDownloadViewModel(
                         if (_uiState.value !is DownloadUiState.Extracting) return
                     } else {
                         val platform = if (errorType == DownloadErrorType.AUTH_REQUIRED) detectPlatform(url) else null
-                        val isReconnect = if (platform != null && secureCookieStore.isConnected(platform)) {
-                            secureCookieStore.clearCookies(platform)
-                            true
-                        } else {
-                            false
-                        }
+                        val isReconnect =
+                            if (platform != null && secureCookieStore.isConnected(platform)) {
+                                secureCookieStore.clearCookies(platform)
+                                true
+                            } else {
+                                false
+                            }
                         _uiState.value =
                             DownloadUiState.Error(
                                 errorType = errorType,
@@ -447,10 +450,11 @@ class SharedDownloadViewModel(
     }
 
     private fun handleBackToIdle() {
-        _uiState.value = DownloadUiState.Idle(
-            prefillUrl = currentUrl,
-            connectedPlatforms = secureCookieStore.connectedPlatforms(),
-        )
+        _uiState.value =
+            DownloadUiState.Idle(
+                prefillUrl = currentUrl,
+                connectedPlatforms = secureCookieStore.connectedPlatforms(),
+            )
     }
 
     private fun handleOpenExisting() {
@@ -476,10 +480,11 @@ class SharedDownloadViewModel(
     private fun handleDismissExistingBanner() {
         val current = _uiState.value
         if (current is DownloadUiState.Idle) {
-            _uiState.value = DownloadUiState.Idle(
-                prefillUrl = current.prefillUrl,
-                connectedPlatforms = secureCookieStore.connectedPlatforms(),
-            )
+            _uiState.value =
+                DownloadUiState.Idle(
+                    prefillUrl = current.prefillUrl,
+                    connectedPlatforms = secureCookieStore.connectedPlatforms(),
+                )
         }
     }
 
@@ -517,7 +522,10 @@ class SharedDownloadViewModel(
         }
     }
 
-    private fun handlePlatformLoginResult(platform: SupportedPlatform, success: Boolean) {
+    private fun handlePlatformLoginResult(
+        platform: SupportedPlatform,
+        success: Boolean,
+    ) {
         if (success && currentUrl.isNotBlank()) {
             // Auto-retry extraction after successful login
             _uiState.value = DownloadUiState.Extracting(currentUrl)
@@ -547,7 +555,8 @@ class SharedDownloadViewModel(
         // Auth-required: platform-specific message
         val platform = detectPlatform(currentUrl)
         if (platform != null) {
-            val authKeywords = listOf("sign in", "login required", "must be logged in", "inappropriate", "age-restricted", "age restricted", "nsfw")
+            val authKeywords =
+                listOf("sign in", "login required", "must be logged in", "inappropriate", "age-restricted", "age restricted", "nsfw")
             if (authKeywords.any { lower.contains(it) }) {
                 return DownloadAuthStrings.authRequiredMessage(platform.displayName)
             }
@@ -574,7 +583,8 @@ class SharedDownloadViewModel(
         val message = error.message ?: return DownloadErrorType.UNKNOWN
 
         // Check for auth-required errors on supported platforms
-        val authKeywords = listOf("sign in", "login required", "must be logged in", "inappropriate", "age-restricted", "age restricted", "nsfw")
+        val authKeywords =
+            listOf("sign in", "login required", "must be logged in", "inappropriate", "age-restricted", "age restricted", "nsfw")
         val lower = message.lowercase()
         if (authKeywords.any { lower.contains(it) } && detectPlatform(currentUrl) != null) {
             return DownloadErrorType.AUTH_REQUIRED

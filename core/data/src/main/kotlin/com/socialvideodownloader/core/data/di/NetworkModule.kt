@@ -3,7 +3,7 @@ package com.socialvideodownloader.core.data.di
 import com.socialvideodownloader.shared.network.ServerResponseMapper
 import com.socialvideodownloader.shared.network.ServerVideoExtractorApi
 import com.socialvideodownloader.shared.network.WebSocketExtractorApi
-import com.socialvideodownloader.shared.network.auth.SecureCookieStore
+import com.socialvideodownloader.shared.network.auth.CookieStore
 import com.socialvideodownloader.shared.network.createHttpClient
 import dagger.Module
 import dagger.Provides
@@ -34,13 +34,14 @@ object NetworkModule {
     fun provideServerVideoExtractorApi(
         client: HttpClient,
         mapper: ServerResponseMapper,
-        secureCookieStore: SecureCookieStore,
-    ): ServerVideoExtractorApi = ServerVideoExtractorApi(client, mapper, secureCookieStore)
+        cookieStore: CookieStore,
+    ): ServerVideoExtractorApi = ServerVideoExtractorApi(client, mapper, cookieStore)
 
     @Provides
     @Singleton
     fun provideWebSocketExtractorApi(
         client: HttpClient,
         mapper: ServerResponseMapper,
-    ): WebSocketExtractorApi = WebSocketExtractorApi(client, mapper)
+        cookieStore: CookieStore,
+    ): WebSocketExtractorApi = WebSocketExtractorApi(client, mapper, cookieStore)
 }

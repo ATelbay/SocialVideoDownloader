@@ -4,6 +4,7 @@ import com.socialvideodownloader.core.domain.usecase.ExtractVideoInfoUseCase
 import com.socialvideodownloader.core.domain.usecase.FindExistingDownloadUseCase
 import com.socialvideodownloader.shared.data.platform.PlatformDownloadManager
 import com.socialvideodownloader.shared.feature.download.SharedDownloadViewModel
+import com.socialvideodownloader.shared.network.auth.CookieStore
 import kotlinx.coroutines.CoroutineScope
 import org.koin.dsl.module
 
@@ -28,6 +29,7 @@ val sharedDownloadModule =
                 extractVideoInfo = get<ExtractVideoInfoUseCase>(),
                 findExistingDownload = get<FindExistingDownloadUseCase>(),
                 platformDownloadManager = get<PlatformDownloadManager>(),
+                secureCookieStore = get<CookieStore>(),
             )
         }
     }

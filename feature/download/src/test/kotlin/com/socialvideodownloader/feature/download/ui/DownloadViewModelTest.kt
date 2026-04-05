@@ -11,6 +11,7 @@ import com.socialvideodownloader.core.domain.usecase.FindExistingDownloadUseCase
 import com.socialvideodownloader.feature.download.service.DownloadServiceState
 import com.socialvideodownloader.feature.download.service.DownloadServiceStateHolder
 import com.socialvideodownloader.shared.data.platform.AndroidDownloadManager
+import com.socialvideodownloader.shared.network.auth.SecureCookieStore
 import com.socialvideodownloader.shared.feature.download.DownloadIntent.DownloadClicked
 import com.socialvideodownloader.shared.feature.download.DownloadIntent.ExtractClicked
 import com.socialvideodownloader.shared.feature.download.DownloadIntent.FormatSelected
@@ -104,6 +105,7 @@ class DownloadViewModelTest {
                 savedStateHandle = androidx.lifecycle.SavedStateHandle(),
                 ioDispatcher = testDispatcher,
                 androidDownloadManager = androidDownloadManager,
+                secureCookieStore = mockk(relaxed = true),
             )
     }
 
@@ -504,6 +506,7 @@ class DownloadViewModelTest {
                     savedStateHandle = savedStateHandle,
                     ioDispatcher = testDispatcher,
                     androidDownloadManager = androidDownloadManager,
+                    secureCookieStore = mockk(relaxed = true),
                 )
 
             vm.onIntent(UrlChanged("https://youtube.com/watch?v=saved"))

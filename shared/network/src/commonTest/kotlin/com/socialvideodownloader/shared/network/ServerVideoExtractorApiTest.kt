@@ -1,5 +1,7 @@
 package com.socialvideodownloader.shared.network
 
+import com.socialvideodownloader.shared.network.auth.CookieStore
+import com.socialvideodownloader.shared.network.auth.SupportedPlatform
 import com.socialvideodownloader.shared.network.dto.ServerExtractResponse
 import com.socialvideodownloader.shared.network.dto.ServerFormatDto
 import io.ktor.client.HttpClient
@@ -19,6 +21,27 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+
+private class FakeCookieStore : CookieStore {
+    private val store = mutableMapOf<SupportedPlatform, String>()
+
+    override fun getCookies(platform: SupportedPlatform): String? = store[platform]
+
+    override fun setCookies(
+        platform: SupportedPlatform,
+        cookies: String,
+    ) {
+        store[platform] = cookies
+    }
+
+    override fun clearCookies(platform: SupportedPlatform) {
+        store.remove(platform)
+    }
+
+    override fun isConnected(platform: SupportedPlatform): Boolean = store.containsKey(platform)
+
+    override fun connectedPlatforms(): List<SupportedPlatform> = store.keys.toList()
+}
 
 class ServerVideoExtractorApiTest {
     private val json = Json { ignoreUnknownKeys = true }
@@ -42,7 +65,7 @@ class ServerVideoExtractorApiTest {
                 }
             }
         val mapper = ServerResponseMapper()
-        return ServerVideoExtractorApi(client, mapper)
+        return ServerVideoExtractorApi(client, mapper, FakeCookieStore())
     }
 
     @Test
@@ -179,7 +202,7 @@ class ServerVideoExtractorApiTest {
                     }
                 }
             val mapper = ServerResponseMapper()
-            val api = ServerVideoExtractorApi(client, mapper)
+            val api = ServerVideoExtractorApi(client, mapper, FakeCookieStore())
 
             api.extractInfo("https://youtube.com/watch?v=test")
 
