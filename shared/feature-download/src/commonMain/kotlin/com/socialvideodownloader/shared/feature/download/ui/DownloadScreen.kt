@@ -151,6 +151,10 @@ private fun DownloadScreenContent(
                     IdleContent(
                         url = urlText,
                         existingDownload = targetState.existingDownload,
+                        connectedPlatforms = targetState.connectedPlatforms,
+                        onDisconnect = { platform ->
+                            onIntent(DownloadIntent.DisconnectPlatformClicked(platform))
+                        },
                         onUrlChanged = { url ->
                             urlText = url
                             onIntent(DownloadIntent.UrlChanged(url))

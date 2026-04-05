@@ -10,6 +10,7 @@ sealed interface DownloadUiState {
     data class Idle(
         val existingDownload: ExistingDownload? = null,
         val prefillUrl: String? = null,
+        val connectedPlatforms: List<SupportedPlatform> = emptyList(),
     ) : DownloadUiState
 
     data class Extracting(val url: String) : DownloadUiState

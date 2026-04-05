@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.socialvideodownloader.core.domain.model.ExistingDownload
+import com.socialvideodownloader.shared.network.auth.SupportedPlatform
 import com.socialvideodownloader.shared.ui.components.GradientButton
 import com.socialvideodownloader.shared.ui.components.PlatformBadge
 import com.socialvideodownloader.shared.ui.theme.Spacing
@@ -43,6 +44,8 @@ fun IdleContent(
     onExtractClicked: () -> Unit,
     modifier: Modifier = Modifier,
     existingDownload: ExistingDownload? = null,
+    connectedPlatforms: List<SupportedPlatform> = emptyList(),
+    onDisconnect: (SupportedPlatform) -> Unit = {},
     onOpenExistingClicked: () -> Unit = {},
     onShareExistingClicked: () -> Unit = {},
     onDismissExistingBanner: () -> Unit = {},
@@ -117,6 +120,11 @@ fun IdleContent(
                 onDismissClicked = onDismissExistingBanner,
             )
         }
+
+        PlatformConnectionChips(
+            connectedPlatforms = connectedPlatforms,
+            onDisconnect = onDisconnect,
+        )
 
         FlowRow(
             modifier = Modifier.fillMaxWidth(),

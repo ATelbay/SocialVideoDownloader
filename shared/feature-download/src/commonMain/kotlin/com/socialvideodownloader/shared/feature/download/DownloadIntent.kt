@@ -36,4 +36,6 @@ sealed interface DownloadIntent {
     data class ConnectPlatformClicked(val platform: SupportedPlatform) : DownloadIntent
 
     data class PlatformLoginResult(val platform: SupportedPlatform, val success: Boolean) : DownloadIntent
+
+    data class DisconnectPlatformClicked(val platform: SupportedPlatform) : DownloadIntent
 }

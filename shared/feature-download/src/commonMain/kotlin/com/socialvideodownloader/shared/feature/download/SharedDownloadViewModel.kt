@@ -60,7 +60,7 @@ class SharedDownloadViewModel(
     /** Base delay in milliseconds for exponential backoff between retries. */
     private val retryBaseDelayMs = 1_000L
 
-    private val _uiState = MutableStateFlow<DownloadUiState>(DownloadUiState.Idle())
+    private val _uiState = MutableStateFlow<DownloadUiState>(DownloadUiState.Idle(connectedPlatforms = secureCookieStore.connectedPlatforms()))
     val uiState: StateFlow<DownloadUiState> = _uiState.asStateFlow()
 
     private val _events = Channel<DownloadEvent>(Channel.BUFFERED)
@@ -77,7 +77,7 @@ class SharedDownloadViewModel(
         val url = initialUrl ?: savedUrl
         if (url != null) {
             currentUrl = url
-            _uiState.value = DownloadUiState.Idle()
+            _uiState.value = DownloadUiState.Idle(connectedPlatforms = secureCookieStore.connectedPlatforms())
         }
     }
 
@@ -186,6 +186,7 @@ class SharedDownloadViewModel(
             is DownloadIntent.BackToIdleClicked -> handleBackToIdle()
             is DownloadIntent.ConnectPlatformClicked -> handleConnectPlatform(intent.platform)
             is DownloadIntent.PlatformLoginResult -> handlePlatformLoginResult(intent.platform, intent.success)
+            is DownloadIntent.DisconnectPlatformClicked -> handleDisconnectPlatform(intent.platform)
         }
     }
 
@@ -197,7 +198,7 @@ class SharedDownloadViewModel(
         if (url.isBlank()) {
             val current = _uiState.value
             if (current is DownloadUiState.Idle && current.existingDownload != null) {
-                _uiState.value = DownloadUiState.Idle()
+                _uiState.value = DownloadUiState.Idle(connectedPlatforms = secureCookieStore.connectedPlatforms())
             }
             return
         }
@@ -207,7 +208,10 @@ class SharedDownloadViewModel(
                 val existing = findExistingDownload(url)
                 val current = _uiState.value
                 if (current is DownloadUiState.Idle) {
-                    _uiState.value = DownloadUiState.Idle(existingDownload = existing)
+                    _uiState.value = DownloadUiState.Idle(
+                        existingDownload = existing,
+                        connectedPlatforms = secureCookieStore.connectedPlatforms(),
+                    )
                 }
             }
     }
@@ -421,11 +425,14 @@ class SharedDownloadViewModel(
         currentUrl = ""
         existingRecordId = null
         duplicateCheckJob?.cancel()
-        _uiState.value = DownloadUiState.Idle()
+        _uiState.value = DownloadUiState.Idle(connectedPlatforms = secureCookieStore.connectedPlatforms())
     }
 
     private fun handleBackToIdle() {
-        _uiState.value = DownloadUiState.Idle(prefillUrl = currentUrl)
+        _uiState.value = DownloadUiState.Idle(
+            prefillUrl = currentUrl,
+            connectedPlatforms = secureCookieStore.connectedPlatforms(),
+        )
     }
 
     private fun handleOpenExisting() {
@@ -451,7 +458,10 @@ class SharedDownloadViewModel(
     private fun handleDismissExistingBanner() {
         val current = _uiState.value
         if (current is DownloadUiState.Idle) {
-            _uiState.value = DownloadUiState.Idle(prefillUrl = current.prefillUrl)
+            _uiState.value = DownloadUiState.Idle(
+                prefillUrl = current.prefillUrl,
+                connectedPlatforms = secureCookieStore.connectedPlatforms(),
+            )
         }
     }
 
@@ -469,6 +479,7 @@ class SharedDownloadViewModel(
                     DownloadUiState.Idle(
                         existingDownload = existing,
                         prefillUrl = url,
+                        connectedPlatforms = secureCookieStore.connectedPlatforms(),
                     )
             } else {
                 handleExtract()
@@ -495,6 +506,14 @@ class SharedDownloadViewModel(
             coroutineScope.launch {
                 extractWithRetry(currentUrl)
             }
+        }
+    }
+
+    private fun handleDisconnectPlatform(platform: SupportedPlatform) {
+        secureCookieStore.clearCookies(platform)
+        val current = _uiState.value
+        if (current is DownloadUiState.Idle) {
+            _uiState.value = current.copy(connectedPlatforms = secureCookieStore.connectedPlatforms())
         }
     }
 
