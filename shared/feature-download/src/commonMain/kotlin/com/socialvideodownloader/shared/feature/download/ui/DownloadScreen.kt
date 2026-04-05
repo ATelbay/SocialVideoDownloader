@@ -251,6 +251,7 @@ private fun DownloadScreenContent(
                         errorType = targetState.errorType,
                         message = targetState.message,
                         platformForAuth = targetState.platformForAuth,
+                        isReconnect = targetState.isReconnect,
                         onConnectPlatformClicked = { platform ->
                             onIntent(DownloadIntent.ConnectPlatformClicked(platform))
                         },

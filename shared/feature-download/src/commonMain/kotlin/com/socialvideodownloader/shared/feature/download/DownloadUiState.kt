@@ -38,6 +38,7 @@ sealed interface DownloadUiState {
         val message: String?,
         val retryAction: RetryAction?,
         val platformForAuth: SupportedPlatform? = null,
+        val isReconnect: Boolean = false,
     ) : DownloadUiState
 }
 

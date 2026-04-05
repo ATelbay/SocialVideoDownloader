@@ -264,12 +264,20 @@ class SharedDownloadViewModel(
                         // Only retry if still in Extracting state (user hasn't navigated away)
                         if (_uiState.value !is DownloadUiState.Extracting) return
                     } else {
+                        val platform = if (errorType == DownloadErrorType.AUTH_REQUIRED) detectPlatform(url) else null
+                        val isReconnect = if (platform != null && secureCookieStore.isConnected(platform)) {
+                            secureCookieStore.clearCookies(platform)
+                            true
+                        } else {
+                            false
+                        }
                         _uiState.value =
                             DownloadUiState.Error(
                                 errorType = errorType,
                                 message = friendlyErrorMessage(error),
                                 retryAction = RetryAction.RetryExtraction(url),
-                                platformForAuth = if (errorType == DownloadErrorType.AUTH_REQUIRED) detectPlatform(url) else null,
+                                platformForAuth = platform,
+                                isReconnect = isReconnect,
                             )
                         return
                     }

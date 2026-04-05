@@ -36,6 +36,7 @@ fun DownloadErrorContent(
     onNewDownloadClicked: () -> Unit,
     modifier: Modifier = Modifier,
     platformForAuth: SupportedPlatform? = null,
+    isReconnect: Boolean = false,
     onConnectPlatformClicked: (SupportedPlatform) -> Unit = {},
 ) {
     val (title, body) = errorPresentation(errorType = errorType, message = message)
@@ -79,7 +80,11 @@ fun DownloadErrorContent(
 
         if (errorType == DownloadErrorType.AUTH_REQUIRED && platformForAuth != null) {
             GradientButton(
-                text = DownloadAuthStrings.connectLabel(platformForAuth.displayName),
+                text = if (isReconnect) {
+                    DownloadAuthStrings.reconnectLabel(platformForAuth.displayName)
+                } else {
+                    DownloadAuthStrings.connectLabel(platformForAuth.displayName)
+                },
                 onClick = { onConnectPlatformClicked(platformForAuth) },
                 modifier = Modifier.fillMaxWidth(),
             )
