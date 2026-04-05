@@ -37,6 +37,7 @@ kotlinMultiplatform = "2.2.10"
 compose-multiplatform = "1.9.3"
 navigation-compose-multiplatform = "2.9.1"
 coil3 = "3.1.0"
+securityCrypto = "1.1.0-alpha06"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -102,6 +103,7 @@ koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = 
 # Multiplatform Settings
 multiplatform-settings = { group = "com.russhwolf", name = "multiplatform-settings", version.ref = "multiplatformSettings" }
 multiplatform-settings-no-arg = { group = "com.russhwolf", name = "multiplatform-settings-no-arg", version.ref = "multiplatformSettings" }
+androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
 
 # Gradle plugin artifacts for build-logic convention plugins
 android-gradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
