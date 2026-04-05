@@ -5,6 +5,7 @@ import com.socialvideodownloader.shared.data.di.sharedDataModule
 import com.socialvideodownloader.shared.feature.download.di.sharedDownloadModule
 import com.socialvideodownloader.shared.feature.history.di.sharedHistoryModule
 import com.socialvideodownloader.shared.feature.library.di.sharedLibraryModule
+import com.socialvideodownloader.shared.network.di.iosNetworkModule
 import com.socialvideodownloader.shared.network.di.networkModule
 import org.koin.core.context.startKoin
 
@@ -22,6 +23,7 @@ fun initKoin() {
     startKoin {
         modules(
             networkModule,
+            iosNetworkModule,
             sharedDataModule,
             iosDataModule,
             sharedDownloadModule,

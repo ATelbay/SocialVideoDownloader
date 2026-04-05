@@ -62,5 +62,6 @@ enum class DownloadErrorType {
     UNSUPPORTED_URL,
     STORAGE_FULL,
     DOWNLOAD_FAILED,
+    AUTH_REQUIRED,
     UNKNOWN,
 }
