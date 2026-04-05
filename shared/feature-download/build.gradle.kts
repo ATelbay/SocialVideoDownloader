@@ -12,6 +12,10 @@ kotlin {
             implementation(project(":shared:data"))
             implementation(project(":shared:network"))
         }
+        commonTest.dependencies {
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.turbine)
+        }
     }
 }
 
