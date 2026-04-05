@@ -1,6 +1,8 @@
 package com.socialvideodownloader.shared.network
 
 import com.socialvideodownloader.core.domain.model.VideoMetadata
+import com.socialvideodownloader.shared.network.auth.SecureCookieStore
+import com.socialvideodownloader.shared.network.auth.detectPlatform
 import com.socialvideodownloader.shared.network.dto.ServerExtractRequest
 import com.socialvideodownloader.shared.network.dto.ServerExtractResponse
 import io.ktor.client.HttpClient
@@ -16,6 +18,8 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.utils.io.readAvailable
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
@@ -24,7 +28,9 @@ import kotlinx.serialization.json.jsonPrimitive
 class ServerVideoExtractorApi(
     private val client: HttpClient,
     private val mapper: ServerResponseMapper,
+    private val secureCookieStore: SecureCookieStore,
 ) {
+    @OptIn(ExperimentalEncodingApi::class)
     suspend fun extractInfo(url: String): VideoMetadata {
         val apiKey = ServerConfig.extractApiKey
         val response: HttpResponse =
@@ -32,6 +38,14 @@ class ServerVideoExtractorApi(
                 contentType(ContentType.Application.Json)
                 if (!apiKey.isNullOrEmpty()) {
                     header("X-API-Key", apiKey)
+                }
+                // Forward platform cookies for authenticated extraction
+                val platform = detectPlatform(url)
+                if (platform != null) {
+                    val cookies = secureCookieStore.getCookies(platform)
+                    if (cookies != null) {
+                        header("X-Platform-Cookies", Base64.Default.encodeToString(cookies.encodeToByteArray()))
+                    }
                 }
                 setBody(ServerExtractRequest(url = url))
             }
