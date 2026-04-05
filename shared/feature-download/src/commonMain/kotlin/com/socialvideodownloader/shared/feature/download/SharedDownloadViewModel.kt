@@ -7,7 +7,11 @@ import com.socialvideodownloader.core.domain.usecase.FindExistingDownloadUseCase
 import com.socialvideodownloader.shared.data.platform.DownloadErrorType
 import com.socialvideodownloader.shared.data.platform.DownloadServiceState
 import com.socialvideodownloader.shared.data.platform.PlatformDownloadManager
+import com.socialvideodownloader.shared.feature.download.ui.DownloadAuthStrings
 import com.socialvideodownloader.shared.network.ServerExtractionException
+import com.socialvideodownloader.shared.network.auth.SecureCookieStore
+import com.socialvideodownloader.shared.network.auth.SupportedPlatform
+import com.socialvideodownloader.shared.network.auth.detectPlatform
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -32,6 +36,7 @@ class SharedDownloadViewModel(
     private val extractVideoInfo: ExtractVideoInfoUseCase,
     private val findExistingDownload: FindExistingDownloadUseCase,
     private val platformDownloadManager: PlatformDownloadManager,
+    private val secureCookieStore: SecureCookieStore,
     private val initialUrl: String? = null,
     private val savedUrl: String? = null,
 ) {
@@ -43,6 +48,8 @@ class SharedDownloadViewModel(
     interface PlatformDelegate {
         /** Called when the VM wants to check/request notification permission before starting a download. */
         fun checkNotificationPermission(pendingShareOnly: Boolean)
+
+        fun showPlatformLogin(platform: SupportedPlatform)
     }
 
     var platformDelegate: PlatformDelegate? = null
@@ -177,6 +184,8 @@ class SharedDownloadViewModel(
             is DownloadIntent.ShareFormatClicked -> handleShareFormat()
             is DownloadIntent.DismissExistingBanner -> handleDismissExistingBanner()
             is DownloadIntent.BackToIdleClicked -> handleBackToIdle()
+            is DownloadIntent.ConnectPlatformClicked -> handleConnectPlatform(intent.platform)
+            is DownloadIntent.PlatformLoginResult -> handlePlatformLoginResult(intent.platform, intent.success)
         }
     }
 
@@ -256,6 +265,7 @@ class SharedDownloadViewModel(
                                 errorType = errorType,
                                 message = friendlyErrorMessage(error),
                                 retryAction = RetryAction.RetryExtraction(url),
+                                platformForAuth = if (errorType == DownloadErrorType.AUTH_REQUIRED) detectPlatform(url) else null,
                             )
                         return
                     }
@@ -466,6 +476,28 @@ class SharedDownloadViewModel(
         }
     }
 
+    private fun handleConnectPlatform(platform: SupportedPlatform) {
+        val delegate = platformDelegate
+        if (delegate != null) {
+            delegate.showPlatformLogin(platform)
+        } else {
+            // iOS path — emit event for shared screen overlay
+            coroutineScope.launch {
+                _events.send(DownloadEvent.ShowPlatformLogin(platform))
+            }
+        }
+    }
+
+    private fun handlePlatformLoginResult(platform: SupportedPlatform, success: Boolean) {
+        if (success && currentUrl.isNotBlank()) {
+            // Auto-retry extraction after successful login
+            _uiState.value = DownloadUiState.Extracting(currentUrl)
+            coroutineScope.launch {
+                extractWithRetry(currentUrl)
+            }
+        }
+    }
+
     /** Cancel the coroutine scope when the ViewModel is cleared. */
     fun cleanup() {
         coroutineScope.cancel()
@@ -474,11 +506,17 @@ class SharedDownloadViewModel(
     private fun friendlyErrorMessage(error: Throwable): String {
         val raw = error.message ?: return "An unexpected error occurred"
         val lower = raw.lowercase()
+
+        // Auth-required: platform-specific message
+        val platform = detectPlatform(currentUrl)
+        if (platform != null) {
+            val authKeywords = listOf("sign in", "login required", "must be logged in", "inappropriate", "age-restricted", "age restricted", "nsfw")
+            if (authKeywords.any { lower.contains(it) }) {
+                return DownloadAuthStrings.authRequiredMessage(platform.displayName)
+            }
+        }
+
         return when {
-            lower.contains("inappropriate") || lower.contains("age-restricted") ||
-                lower.contains("age restricted") ||
-                lower.contains("sign in") || lower.contains("login required") ->
-                "This video is age-restricted and cannot be downloaded without authentication."
             lower.contains("private video") || lower.contains("is private") ->
                 "This video is private and cannot be accessed."
             lower.contains("not available") || lower.contains("not found") ||
@@ -497,6 +535,14 @@ class SharedDownloadViewModel(
             return DownloadErrorType.EXTRACTION_FAILED
         }
         val message = error.message ?: return DownloadErrorType.UNKNOWN
+
+        // Check for auth-required errors on supported platforms
+        val authKeywords = listOf("sign in", "login required", "must be logged in", "inappropriate", "age-restricted", "age restricted", "nsfw")
+        val lower = message.lowercase()
+        if (authKeywords.any { lower.contains(it) } && detectPlatform(currentUrl) != null) {
+            return DownloadErrorType.AUTH_REQUIRED
+        }
+
         return when {
             message.contains("Unsupported URL", ignoreCase = true) -> DownloadErrorType.UNSUPPORTED_URL
             // Server unreachable / backend down (check before generic "unavailable")

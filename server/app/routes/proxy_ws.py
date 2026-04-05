@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["proxy"])
 
 
-def _extract(url: str, ctx: WSContext) -> dict:
-    with yt_dlp.YoutubeDL(get_ydl_opts()) as ydl:
+def _extract(url: str, ctx: WSContext, cookiefile: str | None = None) -> dict:
+    with yt_dlp.YoutubeDL(get_ydl_opts(cookiefile=cookiefile)) as ydl:
         inject_ws_handler(ydl, ctx)
         rd = ydl._request_director
         logger.info("Injected handler. Director handlers: %s", list(rd.handlers.keys()))
@@ -59,10 +59,25 @@ async def ws_extract(websocket: WebSocket) -> None:
         return
 
     url: str = msg["url"]
+
+    # Handle optional cookies for platform authentication
+    cookies_b64 = msg.get("cookies")
+    cookie_file_path = None
+    if cookies_b64:
+        import base64
+        import tempfile
+        import os
+        cookie_bytes = base64.b64decode(cookies_b64)
+        fd, cookie_file_path = tempfile.mkstemp(suffix=".txt", prefix="ytdlp_cookies_")
+        os.write(fd, cookie_bytes)
+        os.close(fd)
+
     loop = asyncio.get_event_loop()
     ctx = WSContext(websocket=websocket, loop=loop)
 
-    extract_task = asyncio.create_task(asyncio.to_thread(_extract, url, ctx))
+    extract_task = asyncio.create_task(
+        asyncio.to_thread(_extract, url, ctx, cookiefile=cookie_file_path)
+    )
     dispatch_task = asyncio.create_task(_dispatch_loop(ctx, websocket))
 
     try:
@@ -73,4 +88,11 @@ async def ws_extract(websocket: WebSocket) -> None:
         dispatch_task.cancel()
         await websocket.send_json({"type": "extract_error", "detail": str(e)})
     finally:
+        # Clean up cookie tempfile
+        if cookie_file_path:
+            import os
+            try:
+                os.unlink(cookie_file_path)
+            except OSError:
+                pass
         await websocket.close()

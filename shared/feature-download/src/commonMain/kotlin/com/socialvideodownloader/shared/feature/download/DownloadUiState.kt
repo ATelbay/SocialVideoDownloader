@@ -4,6 +4,7 @@ import com.socialvideodownloader.core.domain.model.DownloadProgress
 import com.socialvideodownloader.core.domain.model.ExistingDownload
 import com.socialvideodownloader.core.domain.model.VideoMetadata
 import com.socialvideodownloader.shared.data.platform.DownloadErrorType
+import com.socialvideodownloader.shared.network.auth.SupportedPlatform
 
 sealed interface DownloadUiState {
     data class Idle(
@@ -35,6 +36,7 @@ sealed interface DownloadUiState {
         val errorType: DownloadErrorType,
         val message: String?,
         val retryAction: RetryAction?,
+        val platformForAuth: SupportedPlatform? = null,
     ) : DownloadUiState
 }
 
