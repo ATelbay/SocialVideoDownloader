@@ -60,6 +60,9 @@ fun DownloadScreen(
                 is DownloadEvent.ShowSnackbarMessage -> snackbarHostState.showSnackbar(event.message)
                 is DownloadEvent.ShowError -> snackbarHostState.showSnackbar(event.message ?: event.errorType.name)
                 is DownloadEvent.RequestNotificationPermission -> platformActions.requestNotificationPermission()
+                is DownloadEvent.ShowPlatformLogin -> {
+                    // TODO: iOS overlay — will be wired in T023B
+                }
             }
         }
     }
@@ -226,6 +229,10 @@ private fun DownloadScreenContent(
                     DownloadErrorContent(
                         errorType = targetState.errorType,
                         message = targetState.message,
+                        platformForAuth = targetState.platformForAuth,
+                        onConnectPlatformClicked = { platform ->
+                            onIntent(DownloadIntent.ConnectPlatformClicked(platform))
+                        },
                         onRetryClicked = { onIntent(DownloadIntent.RetryClicked) },
                         onNewDownloadClicked = { onIntent(DownloadIntent.NewDownloadClicked) },
                         modifier = nonIdlePadding,
