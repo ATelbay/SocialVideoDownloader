@@ -7,6 +7,7 @@ import com.socialvideodownloader.core.domain.model.DownloadRequest
 import com.socialvideodownloader.core.domain.model.VideoMetadata
 import com.socialvideodownloader.core.domain.repository.VideoExtractorRepository
 import com.socialvideodownloader.shared.network.ServerVideoExtractorApi
+import com.socialvideodownloader.shared.network.WebSocketExtractorApi
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -24,6 +25,7 @@ class FallbackVideoExtractorRepository
     @Inject
     constructor(
         private val local: VideoExtractorRepositoryImpl,
+        private val wsApi: WebSocketExtractorApi,
         private val serverApi: ServerVideoExtractorApi,
         private val httpClient: HttpClient,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
@@ -34,8 +36,14 @@ class FallbackVideoExtractorRepository
                 local.extractInfo(url)
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                Log.w(TAG, "Local extraction failed, trying server", e)
-                serverApi.extractInfo(url)
+                Log.w(TAG, "Local extraction failed, trying WS proxy", e)
+                try {
+                    wsApi.extractViaProxy(url)
+                } catch (wsError: Exception) {
+                    if (wsError is CancellationException) throw wsError
+                    Log.w(TAG, "WS proxy extraction failed, trying REST", wsError)
+                    serverApi.extractInfo(url)
+                }
             }
         }
 

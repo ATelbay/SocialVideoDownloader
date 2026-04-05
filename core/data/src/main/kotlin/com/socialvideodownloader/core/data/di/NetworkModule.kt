@@ -2,6 +2,7 @@ package com.socialvideodownloader.core.data.di
 
 import com.socialvideodownloader.shared.network.ServerResponseMapper
 import com.socialvideodownloader.shared.network.ServerVideoExtractorApi
+import com.socialvideodownloader.shared.network.WebSocketExtractorApi
 import com.socialvideodownloader.shared.network.createHttpClient
 import dagger.Module
 import dagger.Provides
@@ -33,4 +34,11 @@ object NetworkModule {
         client: HttpClient,
         mapper: ServerResponseMapper,
     ): ServerVideoExtractorApi = ServerVideoExtractorApi(client, mapper)
+
+    @Provides
+    @Singleton
+    fun provideWebSocketExtractorApi(
+        client: HttpClient,
+        mapper: ServerResponseMapper,
+    ): WebSocketExtractorApi = WebSocketExtractorApi(client, mapper)
 }
