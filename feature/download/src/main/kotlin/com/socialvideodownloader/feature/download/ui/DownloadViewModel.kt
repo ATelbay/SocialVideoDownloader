@@ -19,6 +19,8 @@ import com.socialvideodownloader.shared.feature.download.DownloadEvent
 import com.socialvideodownloader.shared.feature.download.DownloadIntent
 import com.socialvideodownloader.shared.feature.download.DownloadUiState
 import com.socialvideodownloader.shared.feature.download.SharedDownloadViewModel
+import com.socialvideodownloader.shared.network.auth.SecureCookieStore
+import com.socialvideodownloader.shared.network.auth.SupportedPlatform
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
@@ -52,6 +54,7 @@ class DownloadViewModel
         private val savedStateHandle: SavedStateHandle,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
         private val androidDownloadManager: AndroidDownloadManager,
+        private val secureCookieStore: SecureCookieStore,
     ) : ViewModel() {
         val shared =
             SharedDownloadViewModel(
@@ -59,6 +62,7 @@ class DownloadViewModel
                 extractVideoInfo = extractVideoInfo,
                 findExistingDownload = findExistingDownload,
                 platformDownloadManager = androidDownloadManager,
+                secureCookieStore = secureCookieStore,
                 initialUrl = savedStateHandle["initialUrl"],
                 savedUrl = savedStateHandle["currentUrl"],
             )
@@ -86,6 +90,10 @@ class DownloadViewModel
                             }
                         }
                         shared.startDownload(shareOnly = pendingShareOnly)
+                    }
+
+                    override fun showPlatformLogin(platform: SupportedPlatform) {
+                        shared.emitShowPlatformLogin(platform)
                     }
                 }
 

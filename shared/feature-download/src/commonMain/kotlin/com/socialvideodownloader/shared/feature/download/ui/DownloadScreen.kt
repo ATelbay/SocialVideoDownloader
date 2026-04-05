@@ -35,6 +35,10 @@ import com.socialvideodownloader.shared.feature.download.DownloadIntent
 import com.socialvideodownloader.shared.feature.download.DownloadUiState
 import com.socialvideodownloader.shared.feature.download.SharedDownloadViewModel
 import com.socialvideodownloader.shared.feature.download.platform.PlatformActions
+import com.socialvideodownloader.shared.feature.download.platform.PlatformLoginScreen
+import com.socialvideodownloader.shared.network.auth.SecureCookieStore
+import com.socialvideodownloader.shared.network.auth.SupportedPlatform
+import org.koin.mp.KoinPlatform
 import com.socialvideodownloader.shared.ui.components.GradientButton
 import com.socialvideodownloader.shared.ui.components.SecondaryButton
 import com.socialvideodownloader.shared.ui.components.SvdTopBar
@@ -51,6 +55,7 @@ fun DownloadScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    var showLoginForPlatform by remember { mutableStateOf<SupportedPlatform?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
@@ -61,7 +66,7 @@ fun DownloadScreen(
                 is DownloadEvent.ShowError -> snackbarHostState.showSnackbar(event.message ?: event.errorType.name)
                 is DownloadEvent.RequestNotificationPermission -> platformActions.requestNotificationPermission()
                 is DownloadEvent.ShowPlatformLogin -> {
-                    // TODO: iOS overlay — will be wired in T023B
+                    showLoginForPlatform = event.platform
                 }
             }
         }
@@ -73,6 +78,18 @@ fun DownloadScreen(
         snackbarHostState = snackbarHostState,
         modifier = modifier,
     )
+
+    showLoginForPlatform?.let { platform ->
+        val secureCookieStore = remember { KoinPlatform.getKoin().get<SecureCookieStore>() }
+        PlatformLoginScreen(
+            platform = platform,
+            secureCookieStore = secureCookieStore,
+            onResult = { success ->
+                showLoginForPlatform = null
+                viewModel.onIntent(DownloadIntent.PlatformLoginResult(platform, success))
+            },
+        )
+    }
 }
 
 @Composable

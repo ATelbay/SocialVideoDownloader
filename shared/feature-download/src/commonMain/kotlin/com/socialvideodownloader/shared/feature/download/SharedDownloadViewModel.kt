@@ -323,6 +323,16 @@ class SharedDownloadViewModel(
         }
     }
 
+    /**
+     * Emits [DownloadEvent.ShowPlatformLogin] so the platform UI can show the login screen.
+     * Called by the Android delegate inside [PlatformDelegate.showPlatformLogin].
+     */
+    fun emitShowPlatformLogin(platform: SupportedPlatform) {
+        coroutineScope.launch {
+            _events.send(DownloadEvent.ShowPlatformLogin(platform))
+        }
+    }
+
     private fun startDownloadWithPermissionCheck(shareOnly: Boolean) {
         pendingShareOnly = shareOnly
         val delegate = platformDelegate
