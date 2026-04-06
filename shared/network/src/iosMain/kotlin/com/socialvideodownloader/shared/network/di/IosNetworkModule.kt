@@ -11,5 +11,6 @@ import org.koin.dsl.module
  */
 val iosNetworkModule =
     module {
-        single<CookieStore> { SecureCookieStore() }
+        single { SecureCookieStore() }
+        single<CookieStore> { get<SecureCookieStore>() }
     }

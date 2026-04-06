@@ -577,17 +577,19 @@ class SharedDownloadViewModel(
     }
 
     private fun mapErrorToType(error: Throwable): DownloadErrorType {
-        if (error is ServerExtractionException) {
-            return DownloadErrorType.EXTRACTION_FAILED
-        }
         val message = error.message ?: return DownloadErrorType.UNKNOWN
 
-        // Check for auth-required errors on supported platforms
+        // Check for auth-required errors on supported platforms (before ServerExtractionException
+        // short-circuit, because the WS proxy wraps yt-dlp auth errors as ServerExtractionException)
         val authKeywords =
             listOf("sign in", "login required", "must be logged in", "inappropriate", "age-restricted", "age restricted", "nsfw")
         val lower = message.lowercase()
         if (authKeywords.any { lower.contains(it) } && detectPlatform(currentUrl) != null) {
             return DownloadErrorType.AUTH_REQUIRED
+        }
+
+        if (error is ServerExtractionException) {
+            return DownloadErrorType.EXTRACTION_FAILED
         }
 
         return when {

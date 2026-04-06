@@ -14,5 +14,6 @@ import org.koin.dsl.module
  */
 val androidNetworkModule =
     module {
-        single<CookieStore> { SecureCookieStore(context = androidContext()) }
+        single { SecureCookieStore(context = androidContext()) }
+        single<CookieStore> { get<SecureCookieStore>() }
     }
