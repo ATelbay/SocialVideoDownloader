@@ -324,9 +324,10 @@ class IosDownloadManager : PlatformDownloadManager {
         ensureDirectory(destDir)
 
         val safeTitle = sanitizeFileName(videoTitle).take(100)
-        val ext = tempUrl.pathExtension?.takeIf { it.isNotEmpty() }
-            ?: formatId.substringAfterLast('.').takeIf { it != formatId }
-            ?: "mp4"
+        val ext =
+            tempUrl.pathExtension?.takeIf { it.isNotEmpty() }
+                ?: formatId.substringAfterLast('.').takeIf { it != formatId }
+                ?: "mp4"
         val fileName = "$safeTitle.$ext"
         val destUrl =
             (

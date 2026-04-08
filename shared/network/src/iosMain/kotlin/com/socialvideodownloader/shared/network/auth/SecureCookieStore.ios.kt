@@ -44,6 +44,7 @@ actual class SecureCookieStore : CookieStore {
                 kSecAttrAccount to platform.accountKey,
                 kSecValueData to data,
             )
+
         @Suppress("UNCHECKED_CAST")
         val cfQuery = CFBridgingRetain(query) as CFDictionaryRef?
         try {
@@ -60,6 +61,7 @@ actual class SecureCookieStore : CookieStore {
                 kSecAttrService to SERVICE_NAME,
                 kSecAttrAccount to platform.accountKey,
             )
+
         @Suppress("UNCHECKED_CAST")
         val cfQuery = CFBridgingRetain(query) as CFDictionaryRef?
         try {

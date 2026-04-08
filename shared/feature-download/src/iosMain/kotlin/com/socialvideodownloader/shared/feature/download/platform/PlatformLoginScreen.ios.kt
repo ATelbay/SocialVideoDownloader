@@ -33,9 +33,10 @@ actual fun PlatformLoginScreen(
     modifier: Modifier,
 ) {
     val configuration = remember { WKWebViewConfiguration() }
-    val loginHost = remember {
-        platform.loginUrl.substringAfter("://").substringBefore("/").substringBefore("?")
-    }
+    val loginHost =
+        remember {
+            platform.loginUrl.substringAfter("://").substringBefore("/").substringBefore("?")
+        }
 
     UIKitView(
         factory = {
@@ -49,8 +50,9 @@ actual fun PlatformLoginScreen(
                         didFinishNavigation: WKNavigation?,
                     ) {
                         val currentUrl = webView.URL?.absoluteString ?: ""
-                        val currentHost = currentUrl.substringAfter("://")
-                            .substringBefore("/").substringBefore("?").lowercase()
+                        val currentHost =
+                            currentUrl.substringAfter("://")
+                                .substringBefore("/").substringBefore("?").lowercase()
 
                         val cookieStore = WKWebsiteDataStore.defaultDataStore().httpCookieStore
                         cookieStore.getAllCookies { cookies ->
@@ -59,9 +61,10 @@ actual fun PlatformLoginScreen(
 
                             // If we navigated to the platform host to collect domain cookies, extract now.
                             if (pendingPlatformVisit) {
-                                val isPlatformHost = platform.hostMatches.any { host ->
-                                    currentHost == host || currentHost.endsWith(".$host")
-                                }
+                                val isPlatformHost =
+                                    platform.hostMatches.any { host ->
+                                        currentHost == host || currentHost.endsWith(".$host")
+                                    }
                                 if (isPlatformHost) {
                                     extractAndSaveCookies(httpCookies, platform, secureCookieStore, onResult)
                                 }
@@ -116,23 +119,25 @@ private fun extractAndSaveCookies(
     secureCookieStore: CookieStore,
     onResult: (Boolean) -> Unit,
 ) {
-    val relevantCookies = httpCookies.filter { cookie ->
-        platform.cookieDomains.any { domain ->
-            cookie.domain.endsWith(domain.removePrefix("."))
+    val relevantCookies =
+        httpCookies.filter { cookie ->
+            platform.cookieDomains.any { domain ->
+                cookie.domain.endsWith(domain.removePrefix("."))
+            }
         }
-    }
 
-    val entries = relevantCookies.map { cookie ->
-        CookieEntry(
-            domain = cookie.domain,
-            includeSubdomains = true,
-            path = cookie.path,
-            secure = cookie.isSecure(),
-            expiry = cookie.expiresDate?.timeIntervalSince1970?.toLong() ?: FAR_FUTURE_EXPIRY,
-            name = cookie.name,
-            value = cookie.value,
-        )
-    }
+    val entries =
+        relevantCookies.map { cookie ->
+            CookieEntry(
+                domain = cookie.domain,
+                includeSubdomains = true,
+                path = cookie.path,
+                secure = cookie.isSecure(),
+                expiry = cookie.expiresDate?.timeIntervalSince1970?.toLong() ?: FAR_FUTURE_EXPIRY,
+                name = cookie.name,
+                value = cookie.value,
+            )
+        }
 
     val netscapeCookies = NetscapeCookieParser.formatToNetscape(entries)
     secureCookieStore.setCookies(platform, netscapeCookies)

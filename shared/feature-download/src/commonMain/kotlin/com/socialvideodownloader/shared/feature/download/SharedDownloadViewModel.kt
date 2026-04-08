@@ -590,10 +590,17 @@ class SharedDownloadViewModel(
         // platform AND the error contains auth-adjacent keywords, offer auth as a recovery option.
         // Without the keyword check, generic errors like "Video unavailable" on YouTube URLs
         // would incorrectly show "Login required" UI.
-        val authFallbackKeywords = listOf(
-            "login", "sign in", "private", "restricted", "members only",
-            "subscriber", "authenticate", "credentials",
-        )
+        val authFallbackKeywords =
+            listOf(
+                "login",
+                "sign in",
+                "private",
+                "restricted",
+                "members only",
+                "subscriber",
+                "authenticate",
+                "credentials",
+            )
         val hasAuthHint = authFallbackKeywords.any { it in lower }
         val platformFromUrl = detectPlatform(currentUrl)
         val platformFromError = detectPlatformFromError(message)
