@@ -15,8 +15,8 @@ class FormatInfo(BaseModel):
     acodec: Optional[str] = None
 
 
-def get_ydl_opts() -> dict:
-    return {
+def get_ydl_opts(cookiefile: str | None = None) -> dict:
+    opts = {
         "extract_flat": False,
         "noplaylist": True,
         "quiet": True,
@@ -36,6 +36,9 @@ def get_ydl_opts() -> dict:
             "node": {},
         },
     }
+    if cookiefile:
+        opts["cookiefile"] = cookiefile
+    return opts
 
 
 def filter_formats(info_dict: dict) -> list[FormatInfo]:

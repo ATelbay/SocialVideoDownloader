@@ -104,6 +104,7 @@ class DownloadViewModelTest {
                 savedStateHandle = androidx.lifecycle.SavedStateHandle(),
                 ioDispatcher = testDispatcher,
                 androidDownloadManager = androidDownloadManager,
+                secureCookieStore = mockk(relaxed = true),
             )
     }
 
@@ -504,6 +505,7 @@ class DownloadViewModelTest {
                     savedStateHandle = savedStateHandle,
                     ioDispatcher = testDispatcher,
                     androidDownloadManager = androidDownloadManager,
+                    secureCookieStore = mockk(relaxed = true),
                 )
 
             vm.onIntent(UrlChanged("https://youtube.com/watch?v=saved"))

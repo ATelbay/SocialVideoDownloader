@@ -7,7 +7,12 @@ import com.socialvideodownloader.core.domain.usecase.FindExistingDownloadUseCase
 import com.socialvideodownloader.shared.data.platform.DownloadErrorType
 import com.socialvideodownloader.shared.data.platform.DownloadServiceState
 import com.socialvideodownloader.shared.data.platform.PlatformDownloadManager
+import com.socialvideodownloader.shared.feature.download.ui.DownloadAuthStrings
 import com.socialvideodownloader.shared.network.ServerExtractionException
+import com.socialvideodownloader.shared.network.auth.CookieStore
+import com.socialvideodownloader.shared.network.auth.SupportedPlatform
+import com.socialvideodownloader.shared.network.auth.detectPlatform
+import com.socialvideodownloader.shared.network.auth.detectPlatformFromError
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -32,6 +37,7 @@ class SharedDownloadViewModel(
     private val extractVideoInfo: ExtractVideoInfoUseCase,
     private val findExistingDownload: FindExistingDownloadUseCase,
     private val platformDownloadManager: PlatformDownloadManager,
+    private val secureCookieStore: CookieStore,
     private val initialUrl: String? = null,
     private val savedUrl: String? = null,
 ) {
@@ -43,6 +49,8 @@ class SharedDownloadViewModel(
     interface PlatformDelegate {
         /** Called when the VM wants to check/request notification permission before starting a download. */
         fun checkNotificationPermission(pendingShareOnly: Boolean)
+
+        fun showPlatformLogin(platform: SupportedPlatform)
     }
 
     var platformDelegate: PlatformDelegate? = null
@@ -53,7 +61,8 @@ class SharedDownloadViewModel(
     /** Base delay in milliseconds for exponential backoff between retries. */
     private val retryBaseDelayMs = 1_000L
 
-    private val _uiState = MutableStateFlow<DownloadUiState>(DownloadUiState.Idle())
+    private val _uiState =
+        MutableStateFlow<DownloadUiState>(DownloadUiState.Idle(connectedPlatforms = secureCookieStore.connectedPlatforms()))
     val uiState: StateFlow<DownloadUiState> = _uiState.asStateFlow()
 
     private val _events = Channel<DownloadEvent>(Channel.BUFFERED)
@@ -70,7 +79,7 @@ class SharedDownloadViewModel(
         val url = initialUrl ?: savedUrl
         if (url != null) {
             currentUrl = url
-            _uiState.value = DownloadUiState.Idle()
+            _uiState.value = DownloadUiState.Idle(connectedPlatforms = secureCookieStore.connectedPlatforms())
         }
     }
 
@@ -177,6 +186,9 @@ class SharedDownloadViewModel(
             is DownloadIntent.ShareFormatClicked -> handleShareFormat()
             is DownloadIntent.DismissExistingBanner -> handleDismissExistingBanner()
             is DownloadIntent.BackToIdleClicked -> handleBackToIdle()
+            is DownloadIntent.ConnectPlatformClicked -> handleConnectPlatform(intent.platform)
+            is DownloadIntent.PlatformLoginResult -> handlePlatformLoginResult(intent.platform, intent.success)
+            is DownloadIntent.DisconnectPlatformClicked -> handleDisconnectPlatform(intent.platform)
         }
     }
 
@@ -188,7 +200,7 @@ class SharedDownloadViewModel(
         if (url.isBlank()) {
             val current = _uiState.value
             if (current is DownloadUiState.Idle && current.existingDownload != null) {
-                _uiState.value = DownloadUiState.Idle()
+                _uiState.value = DownloadUiState.Idle(connectedPlatforms = secureCookieStore.connectedPlatforms())
             }
             return
         }
@@ -198,7 +210,11 @@ class SharedDownloadViewModel(
                 val existing = findExistingDownload(url)
                 val current = _uiState.value
                 if (current is DownloadUiState.Idle) {
-                    _uiState.value = DownloadUiState.Idle(existingDownload = existing)
+                    _uiState.value =
+                        DownloadUiState.Idle(
+                            existingDownload = existing,
+                            connectedPlatforms = secureCookieStore.connectedPlatforms(),
+                        )
                 }
             }
     }
@@ -251,11 +267,18 @@ class SharedDownloadViewModel(
                         // Only retry if still in Extracting state (user hasn't navigated away)
                         if (_uiState.value !is DownloadUiState.Extracting) return
                     } else {
+                        val platform = if (errorType == DownloadErrorType.AUTH_REQUIRED) detectPlatform(url) else null
+                        // If cookies exist but extraction still failed, show "Reconnect" label
+                        // but DON'T clear cookies — they may still be valid for retry.
+                        // Cookies are only replaced when the user completes a new login.
+                        val isReconnect = platform != null && secureCookieStore.isConnected(platform)
                         _uiState.value =
                             DownloadUiState.Error(
                                 errorType = errorType,
                                 message = friendlyErrorMessage(error),
                                 retryAction = RetryAction.RetryExtraction(url),
+                                platformForAuth = platform,
+                                isReconnect = isReconnect,
                             )
                         return
                     }
@@ -306,6 +329,16 @@ class SharedDownloadViewModel(
     fun emitRequestNotificationPermission() {
         coroutineScope.launch {
             _events.send(DownloadEvent.RequestNotificationPermission)
+        }
+    }
+
+    /**
+     * Emits [DownloadEvent.ShowPlatformLogin] so the platform UI can show the login screen.
+     * Called by the Android delegate inside [PlatformDelegate.showPlatformLogin].
+     */
+    fun emitShowPlatformLogin(platform: SupportedPlatform) {
+        coroutineScope.launch {
+            _events.send(DownloadEvent.ShowPlatformLogin(platform))
         }
     }
 
@@ -411,11 +444,15 @@ class SharedDownloadViewModel(
         currentUrl = ""
         existingRecordId = null
         duplicateCheckJob?.cancel()
-        _uiState.value = DownloadUiState.Idle()
+        _uiState.value = DownloadUiState.Idle(connectedPlatforms = secureCookieStore.connectedPlatforms())
     }
 
     private fun handleBackToIdle() {
-        _uiState.value = DownloadUiState.Idle(prefillUrl = currentUrl)
+        _uiState.value =
+            DownloadUiState.Idle(
+                prefillUrl = currentUrl,
+                connectedPlatforms = secureCookieStore.connectedPlatforms(),
+            )
     }
 
     private fun handleOpenExisting() {
@@ -441,7 +478,11 @@ class SharedDownloadViewModel(
     private fun handleDismissExistingBanner() {
         val current = _uiState.value
         if (current is DownloadUiState.Idle) {
-            _uiState.value = DownloadUiState.Idle(prefillUrl = current.prefillUrl)
+            _uiState.value =
+                DownloadUiState.Idle(
+                    prefillUrl = current.prefillUrl,
+                    connectedPlatforms = secureCookieStore.connectedPlatforms(),
+                )
         }
     }
 
@@ -459,10 +500,44 @@ class SharedDownloadViewModel(
                     DownloadUiState.Idle(
                         existingDownload = existing,
                         prefillUrl = url,
+                        connectedPlatforms = secureCookieStore.connectedPlatforms(),
                     )
             } else {
                 handleExtract()
             }
+        }
+    }
+
+    private fun handleConnectPlatform(platform: SupportedPlatform) {
+        val delegate = platformDelegate
+        if (delegate != null) {
+            delegate.showPlatformLogin(platform)
+        } else {
+            // iOS path — emit event for shared screen overlay
+            coroutineScope.launch {
+                _events.send(DownloadEvent.ShowPlatformLogin(platform))
+            }
+        }
+    }
+
+    private fun handlePlatformLoginResult(
+        platform: SupportedPlatform,
+        success: Boolean,
+    ) {
+        if (success && currentUrl.isNotBlank()) {
+            // Auto-retry extraction after successful login
+            _uiState.value = DownloadUiState.Extracting(currentUrl)
+            coroutineScope.launch {
+                extractWithRetry(currentUrl)
+            }
+        }
+    }
+
+    private fun handleDisconnectPlatform(platform: SupportedPlatform) {
+        secureCookieStore.clearCookies(platform)
+        val current = _uiState.value
+        if (current is DownloadUiState.Idle) {
+            _uiState.value = current.copy(connectedPlatforms = secureCookieStore.connectedPlatforms())
         }
     }
 
@@ -474,11 +549,18 @@ class SharedDownloadViewModel(
     private fun friendlyErrorMessage(error: Throwable): String {
         val raw = error.message ?: return "An unexpected error occurred"
         val lower = raw.lowercase()
+
+        // Auth-required: platform-specific message
+        val platform = detectPlatform(currentUrl)
+        if (platform != null) {
+            val authKeywords =
+                listOf("sign in", "login required", "must be logged in", "inappropriate", "age-restricted", "age restricted", "nsfw")
+            if (authKeywords.any { lower.contains(it) }) {
+                return DownloadAuthStrings.authRequiredMessage(platform.displayName)
+            }
+        }
+
         return when {
-            lower.contains("inappropriate") || lower.contains("age-restricted") ||
-                lower.contains("age restricted") ||
-                lower.contains("sign in") || lower.contains("login required") ->
-                "This video is age-restricted and cannot be downloaded without authentication."
             lower.contains("private video") || lower.contains("is private") ->
                 "This video is private and cannot be accessed."
             lower.contains("not available") || lower.contains("not found") ||
@@ -493,10 +575,43 @@ class SharedDownloadViewModel(
     }
 
     private fun mapErrorToType(error: Throwable): DownloadErrorType {
+        val message = error.message ?: return DownloadErrorType.UNKNOWN
+
+        // Check for auth-required errors on supported platforms (before ServerExtractionException
+        // short-circuit, because the WS proxy wraps yt-dlp auth errors as ServerExtractionException)
+        val authKeywords =
+            listOf("sign in", "login required", "must be logged in", "inappropriate", "age-restricted", "age restricted", "nsfw")
+        val lower = message.lowercase()
+        if (authKeywords.any { lower.contains(it) } && detectPlatform(currentUrl) != null) {
+            return DownloadErrorType.AUTH_REQUIRED
+        }
+
+        // Fallback: if yt-dlp error has a platform tag (e.g. [youtube]) matching the URL's
+        // platform AND the error contains auth-adjacent keywords, offer auth as a recovery option.
+        // Without the keyword check, generic errors like "Video unavailable" on YouTube URLs
+        // would incorrectly show "Login required" UI.
+        val authFallbackKeywords =
+            listOf(
+                "login",
+                "sign in",
+                "private",
+                "restricted",
+                "members only",
+                "subscriber",
+                "authenticate",
+                "credentials",
+            )
+        val hasAuthHint = authFallbackKeywords.any { it in lower }
+        val platformFromUrl = detectPlatform(currentUrl)
+        val platformFromError = detectPlatformFromError(message)
+        if (platformFromUrl != null && platformFromUrl == platformFromError && hasAuthHint) {
+            return DownloadErrorType.AUTH_REQUIRED
+        }
+
         if (error is ServerExtractionException) {
             return DownloadErrorType.EXTRACTION_FAILED
         }
-        val message = error.message ?: return DownloadErrorType.UNKNOWN
+
         return when {
             message.contains("Unsupported URL", ignoreCase = true) -> DownloadErrorType.UNSUPPORTED_URL
             // Server unreachable / backend down (check before generic "unavailable")

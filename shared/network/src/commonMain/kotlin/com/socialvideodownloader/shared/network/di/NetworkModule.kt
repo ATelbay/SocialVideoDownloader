@@ -10,6 +10,6 @@ val networkModule =
     module {
         single { createHttpClient() }
         single { ServerResponseMapper() }
-        single { ServerVideoExtractorApi(get(), get()) }
-        single { WebSocketExtractorApi(get(), get()) }
+        single { ServerVideoExtractorApi(get(), get(), get()) }
+        single { WebSocketExtractorApi(get(), get(), get()) }
     }

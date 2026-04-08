@@ -134,6 +134,8 @@ io.github.junkfood02.youtubedl-android:aria2c:0.18.+
 - No changes — Room KMP (shared DB), MediaStore (Android), Documents (iOS) (013-compose-multiplatform-migration)
 - Python 3.9+ (server), Kotlin 2.2.10 (KMP/shared), Swift 6.x (iOS shell) + FastAPI + uvicorn (server), yt-dlp >= 2025.1.1, Ktor 3.3.0 + ktor-client-websockets (KMP), Koin 4.1.0 (shared DI) (014-ws-proxy-extraction)
 - N/A — no persistent storage changes. All data is transient within WebSocket session lifetime. (014-ws-proxy-extraction)
+- Kotlin 2.2.10 (Android + KMP shared), Swift 6.x (iOS) + Jetpack Compose (BOM 2026.03.00), Hilt 2.59.2 (Android DI), Koin 4.x (KMP DI), Ktor 3.x (networking), Compose Multiplatform 1.9.x (shared UI) (015-platform-cookie-auth)
+- EncryptedSharedPreferences (Android), iOS Keychain (iOS) — new per-platform cookie storage (015-platform-cookie-auth)
 
 ## Recent Changes
 - 005-ui-redesign-dark-theme: Added Kotlin 2.2.10 + Jetpack Compose (BOM 2026.03.00), Material 3, Hilt (KSP), Navigation Compose 2.9.7, Coil

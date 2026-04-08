@@ -7,7 +7,9 @@ import com.socialvideodownloader.shared.data.platform.androidContext
 import com.socialvideodownloader.shared.feature.download.di.sharedDownloadModule
 import com.socialvideodownloader.shared.feature.history.di.sharedHistoryModule
 import com.socialvideodownloader.shared.feature.library.di.sharedLibraryModule
+import com.socialvideodownloader.shared.network.di.androidNetworkModule
 import com.socialvideodownloader.shared.network.di.networkModule
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
 /**
@@ -26,11 +28,13 @@ object KoinInitializer {
         androidContext = context.applicationContext
 
         startKoin {
+            androidContext(context.applicationContext)
             modules(
                 // Shared KMP modules
                 networkModule,
                 sharedDataModule,
                 // Android platform implementations
+                androidNetworkModule,
                 androidDataModule,
                 // Shared feature ViewModel modules
                 sharedDownloadModule,

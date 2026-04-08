@@ -4,11 +4,13 @@ import com.socialvideodownloader.core.domain.model.DownloadProgress
 import com.socialvideodownloader.core.domain.model.ExistingDownload
 import com.socialvideodownloader.core.domain.model.VideoMetadata
 import com.socialvideodownloader.shared.data.platform.DownloadErrorType
+import com.socialvideodownloader.shared.network.auth.SupportedPlatform
 
 sealed interface DownloadUiState {
     data class Idle(
         val existingDownload: ExistingDownload? = null,
         val prefillUrl: String? = null,
+        val connectedPlatforms: List<SupportedPlatform> = emptyList(),
     ) : DownloadUiState
 
     data class Extracting(val url: String) : DownloadUiState
@@ -35,6 +37,8 @@ sealed interface DownloadUiState {
         val errorType: DownloadErrorType,
         val message: String?,
         val retryAction: RetryAction?,
+        val platformForAuth: SupportedPlatform? = null,
+        val isReconnect: Boolean = false,
     ) : DownloadUiState
 }
 

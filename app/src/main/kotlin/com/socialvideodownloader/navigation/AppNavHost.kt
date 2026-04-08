@@ -20,7 +20,7 @@ fun AppNavHost(
         startDestination = startDestination,
         modifier = modifier,
     ) {
-        downloadScreen()
+        downloadScreen(navController = navController)
         libraryScreen(
             onNavigateToDownload = {
                 navController.navigate(DownloadRoute()) {

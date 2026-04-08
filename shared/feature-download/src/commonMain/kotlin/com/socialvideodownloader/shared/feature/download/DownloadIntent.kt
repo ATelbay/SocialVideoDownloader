@@ -1,5 +1,7 @@
 package com.socialvideodownloader.shared.feature.download
 
+import com.socialvideodownloader.shared.network.auth.SupportedPlatform
+
 sealed interface DownloadIntent {
     data class UrlChanged(val url: String) : DownloadIntent
 
@@ -30,4 +32,10 @@ sealed interface DownloadIntent {
     data object DismissExistingBanner : DownloadIntent
 
     data object BackToIdleClicked : DownloadIntent
+
+    data class ConnectPlatformClicked(val platform: SupportedPlatform) : DownloadIntent
+
+    data class PlatformLoginResult(val platform: SupportedPlatform, val success: Boolean) : DownloadIntent
+
+    data class DisconnectPlatformClicked(val platform: SupportedPlatform) : DownloadIntent
 }

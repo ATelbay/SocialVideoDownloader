@@ -1,6 +1,7 @@
 package com.socialvideodownloader.shared.feature.download
 
 import com.socialvideodownloader.shared.data.platform.DownloadErrorType
+import com.socialvideodownloader.shared.network.auth.SupportedPlatform
 
 /** One-shot side effects emitted by [SharedDownloadViewModel]. */
 sealed interface DownloadEvent {
@@ -13,4 +14,6 @@ sealed interface DownloadEvent {
     data object RequestNotificationPermission : DownloadEvent
 
     data class ShowSnackbarMessage(val message: String) : DownloadEvent
+
+    data class ShowPlatformLogin(val platform: SupportedPlatform) : DownloadEvent
 }

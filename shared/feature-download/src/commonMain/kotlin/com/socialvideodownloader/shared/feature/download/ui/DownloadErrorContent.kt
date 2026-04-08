@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.socialvideodownloader.shared.data.platform.DownloadErrorType
+import com.socialvideodownloader.shared.network.auth.SupportedPlatform
 import com.socialvideodownloader.shared.ui.components.GradientButton
 import com.socialvideodownloader.shared.ui.components.TextActionLink
 import com.socialvideodownloader.shared.ui.theme.Spacing
@@ -34,6 +35,9 @@ fun DownloadErrorContent(
     onRetryClicked: () -> Unit,
     onNewDownloadClicked: () -> Unit,
     modifier: Modifier = Modifier,
+    platformForAuth: SupportedPlatform? = null,
+    isReconnect: Boolean = false,
+    onConnectPlatformClicked: (SupportedPlatform) -> Unit = {},
 ) {
     val (title, body) = errorPresentation(errorType = errorType, message = message)
 
@@ -74,6 +78,19 @@ fun DownloadErrorContent(
             )
         }
 
+        if (errorType == DownloadErrorType.AUTH_REQUIRED && platformForAuth != null) {
+            GradientButton(
+                text =
+                    if (isReconnect) {
+                        DownloadAuthStrings.reconnectLabel(platformForAuth.displayName)
+                    } else {
+                        DownloadAuthStrings.connectLabel(platformForAuth.displayName)
+                    },
+                onClick = { onConnectPlatformClicked(platformForAuth) },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+
         GradientButton(
             text = "Retry",
             onClick = onRetryClicked,
@@ -100,6 +117,7 @@ private fun errorPresentation(
             DownloadErrorType.UNSUPPORTED_URL -> "This URL is not supported."
             DownloadErrorType.STORAGE_FULL -> "Not enough storage space to save the download."
             DownloadErrorType.DOWNLOAD_FAILED -> "Download failed. Please try again."
+            DownloadErrorType.AUTH_REQUIRED -> "Authentication required to download this content."
             DownloadErrorType.UNKNOWN -> "Something went wrong. Please try again."
         }
 
@@ -111,6 +129,7 @@ private fun errorPresentation(
             DownloadErrorType.UNSUPPORTED_URL -> "Unsupported URL"
             DownloadErrorType.STORAGE_FULL -> "Storage full"
             DownloadErrorType.DOWNLOAD_FAILED -> "Download failed"
+            DownloadErrorType.AUTH_REQUIRED -> "Login required"
             DownloadErrorType.UNKNOWN -> "Something went wrong"
         }
 

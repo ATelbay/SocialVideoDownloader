@@ -133,7 +133,7 @@ class IosDownloadManager : PlatformDownloadManager {
                     DownloadServiceState.Completed(
                         requestId = request.id,
                         filePath = destPath,
-                        fileUri = null,
+                        fileUri = "file://$destPath",
                     )
             } catch (e: Exception) {
                 log(
@@ -324,7 +324,10 @@ class IosDownloadManager : PlatformDownloadManager {
         ensureDirectory(destDir)
 
         val safeTitle = sanitizeFileName(videoTitle).take(100)
-        val ext = formatId.substringAfterLast('.', "mp4")
+        val ext =
+            tempUrl.pathExtension?.takeIf { it.isNotEmpty() }
+                ?: formatId.substringAfterLast('.').takeIf { it != formatId }
+                ?: "mp4"
         val fileName = "$safeTitle.$ext"
         val destUrl =
             (

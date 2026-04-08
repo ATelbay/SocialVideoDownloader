@@ -35,6 +35,9 @@ import com.socialvideodownloader.shared.feature.download.DownloadIntent
 import com.socialvideodownloader.shared.feature.download.DownloadUiState
 import com.socialvideodownloader.shared.feature.download.SharedDownloadViewModel
 import com.socialvideodownloader.shared.feature.download.platform.PlatformActions
+import com.socialvideodownloader.shared.feature.download.platform.PlatformLoginScreen
+import com.socialvideodownloader.shared.network.auth.CookieStore
+import com.socialvideodownloader.shared.network.auth.SupportedPlatform
 import com.socialvideodownloader.shared.ui.components.GradientButton
 import com.socialvideodownloader.shared.ui.components.SecondaryButton
 import com.socialvideodownloader.shared.ui.components.SvdTopBar
@@ -42,6 +45,7 @@ import com.socialvideodownloader.shared.ui.components.VideoInfoCard
 import com.socialvideodownloader.shared.ui.theme.Spacing
 import com.socialvideodownloader.shared.ui.theme.SvdBg
 import com.socialvideodownloader.shared.ui.tokens.PlatformColors
+import org.koin.mp.KoinPlatform
 
 @Composable
 fun DownloadScreen(
@@ -51,6 +55,7 @@ fun DownloadScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    var showLoginForPlatform by remember { mutableStateOf<SupportedPlatform?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
@@ -60,6 +65,9 @@ fun DownloadScreen(
                 is DownloadEvent.ShowSnackbarMessage -> snackbarHostState.showSnackbar(event.message)
                 is DownloadEvent.ShowError -> snackbarHostState.showSnackbar(event.message ?: event.errorType.name)
                 is DownloadEvent.RequestNotificationPermission -> platformActions.requestNotificationPermission()
+                is DownloadEvent.ShowPlatformLogin -> {
+                    showLoginForPlatform = event.platform
+                }
             }
         }
     }
@@ -70,6 +78,18 @@ fun DownloadScreen(
         snackbarHostState = snackbarHostState,
         modifier = modifier,
     )
+
+    showLoginForPlatform?.let { platform ->
+        val secureCookieStore = remember { KoinPlatform.getKoin().get<CookieStore>() }
+        PlatformLoginScreen(
+            platform = platform,
+            secureCookieStore = secureCookieStore,
+            onResult = { success ->
+                showLoginForPlatform = null
+                viewModel.onIntent(DownloadIntent.PlatformLoginResult(platform, success))
+            },
+        )
+    }
 }
 
 @Composable
@@ -148,6 +168,10 @@ private fun DownloadScreenContent(
                     IdleContent(
                         url = urlText,
                         existingDownload = targetState.existingDownload,
+                        connectedPlatforms = targetState.connectedPlatforms,
+                        onDisconnect = { platform ->
+                            onIntent(DownloadIntent.DisconnectPlatformClicked(platform))
+                        },
                         onUrlChanged = { url ->
                             urlText = url
                             onIntent(DownloadIntent.UrlChanged(url))
@@ -226,6 +250,11 @@ private fun DownloadScreenContent(
                     DownloadErrorContent(
                         errorType = targetState.errorType,
                         message = targetState.message,
+                        platformForAuth = targetState.platformForAuth,
+                        isReconnect = targetState.isReconnect,
+                        onConnectPlatformClicked = { platform ->
+                            onIntent(DownloadIntent.ConnectPlatformClicked(platform))
+                        },
                         onRetryClicked = { onIntent(DownloadIntent.RetryClicked) },
                         onNewDownloadClicked = { onIntent(DownloadIntent.NewDownloadClicked) },
                         modifier = nonIdlePadding,

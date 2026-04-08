@@ -5,6 +5,7 @@ import com.socialvideodownloader.shared.data.platform.PlatformClipboard
 import com.socialvideodownloader.shared.data.platform.PlatformDownloadManager
 import com.socialvideodownloader.shared.data.platform.PlatformFileStorage
 import com.socialvideodownloader.shared.data.platform.PlatformStringProvider
+import com.socialvideodownloader.shared.network.auth.CookieStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -54,4 +55,8 @@ object KoinBridgeModule {
     @Provides
     @Singleton
     fun providePlatformStringProvider(): PlatformStringProvider = KoinPlatform.getKoin().get()
+
+    @Provides
+    @Singleton
+    fun provideCookieStore(): CookieStore = KoinPlatform.getKoin().get()
 }
