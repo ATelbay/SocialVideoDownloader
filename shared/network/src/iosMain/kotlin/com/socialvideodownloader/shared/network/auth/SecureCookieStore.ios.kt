@@ -4,6 +4,7 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
+import kotlinx.cinterop.readBytes
 import kotlinx.cinterop.value
 import platform.CoreFoundation.CFDictionaryRef
 import platform.CoreFoundation.CFTypeRefVar
@@ -28,15 +29,16 @@ import platform.Security.kSecValueData
 
 @OptIn(ExperimentalForeignApi::class)
 actual class SecureCookieStore : CookieStore {
-    actual fun getCookies(platform: SupportedPlatform): String? = keychainRead(platform.accountKey)
+    actual override fun getCookies(platform: SupportedPlatform): String? = keychainRead(platform.accountKey)
 
-    actual fun setCookies(
+    actual override fun setCookies(
         platform: SupportedPlatform,
         cookies: String,
     ) {
         // Upsert pattern: delete then add
         clearCookies(platform)
-        val data = NSString.create(string = cookies).dataUsingEncoding(NSUTF8StringEncoding) ?: return
+        @Suppress("CAST_NEVER_SUCCEEDS")
+        val data = (cookies as NSString).dataUsingEncoding(NSUTF8StringEncoding) ?: return
         val query =
             mapOf<Any?, Any?>(
                 kSecClass to kSecClassGenericPassword,
@@ -54,7 +56,7 @@ actual class SecureCookieStore : CookieStore {
         }
     }
 
-    actual fun clearCookies(platform: SupportedPlatform) {
+    actual override fun clearCookies(platform: SupportedPlatform) {
         val query =
             mapOf<Any?, Any?>(
                 kSecClass to kSecClassGenericPassword,
@@ -71,9 +73,9 @@ actual class SecureCookieStore : CookieStore {
         }
     }
 
-    actual fun isConnected(platform: SupportedPlatform): Boolean = getCookies(platform) != null
+    actual override fun isConnected(platform: SupportedPlatform): Boolean = getCookies(platform) != null
 
-    actual fun connectedPlatforms(): List<SupportedPlatform> = SupportedPlatform.entries.filter { isConnected(it) }
+    actual override fun connectedPlatforms(): List<SupportedPlatform> = SupportedPlatform.entries.filter { isConnected(it) }
 
     private fun keychainRead(account: String): String? {
         val query =
@@ -96,8 +98,11 @@ actual class SecureCookieStore : CookieStore {
                     cfQuery?.let { CFBridgingRelease(it) }
                 }
             if (status != errSecSuccess) return null
-            val data = CFBridgingRelease(resultRef.value) as? NSData ?: return null
-            return NSString.create(data = data, encoding = NSUTF8StringEncoding) as? String
+            val nsData = CFBridgingRelease(resultRef.value) as? NSData ?: return null
+            val length = nsData.length.toInt()
+            if (length == 0) return ""
+            val bytes = nsData.bytes?.readBytes(length) ?: return null
+            return bytes.decodeToString()
         }
     }
 
