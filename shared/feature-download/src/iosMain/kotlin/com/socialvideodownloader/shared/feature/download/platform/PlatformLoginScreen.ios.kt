@@ -11,7 +11,9 @@ import com.socialvideodownloader.shared.network.auth.SupportedPlatform
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.cValue
 import platform.CoreGraphics.CGRectZero
+import platform.Foundation.NSDate
 import platform.Foundation.NSHTTPCookie
+import platform.Foundation.NSTimeIntervalSince1970
 import platform.Foundation.NSURL
 import platform.Foundation.NSURLRequest
 import platform.WebKit.WKNavigation
@@ -133,7 +135,10 @@ private fun extractAndSaveCookies(
                 includeSubdomains = true,
                 path = cookie.path,
                 secure = cookie.isSecure(),
-                expiry = cookie.expiresDate?.timeIntervalSince1970?.toLong() ?: FAR_FUTURE_EXPIRY,
+                expiry =
+                    (cookie.expiresDate as? NSDate)?.let {
+                        (it.timeIntervalSinceReferenceDate + NSTimeIntervalSince1970).toLong()
+                    } ?: FAR_FUTURE_EXPIRY,
                 name = cookie.name,
                 value = cookie.value,
             )
