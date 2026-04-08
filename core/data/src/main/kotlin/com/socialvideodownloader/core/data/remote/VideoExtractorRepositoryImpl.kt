@@ -42,7 +42,7 @@ class VideoExtractorRepositoryImpl
         private fun writeCookieFile(url: String): File? {
             val platform = detectPlatform(url) ?: return null
             val cookies = cookieStore.getCookies(platform) ?: return null
-            val file = File(context.cacheDir, "ytdlp_cookies_${platform.name}.txt")
+            val file = File.createTempFile("ytdlp_cookies_${platform.name}_", ".txt", context.cacheDir)
             file.writeText(cookies)
             return file
         }

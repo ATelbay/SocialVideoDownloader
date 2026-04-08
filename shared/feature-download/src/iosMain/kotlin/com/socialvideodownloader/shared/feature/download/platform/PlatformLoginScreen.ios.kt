@@ -21,6 +21,9 @@ import platform.WebKit.WKWebViewConfiguration
 import platform.WebKit.WKWebsiteDataStore
 import platform.darwin.NSObject
 
+// Far-future expiry (year 2035) so yt-dlp doesn't reject session cookies as expired
+private const val FAR_FUTURE_EXPIRY = 2051222400L
+
 @OptIn(ExperimentalForeignApi::class)
 @Composable
 actual fun PlatformLoginScreen(
@@ -30,10 +33,14 @@ actual fun PlatformLoginScreen(
     modifier: Modifier,
 ) {
     val configuration = remember { WKWebViewConfiguration() }
+    val loginHost = remember {
+        platform.loginUrl.substringAfter("://").substringBefore("/").substringBefore("?")
+    }
 
     UIKitView(
         factory = {
             val webView = WKWebView(frame = cValue { CGRectZero }, configuration = configuration)
+            var pendingPlatformVisit = false
 
             val delegate =
                 object : NSObject(), WKNavigationDelegateProtocol {
@@ -41,10 +48,30 @@ actual fun PlatformLoginScreen(
                         webView: WKWebView,
                         didFinishNavigation: WKNavigation?,
                     ) {
+                        val currentUrl = webView.URL?.absoluteString ?: ""
+                        val currentHost = currentUrl.substringAfter("://")
+                            .substringBefore("/").substringBefore("?").lowercase()
+
                         val cookieStore = WKWebsiteDataStore.defaultDataStore().httpCookieStore
                         cookieStore.getAllCookies { cookies ->
                             @Suppress("UNCHECKED_CAST")
                             val httpCookies = cookies as? List<NSHTTPCookie> ?: return@getAllCookies
+
+                            // If we navigated to the platform host to collect domain cookies, extract now.
+                            if (pendingPlatformVisit) {
+                                val isPlatformHost = platform.hostMatches.any { host ->
+                                    currentHost == host || currentHost.endsWith(".$host")
+                                }
+                                if (isPlatformHost) {
+                                    extractAndSaveCookies(httpCookies, platform, secureCookieStore, onResult)
+                                }
+                                return@getAllCookies
+                            }
+
+                            // Don't extract while still on the login domain
+                            if (currentHost == loginHost || currentHost.endsWith(".$loginHost")) {
+                                return@getAllCookies
+                            }
 
                             val hasSuccessCookie =
                                 httpCookies.any { cookie ->
@@ -55,35 +82,19 @@ actual fun PlatformLoginScreen(
                                 }
 
                             if (hasSuccessCookie) {
-                                val relevantCookies =
-                                    httpCookies.filter { cookie ->
-                                        platform.cookieDomains.any { domain ->
-                                            cookie.domain.endsWith(domain.removePrefix("."))
-                                        }
-                                    }
-
-                                val entries =
-                                    relevantCookies.map { cookie ->
-                                        CookieEntry(
-                                            domain = cookie.domain,
-                                            includeSubdomains = true,
-                                            path = cookie.path,
-                                            secure = cookie.isSecure(),
-                                            expiry = cookie.expiresDate?.timeIntervalSince1970?.toLong() ?: 0L,
-                                            name = cookie.name,
-                                            value = cookie.value,
-                                        )
-                                    }
-
-                                val netscapeCookies = NetscapeCookieParser.formatToNetscape(entries)
-                                secureCookieStore.setCookies(platform, netscapeCookies)
-
-                                // Clear WKWebView cookies after extraction
-                                relevantCookies.forEach { cookie ->
-                                    cookieStore.deleteCookie(cookie, completionHandler = null)
+                                // For platforms where login host differs from content host (e.g. YouTube:
+                                // login on accounts.google.com but cookies needed from .youtube.com),
+                                // navigate to the platform's primary host to trigger cookie creation.
+                                val primaryHost = platform.hostMatches.firstOrNull() ?: ""
+                                val needsPlatformVisit = !currentHost.endsWith(primaryHost)
+                                if (needsPlatformVisit) {
+                                    pendingPlatformVisit = true
+                                    val platformUrl = NSURL.URLWithString("https://www.$primaryHost")!!
+                                    webView.loadRequest(NSURLRequest.requestWithURL(platformUrl))
+                                    return@getAllCookies
                                 }
 
-                                onResult(true)
+                                extractAndSaveCookies(httpCookies, platform, secureCookieStore, onResult)
                             }
                         }
                     }
@@ -97,4 +108,35 @@ actual fun PlatformLoginScreen(
         },
         modifier = modifier,
     )
+}
+
+private fun extractAndSaveCookies(
+    httpCookies: List<NSHTTPCookie>,
+    platform: SupportedPlatform,
+    secureCookieStore: CookieStore,
+    onResult: (Boolean) -> Unit,
+) {
+    val relevantCookies = httpCookies.filter { cookie ->
+        platform.cookieDomains.any { domain ->
+            cookie.domain.endsWith(domain.removePrefix("."))
+        }
+    }
+
+    val entries = relevantCookies.map { cookie ->
+        CookieEntry(
+            domain = cookie.domain,
+            includeSubdomains = true,
+            path = cookie.path,
+            secure = cookie.isSecure(),
+            expiry = cookie.expiresDate?.timeIntervalSince1970?.toLong() ?: FAR_FUTURE_EXPIRY,
+            name = cookie.name,
+            value = cookie.value,
+        )
+    }
+
+    val netscapeCookies = NetscapeCookieParser.formatToNetscape(entries)
+    secureCookieStore.setCookies(platform, netscapeCookies)
+
+    // Don't clear WKWebView cookies — keeping the session means "Reconnect" won't require full re-login.
+    onResult(true)
 }

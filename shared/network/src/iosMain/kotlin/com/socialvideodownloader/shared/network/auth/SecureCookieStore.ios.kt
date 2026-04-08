@@ -45,7 +45,12 @@ actual class SecureCookieStore : CookieStore {
                 kSecValueData to data,
             )
         @Suppress("UNCHECKED_CAST")
-        SecItemAdd(CFBridgingRetain(query) as CFDictionaryRef, null)
+        val cfQuery = CFBridgingRetain(query) as CFDictionaryRef?
+        try {
+            SecItemAdd(cfQuery, null)
+        } finally {
+            cfQuery?.let { CFBridgingRelease(it) }
+        }
     }
 
     actual fun clearCookies(platform: SupportedPlatform) {
@@ -56,7 +61,12 @@ actual class SecureCookieStore : CookieStore {
                 kSecAttrAccount to platform.accountKey,
             )
         @Suppress("UNCHECKED_CAST")
-        SecItemDelete(CFBridgingRetain(query) as CFDictionaryRef)
+        val cfQuery = CFBridgingRetain(query) as CFDictionaryRef?
+        try {
+            SecItemDelete(cfQuery)
+        } finally {
+            cfQuery?.let { CFBridgingRelease(it) }
+        }
     }
 
     actual fun isConnected(platform: SupportedPlatform): Boolean = getCookies(platform) != null
@@ -76,11 +86,13 @@ actual class SecureCookieStore : CookieStore {
             val resultRef = alloc<CFTypeRefVar>()
 
             @Suppress("UNCHECKED_CAST")
+            val cfQuery = CFBridgingRetain(query) as CFDictionaryRef?
             val status =
-                SecItemCopyMatching(
-                    CFBridgingRetain(query) as CFDictionaryRef,
-                    resultRef.ptr,
-                )
+                try {
+                    SecItemCopyMatching(cfQuery, resultRef.ptr)
+                } finally {
+                    cfQuery?.let { CFBridgingRelease(it) }
+                }
             if (status != errSecSuccess) return null
             val data = CFBridgingRelease(resultRef.value) as? NSData ?: return null
             return NSString.create(data = data, encoding = NSUTF8StringEncoding) as? String

@@ -16,7 +16,11 @@ private const val APP_GROUP = "group.com.socialvideodownloader.shared"
 @OptIn(ExperimentalForeignApi::class)
 actual class PlatformActions {
     actual fun openFile(uri: String) {
-        val url = platform.Foundation.NSURL.URLWithString(uri) ?: return
+        val url = if (uri.startsWith("file://")) {
+            platform.Foundation.NSURL(string = uri)
+        } else {
+            platform.Foundation.NSURL(fileURLWithPath = uri)
+        }
         val controller = UIDocumentInteractionController.interactionControllerWithURL(url)
         val rootVc = UIApplication.sharedApplication.keyWindow?.rootViewController ?: return
         controller.presentOptionsMenuFromRect(
@@ -27,7 +31,11 @@ actual class PlatformActions {
     }
 
     actual fun shareFile(uri: String) {
-        val url = platform.Foundation.NSURL.URLWithString(uri) ?: return
+        val url = if (uri.startsWith("file://")) {
+            platform.Foundation.NSURL(string = uri)
+        } else {
+            platform.Foundation.NSURL(fileURLWithPath = uri)
+        }
         val activityVc =
             UIActivityViewController(
                 activityItems = listOf(url),

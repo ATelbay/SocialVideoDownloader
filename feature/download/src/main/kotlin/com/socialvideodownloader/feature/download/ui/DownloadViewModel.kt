@@ -19,7 +19,7 @@ import com.socialvideodownloader.shared.feature.download.DownloadEvent
 import com.socialvideodownloader.shared.feature.download.DownloadIntent
 import com.socialvideodownloader.shared.feature.download.DownloadUiState
 import com.socialvideodownloader.shared.feature.download.SharedDownloadViewModel
-import com.socialvideodownloader.shared.network.auth.SecureCookieStore
+import com.socialvideodownloader.shared.network.auth.CookieStore
 import com.socialvideodownloader.shared.network.auth.SupportedPlatform
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -56,7 +56,7 @@ class DownloadViewModel
         private val savedStateHandle: SavedStateHandle,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
         private val androidDownloadManager: AndroidDownloadManager,
-        private val secureCookieStore: SecureCookieStore,
+        private val secureCookieStore: CookieStore,
     ) : ViewModel() {
         val shared =
             SharedDownloadViewModel(
