@@ -6,8 +6,11 @@ import com.socialvideodownloader.core.domain.di.IoDispatcher
 import com.socialvideodownloader.core.domain.model.DownloadRequest
 import com.socialvideodownloader.core.domain.model.VideoMetadata
 import com.socialvideodownloader.core.domain.repository.VideoExtractorRepository
+import com.socialvideodownloader.shared.network.ServerExtractionException
 import com.socialvideodownloader.shared.network.ServerVideoExtractorApi
 import com.socialvideodownloader.shared.network.WebSocketExtractorApi
+import com.socialvideodownloader.shared.network.auth.SupportedPlatform
+import com.socialvideodownloader.shared.network.auth.detectPlatform
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -32,17 +35,34 @@ class FallbackVideoExtractorRepository
         @ApplicationContext private val context: Context,
     ) : VideoExtractorRepository {
         override suspend fun extractInfo(url: String): VideoMetadata {
+            // YouTube requires a JS runtime (node/deno) for signature solving,
+            // which is unavailable on Android — skip straight to server.
+            if (detectPlatform(url) == SupportedPlatform.YOUTUBE) {
+                return extractViaServer(url)
+            }
+
             return try {
                 local.extractInfo(url)
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                Log.w(TAG, "Local extraction failed, trying WS proxy", e)
+                Log.w(TAG, "Local extraction failed, trying server", e)
+                extractViaServer(url)
+            }
+        }
+
+        private suspend fun extractViaServer(url: String): VideoMetadata {
+            return try {
+                wsApi.extractViaProxy(url)
+            } catch (wsError: Exception) {
+                if (wsError is CancellationException) throw wsError
+                Log.w(TAG, "WS proxy failed, trying REST", wsError)
                 try {
-                    wsApi.extractViaProxy(url)
-                } catch (wsError: Exception) {
-                    if (wsError is CancellationException) throw wsError
-                    Log.w(TAG, "WS proxy extraction failed, trying REST", wsError)
                     serverApi.extractInfo(url)
+                } catch (restError: Exception) {
+                    if (restError is CancellationException) throw restError
+                    Log.w(TAG, "REST extraction also failed", restError)
+                    if (wsError is ServerExtractionException) throw wsError
+                    throw restError
                 }
             }
         }

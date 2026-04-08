@@ -14,7 +14,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.socialvideodownloader.feature.download.navigation.PlatformLoginRoute
-import com.socialvideodownloader.shared.feature.download.DownloadEvent
 import com.socialvideodownloader.shared.feature.download.DownloadIntent
 import com.socialvideodownloader.shared.feature.download.platform.PlatformActions
 import com.socialvideodownloader.shared.network.auth.SupportedPlatform
@@ -43,16 +42,19 @@ fun DownloadScreen(
         }
     }
 
-    // Navigate to platform login screen when the shared VM emits ShowPlatformLogin
+    // Navigate to platform login screen via Android-only channel (not shared events)
     LaunchedEffect(Unit) {
-        viewModel.events.collect { event ->
-            if (event is DownloadEvent.ShowPlatformLogin) {
-                navController.navigate(PlatformLoginRoute(event.platform.name))
-            }
+        viewModel.platformLoginNav.collect { platform ->
+            navController.navigate(PlatformLoginRoute(platform.name))
         }
     }
 
-    // Observe platform login result passed back via savedStateHandle from PlatformLoginRoute
+    // Observe platform login result passed back via savedStateHandle from PlatformLoginRoute.
+    // Clear any stale value on first composition to avoid spurious re-extraction after process death.
+    LaunchedEffect(Unit) {
+        navController.currentBackStackEntry?.savedStateHandle?.set<String?>("platformLoginResult", null)
+    }
+
     val loginResult by navController.currentBackStackEntry
         ?.savedStateHandle
         ?.getStateFlow<String?>("platformLoginResult", null)

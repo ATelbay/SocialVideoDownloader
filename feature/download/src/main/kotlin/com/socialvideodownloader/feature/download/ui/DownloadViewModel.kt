@@ -25,8 +25,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.socialvideodownloader.shared.data.platform.DownloadServiceState as SharedDownloadServiceState
@@ -70,6 +72,10 @@ class DownloadViewModel
         val uiState: StateFlow<DownloadUiState> = shared.uiState
         val events: Flow<DownloadEvent> = shared.events
 
+        /** Separate channel for Android-only navigation to platform login screen. */
+        private val _platformLoginNav = Channel<SupportedPlatform>(Channel.BUFFERED)
+        val platformLoginNav = _platformLoginNav.receiveAsFlow()
+
         init {
             // Wire notification permission check back through the Android layer
             shared.platformDelegate =
@@ -93,7 +99,12 @@ class DownloadViewModel
                     }
 
                     override fun showPlatformLogin(platform: SupportedPlatform) {
-                        shared.emitShowPlatformLogin(platform)
+                        // Use a separate Android-only channel to avoid competing with
+                        // the shared DownloadScreen's event collector (which would trigger
+                        // the iOS overlay and crash on the Android no-op actual).
+                        viewModelScope.launch {
+                            _platformLoginNav.send(platform)
+                        }
                     }
                 }
 

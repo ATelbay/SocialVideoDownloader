@@ -12,6 +12,7 @@ import com.socialvideodownloader.shared.network.ServerExtractionException
 import com.socialvideodownloader.shared.network.auth.CookieStore
 import com.socialvideodownloader.shared.network.auth.SupportedPlatform
 import com.socialvideodownloader.shared.network.auth.detectPlatform
+import com.socialvideodownloader.shared.network.auth.detectPlatformFromError
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -267,13 +268,10 @@ class SharedDownloadViewModel(
                         if (_uiState.value !is DownloadUiState.Extracting) return
                     } else {
                         val platform = if (errorType == DownloadErrorType.AUTH_REQUIRED) detectPlatform(url) else null
-                        val isReconnect =
-                            if (platform != null && secureCookieStore.isConnected(platform)) {
-                                secureCookieStore.clearCookies(platform)
-                                true
-                            } else {
-                                false
-                            }
+                        // If cookies exist but extraction still failed, show "Reconnect" label
+                        // but DON'T clear cookies — they may still be valid for retry.
+                        // Cookies are only replaced when the user completes a new login.
+                        val isReconnect = platform != null && secureCookieStore.isConnected(platform)
                         _uiState.value =
                             DownloadUiState.Error(
                                 errorType = errorType,
@@ -585,6 +583,14 @@ class SharedDownloadViewModel(
             listOf("sign in", "login required", "must be logged in", "inappropriate", "age-restricted", "age restricted", "nsfw")
         val lower = message.lowercase()
         if (authKeywords.any { lower.contains(it) } && detectPlatform(currentUrl) != null) {
+            return DownloadErrorType.AUTH_REQUIRED
+        }
+
+        // Fallback: if yt-dlp error has a platform tag (e.g. [youtube]) matching the URL's
+        // platform, offer auth as a recovery option — the extractor error may be auth-gated
+        val platformFromUrl = detectPlatform(currentUrl)
+        val platformFromError = detectPlatformFromError(message)
+        if (platformFromUrl != null && platformFromUrl == platformFromError) {
             return DownloadErrorType.AUTH_REQUIRED
         }
 

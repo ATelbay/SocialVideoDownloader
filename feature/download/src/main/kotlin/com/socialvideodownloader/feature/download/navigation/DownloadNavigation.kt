@@ -5,7 +5,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.socialvideodownloader.feature.download.ui.DownloadScreen
-import com.socialvideodownloader.shared.feature.download.platform.PlatformLoginScreen
+import com.socialvideodownloader.feature.download.ui.PlatformLoginScreen
 import com.socialvideodownloader.shared.network.auth.SecureCookieStore
 import com.socialvideodownloader.shared.network.auth.SupportedPlatform
 import kotlinx.serialization.Serializable
