@@ -108,7 +108,7 @@ class SharedDownloadViewModel(
                         backgroundDownload = null
                         if (downloading.progress.requestId != serviceState.requestId) return@collect
                         if (downloading.isShareMode) {
-                            _events.send(DownloadEvent.ShareFile(serviceState.filePath))
+                            _events.send(DownloadEvent.ShareFile(serviceState.fileUri ?: serviceState.filePath))
                             _uiState.value =
                                 DownloadUiState.FormatSelection(
                                     metadata = downloading.metadata,
@@ -371,6 +371,7 @@ class SharedDownloadViewModel(
                 videoTitle = state.metadata.title,
                 thumbnailUrl = state.metadata.thumbnailUrl,
                 formatId = selectedFormat.formatId,
+                ext = selectedFormat.ext,
                 formatLabel = selectedFormat.label,
                 isVideoOnly = selectedFormat.isVideoOnly,
                 totalBytes = selectedFormat.fileSizeBytes,
@@ -422,7 +423,7 @@ class SharedDownloadViewModel(
         val state = _uiState.value
         if (state is DownloadUiState.Done) {
             coroutineScope.launch {
-                _events.send(DownloadEvent.OpenFile(state.filePath))
+                _events.send(DownloadEvent.OpenFile(state.fileUri ?: state.filePath))
             }
         }
     }
@@ -431,7 +432,7 @@ class SharedDownloadViewModel(
         val state = _uiState.value
         if (state is DownloadUiState.Done) {
             coroutineScope.launch {
-                _events.send(DownloadEvent.ShareFile(state.filePath))
+                _events.send(DownloadEvent.ShareFile(state.fileUri ?: state.filePath))
             }
         }
     }

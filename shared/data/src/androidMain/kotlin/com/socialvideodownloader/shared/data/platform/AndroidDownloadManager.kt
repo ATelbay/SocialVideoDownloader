@@ -48,6 +48,7 @@ class AndroidDownloadManager(
                 putExtra(EXTRA_IS_VIDEO_ONLY, request.isVideoOnly)
                 putExtra(EXTRA_SHARE_ONLY, request.shareOnly)
                 putExtra(EXTRA_DIRECT_DOWNLOAD_URL, request.directDownloadUrl)
+                putExtra(EXTRA_EXT, request.ext)
                 request.existingRecordId?.let { putExtra(EXTRA_EXISTING_RECORD_ID, it) }
             }
         ContextCompat.startForegroundService(context, intent)
@@ -88,5 +89,6 @@ class AndroidDownloadManager(
         private const val EXTRA_SHARE_ONLY = "extra_share_only"
         private const val EXTRA_DIRECT_DOWNLOAD_URL = "extra_direct_download_url"
         private const val EXTRA_EXISTING_RECORD_ID = "extra_existing_record_id"
+        private const val EXTRA_EXT = "extra_ext"
     }
 }

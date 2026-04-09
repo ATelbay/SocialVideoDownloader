@@ -1,11 +1,11 @@
 package com.socialvideodownloader.shared.feature.history.platform
 
-import platform.Foundation.NSURL
+import com.socialvideodownloader.shared.data.platform.resolveFileUrl
 import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIApplication
 
 actual fun shareFile(uri: String) {
-    val url = NSURL.URLWithString(uri) ?: return
+    val url = resolveFileUrl(uri)
     val activityViewController =
         UIActivityViewController(
             activityItems = listOf(url),

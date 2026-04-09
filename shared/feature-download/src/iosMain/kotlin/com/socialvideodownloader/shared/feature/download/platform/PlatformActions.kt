@@ -1,5 +1,6 @@
 package com.socialvideodownloader.shared.feature.download.platform
 
+import com.socialvideodownloader.shared.data.platform.resolveFileUrl
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSUserDefaults
 import platform.UIKit.UIActivityViewController
@@ -15,16 +16,13 @@ private const val APP_GROUP = "group.com.socialvideodownloader.shared"
 
 @OptIn(ExperimentalForeignApi::class)
 actual class PlatformActions {
+    private var documentController: UIDocumentInteractionController? = null
+
     actual fun openFile(uri: String) {
-        val url =
-            if (uri.startsWith("file://")) {
-                platform.Foundation.NSURL(string = uri)
-            } else {
-                platform.Foundation.NSURL(fileURLWithPath = uri)
-            }
-        val controller = UIDocumentInteractionController.interactionControllerWithURL(url)
+        val url = resolveFileUrl(uri)
+        documentController = UIDocumentInteractionController.interactionControllerWithURL(url)
         val rootVc = UIApplication.sharedApplication.keyWindow?.rootViewController ?: return
-        controller.presentOptionsMenuFromRect(
+        documentController!!.presentOptionsMenuFromRect(
             rect = rootVc.view.bounds,
             inView = rootVc.view,
             animated = true,
@@ -32,12 +30,7 @@ actual class PlatformActions {
     }
 
     actual fun shareFile(uri: String) {
-        val url =
-            if (uri.startsWith("file://")) {
-                platform.Foundation.NSURL(string = uri)
-            } else {
-                platform.Foundation.NSURL(fileURLWithPath = uri)
-            }
+        val url = resolveFileUrl(uri)
         val activityVc =
             UIActivityViewController(
                 activityItems = listOf(url),

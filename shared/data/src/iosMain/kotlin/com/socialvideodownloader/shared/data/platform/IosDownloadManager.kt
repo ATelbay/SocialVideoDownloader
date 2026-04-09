@@ -128,7 +128,7 @@ class IosDownloadManager : PlatformDownloadManager {
             try {
                 // URLSession's temporary file may be removed as soon as this callback returns,
                 // so finalize it synchronously while the location is still valid.
-                val destPath = moveToDownloads(tempUrl, request.videoTitle, request.formatId)
+                val destPath = moveToDownloads(tempUrl, request.videoTitle, request.ext)
                 _downloadState.value =
                     DownloadServiceState.Completed(
                         requestId = request.id,
@@ -315,7 +315,7 @@ class IosDownloadManager : PlatformDownloadManager {
     private fun moveToDownloads(
         tempUrl: NSURL,
         videoTitle: String,
-        formatId: String,
+        ext: String,
     ): String {
         val destDir =
             svdDirectory()
@@ -324,11 +324,8 @@ class IosDownloadManager : PlatformDownloadManager {
         ensureDirectory(destDir)
 
         val safeTitle = sanitizeFileName(videoTitle).take(100)
-        val ext =
-            tempUrl.pathExtension?.takeIf { it.isNotEmpty() }
-                ?: formatId.substringAfterLast('.').takeIf { it != formatId }
-                ?: "mp4"
-        val fileName = "$safeTitle.$ext"
+        val safeExt = ext.takeIf { it.isNotEmpty() } ?: "mp4"
+        val fileName = "$safeTitle.$safeExt"
         val destUrl =
             (
                 destDir.URLByAppendingPathComponent(fileName)
