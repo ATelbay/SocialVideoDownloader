@@ -329,6 +329,7 @@ class DownloadService : Service() {
             shareOnly = intent.getBooleanExtra(EXTRA_SHARE_ONLY, false),
             existingRecordId = existingRecordId,
             directDownloadUrl = intent.getStringExtra(EXTRA_DIRECT_DOWNLOAD_URL),
+            ext = intent.getStringExtra(EXTRA_EXT) ?: "mp4",
         )
     }
 
@@ -354,5 +355,6 @@ class DownloadService : Service() {
         const val EXTRA_SHARE_ONLY = "extra_share_only"
         const val EXTRA_DIRECT_DOWNLOAD_URL = "extra_direct_download_url"
         const val EXTRA_EXISTING_RECORD_ID = "extra_existing_record_id"
+        const val EXTRA_EXT = "extra_ext"
     }
 }

@@ -108,7 +108,7 @@ class SharedDownloadViewModel(
                         backgroundDownload = null
                         if (downloading.progress.requestId != serviceState.requestId) return@collect
                         if (downloading.isShareMode) {
-                            _events.send(DownloadEvent.ShareFile(serviceState.filePath))
+                            _events.send(DownloadEvent.ShareFile(serviceState.fileUri ?: serviceState.filePath))
                             _uiState.value =
                                 DownloadUiState.FormatSelection(
                                     metadata = downloading.metadata,

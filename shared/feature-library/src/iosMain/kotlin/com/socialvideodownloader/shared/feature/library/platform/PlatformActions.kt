@@ -1,16 +1,18 @@
 package com.socialvideodownloader.shared.feature.library.platform
 
-import platform.Foundation.NSURL
+import com.socialvideodownloader.shared.data.platform.resolveFileUrl
 import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIApplication
 import platform.UIKit.UIDocumentInteractionController
 
 actual class PlatformActions {
+    private var documentController: UIDocumentInteractionController? = null
+
     actual fun openFile(uri: String) {
         val url = resolveFileUrl(uri)
-        val controller = UIDocumentInteractionController.interactionControllerWithURL(url)
+        documentController = UIDocumentInteractionController.interactionControllerWithURL(url)
         val rootVC = UIApplication.sharedApplication.keyWindow?.rootViewController ?: return
-        controller.presentOptionsMenuFromRect(
+        documentController!!.presentOptionsMenuFromRect(
             rect = rootVC.view.bounds,
             inView = rootVC.view,
             animated = true,
@@ -27,11 +29,4 @@ actual class PlatformActions {
         val rootVC = UIApplication.sharedApplication.keyWindow?.rootViewController ?: return
         rootVC.presentViewController(activityVC, animated = true, completion = null)
     }
-
-    private fun resolveFileUrl(uri: String): NSURL =
-        if (uri.startsWith("file://")) {
-            NSURL(string = uri)
-        } else {
-            NSURL(fileURLWithPath = uri)
-        }
 }
