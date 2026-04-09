@@ -6,6 +6,7 @@ data class DownloadRequest(
     val videoTitle: String,
     val thumbnailUrl: String? = null,
     val formatId: String,
+    val ext: String = "mp4",
     val formatLabel: String,
     val isVideoOnly: Boolean,
     val totalBytes: Long? = null,

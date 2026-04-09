@@ -5,7 +5,12 @@ import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIApplication
 
 actual fun shareFile(uri: String) {
-    val url = NSURL.URLWithString(uri) ?: return
+    val url =
+        if (uri.startsWith("file://")) {
+            NSURL(string = uri)
+        } else {
+            NSURL(fileURLWithPath = uri)
+        }
     val activityViewController =
         UIActivityViewController(
             activityItems = listOf(url),
