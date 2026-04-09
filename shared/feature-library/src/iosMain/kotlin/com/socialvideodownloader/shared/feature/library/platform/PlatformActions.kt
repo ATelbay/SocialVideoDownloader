@@ -1,10 +1,12 @@
 package com.socialvideodownloader.shared.feature.library.platform
 
 import com.socialvideodownloader.shared.data.platform.resolveFileUrl
+import kotlinx.cinterop.ExperimentalForeignApi
 import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIApplication
 import platform.UIKit.UIDocumentInteractionController
 
+@OptIn(ExperimentalForeignApi::class)
 actual class PlatformActions {
     private var documentController: UIDocumentInteractionController? = null
 

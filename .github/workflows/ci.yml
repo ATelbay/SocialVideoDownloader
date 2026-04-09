@@ -155,7 +155,7 @@ jobs:
             :shared:feature-library:linkDebugFrameworkIosSimulatorArm64 \
             :shared:network:linkDebugFrameworkIosSimulatorArm64 \
             :core:domain:linkDebugFrameworkIosSimulatorArm64 \
-            -Pkotlin.native.binary.linkParallelism=1
+            -Pkotlin.native.binary.linkParallelism=2
       - name: Build iOS app
         run: |
           xcodebuild \
