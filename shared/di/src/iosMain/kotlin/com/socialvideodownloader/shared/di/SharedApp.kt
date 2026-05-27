@@ -28,6 +28,7 @@ import com.socialvideodownloader.shared.feature.history.SharedHistoryViewModel
 import com.socialvideodownloader.shared.feature.history.platform.openUpgradeFlow
 import com.socialvideodownloader.shared.feature.history.platform.shareFile
 import com.socialvideodownloader.shared.feature.history.platform.triggerGoogleSignIn
+import com.socialvideodownloader.shared.feature.history.ui.GoogleSignInResult
 import com.socialvideodownloader.shared.feature.history.ui.HistoryScreen
 import com.socialvideodownloader.shared.feature.history.ui.HistoryStrings
 import com.socialvideodownloader.shared.feature.history.ui.formatTimestamp
@@ -161,8 +162,10 @@ fun SharedApp() {
                                 shareFile(uri)
                             },
                             onLaunchGoogleSignIn = {
-                                val result = triggerGoogleSignIn()
-                                result.getOrNull()
+                                triggerGoogleSignIn().fold(
+                                    onSuccess = { GoogleSignInResult.Success(it) },
+                                    onFailure = { GoogleSignInResult.Failed(it.message) },
+                                )
                             },
                             onLaunchUpgradeFlow = {
                                 openUpgradeFlow()
