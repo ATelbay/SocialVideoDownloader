@@ -203,6 +203,7 @@ class SharedHistoryViewModel(
         coroutineScope.launch {
             if (!_isSignedIn.value) {
                 if (_isSigningIn.value) return@launch
+                _signInError.value = null
                 _isSigningIn.value = true
                 _effect.emit(HistoryEffect.LaunchGoogleSignIn)
             } else if (_isCloudBackupEnabled.value) {
