@@ -1,99 +1,86 @@
-# SocialVideoDownloader Development Guidelines
+# Agent Instructions for SocialVideoDownloader
 
-Auto-generated from all feature plans. Last updated: 2026-03-15
+## Purpose
 
-## Active Technologies
-- Kotlin 2.2.10 + Jetpack Compose Material 3, Navigation Compose 2.9.7, Hilt 2.56, Room 2.8.4, Coil 2.7.0, Kotlin Coroutines/Flow (003-download-history)
-- Room for download history metadata; MediaStore-backed content URIs for file actions, with legacy `filePath` fallback where needed (003-download-history)
+This file is the compact, always-on contract for coding agents in this repo. Keep it short. Detailed procedures, examples, and long checklists live in `.agents/skills/<name>/SKILL.md`.
 
-- Kotlin 2.2.10 + Jetpack Compose (BOM 2026.03.00), Hilt 2.59.2, Room 2.8.4, Navigation Compose 2.9.7, youtubedl-android 0.18.0 (+ FFmpeg + Aria2c), Coil 2.7.0, kotlinx-serialization 1.7.3 (002-core-download-flow)
-- Room (download history), MediaStore (downloaded files) (002-core-download-flow)
-- Kotlin 2.2.10 + Jetpack Compose (BOM 2026.03.00), Dagger/Hilt 2.56, Room 2.8.4, Navigation Compose 2.9.7, youtubedl-android 0.18.x, Coil 2.7.0, kotlinx-serialization 1.7.3 (001-project-foundation)
+## Project overview
 
-## Project Structure
+- Personal Android + KMP video downloader: URL in → video file out. No ads, no backend dependency for core flow.
+- Kotlin 2.2.10, Jetpack Compose / Compose Multiplatform, Material 3, Hilt on Android, Koin in shared/iOS, Room/KMP, Ktor, Coil, Firebase/Play Billing where already present.
+- Extraction: `youtubedl-android` on Android plus optional FastAPI/WebSocket extraction proxy under `server/`.
+- Main areas: `app`, `feature/*`, `core/*`, `shared/*`, `iosApp/`, `server/`, `specs/`.
 
-```text
-:app
-:feature:download
-:feature:history
-:core:domain
-:core:data
-:core:ui
-specs/
+## Critical rules
+
+1. Compose-only UI; never add XML layouts or fragments.
+2. Use KSP only; never introduce kapt.
+3. Inject coroutine dispatchers; do not hardcode `Dispatchers.IO/Main` in production code except at composition roots/platform adapters.
+4. Keep domain/repository contracts in `:core:domain`; Android implementations in `:core:data`; KMP implementations in `shared/*` where applicable.
+5. Feature modules must not depend on each other directly; share via `core/*` or `shared/*` contracts.
+6. New dependencies go through Gradle version catalogs/convention plugins first.
+7. User-facing strings must be resources/extractable; no hardcoded strings in composables.
+8. Save Android downloads through MediaStore under `Downloads/SocialVideoDownloader/`; keep scoped-storage compatibility.
+9. yt-dlp work runs off the main thread; initialize/update `YoutubeDL` from app/platform setup only.
+10. Never commit secrets, keystores, `local.properties`, Firebase private config, tokens, or production credentials.
+11. Do not suppress lint/build/module-boundary failures; fix the underlying architecture.
+12. Keep the app focused: no analytics, auth, or backend requirements beyond explicitly requested opt-in features.
+
+## Architecture defaults
+
+- Pattern: MVI/MVVM with immutable UiState and one-shot events where needed.
+- State: `StateFlow`/`SharedFlow`; ViewModels expose state, UI sends intents/actions.
+- Navigation: single-activity Compose Navigation on Android; JetBrains Navigation Compose/shared shell where used; pass navigation as lambdas.
+- Persistence: Room for download history/library metadata; DataStore/Settings for preferences; platform storage abstractions for files.
+- Tests: prioritize use cases and ViewModels with JUnit5, MockK, Turbine; UI tests are optional unless requested.
+
+## Task workflow
+
+- When user requests a task: create todos only; do not execute implementation until explicit `start` / `старт` if the task is not already phrased as an execution request.
+- For unclear or large tasks, use `/session-start` to assemble a Task Brief.
+- Before non-trivial edits, inspect relevant files and similar implementations.
+- Ask before high-risk architecture, security, storage, or cross-platform decisions.
+- Run only relevant checks; avoid expensive full builds unless needed or requested.
+
+## Agent artifacts and personal rules
+
+- Agent-generated artifacts go under `ai/`: `ai/specs/` for plans/tasks, `ai/temp/` for scratch, `ai/personal/AGENTS.md` for per-developer overrides. `ai/` is gitignored.
+- Per-developer overrides are layered over this file by local agent bridges (for example root `CLAUDE.md` or `.pi/APPEND_SYSTEM.md`). On conflict, personal rules take precedence.
+- Shared skills live in `.agents/skills/`. Prefer adding/updating a skill over growing this file.
+
+## Common commands
+
+```bash
+./gradlew assembleDebug
+./gradlew test
+./gradlew ktlintCheck
+./gradlew ktlintFormat
+./gradlew connectedAndroidTest
 ```
 
-## Commands
+For KMP/iOS-related checks, exclude unsupported iOS native compile tasks when the current dependency set requires it:
 
-- `./gradlew assembleDebug` - build debug APK
-- `./gradlew assembleRelease` - build release APK
-- `./gradlew test` - run unit tests
-- `./gradlew connectedAndroidTest` - run instrumentation tests
-- `./gradlew ktlintCheck` - run lint/style checks
+```bash
+./gradlew ktlintCheck -x compileKotlinIosArm64 -x compileKotlinIosSimulatorArm64
+```
 
-## Code Style
+## Skills routing
 
-Kotlin 2.2.10: Follow standard conventions, Compose-only UI, KSP instead of kapt, repository interfaces in `:core:domain` with implementations in `:core:data`
+| Task | Use skill |
+|---|---|
+| First clone / repair agent wiring | `/initial-project-setup` |
+| Agent docs, bridges, local personal rules, shared skills | `/agent-workflow` |
+| New or unclear task intake | `/session-start` |
+| New feature/screen/ViewModel/module | `/feature-scaffold` |
+| Compose UI/design system/strings | `/compose-ui-guidelines` |
+| Architecture, DI, module boundaries, navigation | `/architecture-and-di` |
+| yt-dlp/video info/download/storage flow | `/download-flow-ytdlp` |
+| KMP/shared/iOS migration or bridge work | `/kmp-ios` |
+| Spec Kit feature workflow | `/spec-kit` |
+| Tests, pre-PR checks, review checklist | `/testing-and-preflight` |
+| Gradle/build/ktlint failures | `/gradle-troubleshooting` |
+| Merge a branch/PR, branch naming, merge style | `/merge-branch` |
 
-## Recent Changes
-- 003-download-history: Added Kotlin 2.2.10 + Jetpack Compose Material 3, Navigation Compose 2.9.7, Hilt 2.56, Room 2.8.4, Coil 2.7.0, Kotlin Coroutines/Flow
-- 002-core-download-flow: Added Kotlin 2.2.10 + Jetpack Compose (BOM 2026.03.00), Hilt 2.59.2, Room 2.8.4, Navigation Compose 2.9.7, youtubedl-android 0.18.0 (+ FFmpeg + Aria2c), Coil 2.7.0, kotlinx-serialization 1.7.3
-- 001-project-foundation: Added Kotlin 2.2.10 + Jetpack Compose (BOM 2026.03.00), Dagger/Hilt 2.56, Room 2.8.4, Navigation Compose 2.9.7, youtubedl-android 0.18.x, Coil 2.7.0, kotlinx-serialization 1.7.3
+## When in doubt
 
-<!-- MANUAL ADDITIONS START -->
-## Project Overview
-
-Android video downloader. URL in, video file out. No backend, no ads, no auth. Personal utility built on yt-dlp through `youtubedl-android`.
-
-## Architecture Notes
-
-- Pattern: MVI
-- UI: Jetpack Compose + Material 3 + Dynamic Color
-- Navigation: single-activity Compose Navigation, no fragments
-- DI: Hilt with KSP, never kapt
-- Async: Coroutines + `StateFlow`/`SharedFlow`
-- Storage: Room for download history
-- Extraction: `youtubedl-android` with FFmpeg and aria2c
-- Images: Coil for thumbnails
-- SDKs: min 26, target 36
-
-## Naming Conventions
-
-- Packages: `com.socialvideodownloader.{module}.{layer}`
-- Composables: PascalCase with `Screen`, `Content`, or `Item` suffixes
-- ViewModels: `{Feature}ViewModel`
-- Use cases: verb phrase with `UseCase` suffix
-- Room types: `{Name}Entity`, `{Name}Dao`, `AppDatabase`
-- State containers: `{Feature}UiState`, `{Feature}Intent`
-
-## Spec Kit For Codex
-
-- Use Spec Kit only for new features. Bug fixes and small tweaks should be implemented directly.
-- Codex runtime guidance lives in `AGENTS.md`; Claude-specific guidance remains in `.claude/CLAUDE.md`.
-- The current baseline spec artifacts are under `specs/001-project-foundation/`. There is no `docs/PRODUCT_SPEC.md` in this repo right now.
-- `/speckit.specify` equivalent: run `.specify/scripts/bash/create-new-feature.sh --json --short-name "<short-name>" "<feature description>"`, then fill the generated `spec.md`.
-- `/speckit.plan` equivalent: run `.specify/scripts/bash/setup-plan.sh --json`, complete `plan.md`, generate design artifacts, then run `.specify/scripts/bash/update-agent-context.sh codex`.
-- If a plan step says to update the agent context, always target `codex` from this environment so `AGENTS.md` stays in sync.
-
-## yt-dlp Notes
-
-- Initialize `YoutubeDL.getInstance().init(context)` in `Application.onCreate()`
-- Run yt-dlp work on `Dispatchers.IO`
-- Use `getInfo()` for format selection before download
-- Update the yt-dlp binary periodically with `updateYoutubeDL()`
-- Save downloads through MediaStore under `Downloads/SocialVideoDownloader/`
-
-## Testing And Git
-
-- Prioritize unit tests for use cases and ViewModels with JUnit5, MockK, and Turbine
-- UI tests are deferred for MVP
-- Never push directly to `main`
-- Repository history uses `feature/`, `fix/`, and `refactor/` naming, but Codex-created branches must still use the required `codex/*` prefix
-
-## Avoid
-
-- No XML layouts or fragments
-- No kapt
-- No analytics, auth, or backend services
-- No hardcoded user-facing strings in composables
-- No hardcoded coroutine dispatchers
-<!-- MANUAL ADDITIONS END -->
+Search for a similar existing implementation first, load the relevant skill, and choose the smallest safe change. If requirements are ambiguous, ask instead of guessing.
