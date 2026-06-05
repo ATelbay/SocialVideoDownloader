@@ -40,3 +40,13 @@ app_icon_candidate.png
 *.jks
 keystore.properties
 app/google-services.json
+
+# Agent workflow local/generated files
+# Shared source-of-truth skills live in .agents/skills and should stay trackable.
+ai/
+.pi/
+.kiro/
+.cline/
+.gemini/
+.claude/skills
+CLAUDE.md
