@@ -18,6 +18,7 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.socialvideodownloader.core.ui.util.openVideo
 import com.socialvideodownloader.core.ui.util.shareVideo
 import com.socialvideodownloader.feature.history.R
+import com.socialvideodownloader.shared.feature.history.ui.GoogleSignInResult
 import com.socialvideodownloader.shared.feature.history.ui.HistoryScreen
 import com.socialvideodownloader.shared.feature.history.ui.HistoryStrings
 import kotlinx.coroutines.launch
@@ -111,7 +112,9 @@ fun HistoryScreen(
         onOpenFile = { uri -> context.openVideo(uri) },
         onShareFile = { uri -> context.shareVideo(uri) },
         onLaunchGoogleSignIn = {
-            val activity = context as? Activity ?: return@HistoryScreen null
+            val activity =
+                context as? Activity
+                    ?: return@HistoryScreen GoogleSignInResult.Failed("No host Activity for sign-in")
             try {
                 val googleIdOption =
                     GetGoogleIdOption.Builder()
@@ -123,12 +126,13 @@ fun HistoryScreen(
                         .addCredentialOption(googleIdOption)
                         .build()
                 val result = credentialManager.getCredential(context = activity, request = request)
-                GoogleIdTokenCredential.createFrom(result.credential.data).idToken
+                val idToken = GoogleIdTokenCredential.createFrom(result.credential.data).idToken
+                GoogleSignInResult.Success(idToken)
             } catch (e: GetCredentialCancellationException) {
-                null
+                GoogleSignInResult.Cancelled
             } catch (e: Exception) {
                 Log.e("HistoryScreen", "Google sign-in failed", e)
-                null
+                GoogleSignInResult.Failed(e.message)
             }
         },
         onLaunchUpgradeFlow = {

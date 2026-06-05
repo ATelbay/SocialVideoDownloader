@@ -116,7 +116,7 @@ fun HistoryScreen(
     onNavigateToDownload: (initialUrl: String, existingRecordId: Long?) -> Unit,
     onOpenFile: (uri: String) -> Unit,
     onShareFile: (uri: String) -> Unit,
-    onLaunchGoogleSignIn: suspend () -> String?,
+    onLaunchGoogleSignIn: suspend () -> GoogleSignInResult,
     onLaunchUpgradeFlow: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -165,11 +165,13 @@ fun HistoryScreen(
                     showUpgradeDialog = true
                 }
                 is HistoryEffect.LaunchGoogleSignIn -> {
-                    val idToken = onLaunchGoogleSignIn()
-                    if (idToken != null) {
-                        viewModel.onIntent(HistoryIntent.SignInWithGoogle(idToken))
-                    } else {
-                        viewModel.onIntent(HistoryIntent.SignInCancelled)
+                    when (val result = onLaunchGoogleSignIn()) {
+                        is GoogleSignInResult.Success ->
+                            viewModel.onIntent(HistoryIntent.SignInWithGoogle(result.idToken))
+                        is GoogleSignInResult.Cancelled ->
+                            viewModel.onIntent(HistoryIntent.SignInCancelled)
+                        is GoogleSignInResult.Failed ->
+                            viewModel.onIntent(HistoryIntent.SignInFailed(result.message))
                     }
                 }
             }

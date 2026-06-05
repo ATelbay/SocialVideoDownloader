@@ -32,6 +32,8 @@ sealed interface HistoryIntent {
 
     data object SignInCancelled : HistoryIntent
 
+    data class SignInFailed(val message: String?) : HistoryIntent
+
     data object SignOutCloud : HistoryIntent
 
     data object DismissSignInError : HistoryIntent

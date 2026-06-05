@@ -174,6 +174,7 @@ class SharedHistoryViewModel(
             is HistoryIntent.ToggleCloudBackup -> handleToggleCloudBackup()
             is HistoryIntent.SignInWithGoogle -> handleSignInWithGoogle(intent.idToken)
             is HistoryIntent.SignInCancelled -> _isSigningIn.value = false
+            is HistoryIntent.SignInFailed -> handleSignInFailed(intent.message)
             is HistoryIntent.SignOutCloud -> handleSignOut()
             is HistoryIntent.DismissSignInError -> _signInError.value = null
             is HistoryIntent.RestoreFromCloud -> handleRestoreFromCloud()
@@ -202,6 +203,7 @@ class SharedHistoryViewModel(
         coroutineScope.launch {
             if (!_isSignedIn.value) {
                 if (_isSigningIn.value) return@launch
+                _signInError.value = null
                 _isSigningIn.value = true
                 _effect.emit(HistoryEffect.LaunchGoogleSignIn)
             } else if (_isCloudBackupEnabled.value) {
@@ -234,6 +236,11 @@ class SharedHistoryViewModel(
                 _isSigningIn.value = false
             }
         }
+    }
+
+    private fun handleSignInFailed(message: String?) {
+        _signInError.value = message ?: "Google sign-in failed"
+        _isSigningIn.value = false
     }
 
     private fun handleSignOut() {

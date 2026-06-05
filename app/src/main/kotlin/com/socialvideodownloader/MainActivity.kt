@@ -44,7 +44,10 @@ class MainActivity : ComponentActivity() {
         )
         val sharedUrl = getSharedUrl(intent)
         setContent {
-            SvdThemeAndroid(dynamicColor = true) {
+            // Keep the SVD warm-editorial brand palette. Dynamic Color (Material You) would
+            // override colorScheme.primary with a wallpaper-derived tint (often blue), which
+            // repaints the brand-orange buttons/controls. Brand color > device wallpaper here.
+            SvdThemeAndroid(dynamicColor = false) {
                 val navController = rememberNavController().also { this@MainActivity.navController = it }
                 val currentBackStack by navController.currentBackStackEntryAsState()
                 val currentDestination = currentBackStack?.destination

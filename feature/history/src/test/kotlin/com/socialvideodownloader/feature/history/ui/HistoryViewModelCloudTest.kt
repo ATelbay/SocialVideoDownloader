@@ -16,6 +16,7 @@ import com.socialvideodownloader.feature.history.testutil.MainDispatcherRule
 import com.socialvideodownloader.shared.data.platform.PlatformClipboard
 import com.socialvideodownloader.shared.feature.history.HistoryEffect.LaunchGoogleSignIn
 import com.socialvideodownloader.shared.feature.history.HistoryIntent.DismissSignInError
+import com.socialvideodownloader.shared.feature.history.HistoryIntent.SignInFailed
 import com.socialvideodownloader.shared.feature.history.HistoryIntent.SignInWithGoogle
 import com.socialvideodownloader.shared.feature.history.HistoryIntent.SignOutCloud
 import com.socialvideodownloader.shared.feature.history.HistoryIntent.ToggleCloudBackup
@@ -154,6 +155,38 @@ class HistoryViewModelCloudTest {
                 val state = awaitItem()
                 assertFalse(state.isSigningIn)
                 assertEquals("auth failed", state.signInError)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `SignInFailed sets signInError and clears isSigningIn`() =
+        runTest {
+            every { cloudAuthService.isAuthenticated() } returns false
+            val vm = createViewModel()
+
+            vm.onIntent(SignInFailed("credential manager error"))
+
+            vm.cloudBackupState.test {
+                val state = awaitItem()
+                assertFalse(state.isSigningIn)
+                assertEquals("credential manager error", state.signInError)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `ToggleCloudBackup retry clears previous signInError`() =
+        runTest {
+            every { cloudAuthService.isAuthenticated() } returns false
+            val vm = createViewModel()
+
+            vm.onIntent(SignInFailed("first failure"))
+            vm.onIntent(ToggleCloudBackup)
+
+            vm.cloudBackupState.test {
+                val state = awaitItem()
+                assertNull(state.signInError)
                 cancelAndIgnoreRemainingEvents()
             }
         }
