@@ -79,6 +79,7 @@ For KMP/iOS-related checks, exclude unsupported iOS native compile tasks when th
 | Spec Kit feature workflow | `/spec-kit` |
 | Tests, pre-PR checks, review checklist | `/testing-and-preflight` |
 | Gradle/build/ktlint failures | `/gradle-troubleshooting` |
+| Merge a branch/PR, branch naming, merge style | `/merge-branch` |
 
 ## When in doubt
 
