@@ -8,7 +8,6 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class RestoreFromCloudUseCaseTest {
@@ -93,11 +92,11 @@ class RestoreFromCloudUseCaseTest {
             assertEquals(1, result.restored)
             assertEquals(1, result.skipped)
             assertEquals(0, result.failed)
-            assertNull(result.error)
+            assertNull(result.errorReason)
         }
 
     @Test
-    fun whenDecryptionFailsReturnsErrorResult() =
+    fun whenDecryptionFailsReturnsKeyUnavailableReason() =
         runTest {
             val errorMessage = "Encryption key no longer available"
             cloudBackupRepository.fetchException = IllegalStateException(errorMessage)
@@ -107,8 +106,17 @@ class RestoreFromCloudUseCaseTest {
             assertEquals(0, result.restored)
             assertEquals(0, result.skipped)
             assertEquals(0, result.failed)
-            assertNotNull(result.error)
-            assertEquals(errorMessage, result.error)
+            assertEquals(RestoreErrorReason.KEY_UNAVAILABLE, result.errorReason)
+        }
+
+    @Test
+    fun whenFetchFailsWithoutKeyHintReturnsGenericReason() =
+        runTest {
+            cloudBackupRepository.fetchException = IllegalStateException("network unreachable")
+
+            val result = useCase()
+
+            assertEquals(RestoreErrorReason.GENERIC, result.errorReason)
         }
 
     @Test

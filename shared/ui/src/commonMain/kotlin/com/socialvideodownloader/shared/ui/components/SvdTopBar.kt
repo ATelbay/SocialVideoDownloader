@@ -16,7 +16,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -51,11 +50,7 @@ fun SvdTopBar(
     ) {
         Text(
             text = title,
-            style =
-                MaterialTheme.typography.bodyLarge.copy(
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                ),
+            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
             color = SvdForeground,
         )
         Spacer(Modifier.weight(1f))
@@ -68,17 +63,14 @@ fun SvdTopBar(
                         .then(
                             if (onActionClick != null) {
                                 Modifier
-                                    .semantics(mergeDescendants = true) {
-                                        role = Role.Button
-                                        contentDescription = actionLabel
-                                    }
+                                    .semantics(mergeDescendants = true) { role = Role.Button }
                                     .clickable(onClick = onActionClick)
                             } else {
                                 Modifier
                             },
                         )
                         .heightIn(min = Spacing.ActionChipHeight)
-                        .padding(horizontal = 12.dp),
+                        .padding(horizontal = Spacing.GapLg),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(

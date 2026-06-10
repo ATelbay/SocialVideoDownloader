@@ -90,16 +90,39 @@ class SocialVideoDownloaderApp : Application() {
                 Log.e(TAG, "Failed to initialize Aria2c", e)
             }
 
-            try {
-                YoutubeDL.getInstance().updateYoutubeDL(
-                    this@SocialVideoDownloaderApp,
-                    YoutubeDL.UpdateChannel.NIGHTLY,
-                )
-                Log.d(TAG, "yt-dlp updated successfully")
-            } catch (e: Exception) {
-                Log.d(TAG, "yt-dlp update skipped: ${e.message}")
+            if (shouldUpdateYoutubeDl()) {
+                try {
+                    YoutubeDL.getInstance().updateYoutubeDL(
+                        this@SocialVideoDownloaderApp,
+                        YoutubeDL.UpdateChannel.NIGHTLY,
+                    )
+                    markYoutubeDlUpdated()
+                    Log.d(TAG, "yt-dlp updated successfully")
+                } catch (e: Exception) {
+                    Log.d(TAG, "yt-dlp update skipped: ${e.message}")
+                }
+            } else {
+                Log.d(TAG, "yt-dlp update throttled (updated within last ${UPDATE_INTERVAL_MS}ms)")
             }
         }
+    }
+
+    /**
+     * Throttle the yt-dlp self-update so it does not run a network fetch on every cold start.
+     * The binary still tracks the NIGHTLY channel for fresh extractor fixes, but at most once
+     * per [UPDATE_INTERVAL_MS].
+     */
+    private fun shouldUpdateYoutubeDl(): Boolean {
+        val prefs = getSharedPreferences(UPDATE_PREFS, MODE_PRIVATE)
+        val last = prefs.getLong(KEY_LAST_UPDATE, 0L)
+        return System.currentTimeMillis() - last >= UPDATE_INTERVAL_MS
+    }
+
+    private fun markYoutubeDlUpdated() {
+        getSharedPreferences(UPDATE_PREFS, MODE_PRIVATE)
+            .edit()
+            .putLong(KEY_LAST_UPDATE, System.currentTimeMillis())
+            .apply()
     }
 
     // T064: Restore purchases and update tier limit on startup.
@@ -146,5 +169,8 @@ class SocialVideoDownloaderApp : Application() {
 
     companion object {
         private const val TAG = "SocialVideoDownloaderApp"
+        private const val UPDATE_PREFS = "ytdlp_update"
+        private const val KEY_LAST_UPDATE = "last_update_ms"
+        private const val UPDATE_INTERVAL_MS = 24L * 60 * 60 * 1000 // 24h
     }
 }

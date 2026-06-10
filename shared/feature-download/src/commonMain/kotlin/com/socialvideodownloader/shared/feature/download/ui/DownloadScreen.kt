@@ -34,6 +34,17 @@ import com.socialvideodownloader.shared.feature.download.DownloadEvent
 import com.socialvideodownloader.shared.feature.download.DownloadIntent
 import com.socialvideodownloader.shared.feature.download.DownloadUiState
 import com.socialvideodownloader.shared.feature.download.SharedDownloadViewModel
+import com.socialvideodownloader.shared.feature.download.generated.resources.Res
+import com.socialvideodownloader.shared.feature.download.generated.resources.action_back
+import com.socialvideodownloader.shared.feature.download.generated.resources.action_download
+import com.socialvideodownloader.shared.feature.download.generated.resources.action_hide
+import com.socialvideodownloader.shared.feature.download.generated.resources.action_share
+import com.socialvideodownloader.shared.feature.download.generated.resources.action_tips
+import com.socialvideodownloader.shared.feature.download.generated.resources.topbar_complete
+import com.socialvideodownloader.shared.feature.download.generated.resources.topbar_downloading
+import com.socialvideodownloader.shared.feature.download.generated.resources.topbar_error
+import com.socialvideodownloader.shared.feature.download.generated.resources.topbar_new_download
+import com.socialvideodownloader.shared.feature.download.generated.resources.topbar_select_format
 import com.socialvideodownloader.shared.feature.download.platform.PlatformActions
 import com.socialvideodownloader.shared.feature.download.platform.PlatformLoginScreen
 import com.socialvideodownloader.shared.network.auth.CookieStore
@@ -45,6 +56,7 @@ import com.socialvideodownloader.shared.ui.components.VideoInfoCard
 import com.socialvideodownloader.shared.ui.theme.Spacing
 import com.socialvideodownloader.shared.ui.theme.SvdBg
 import com.socialvideodownloader.shared.ui.tokens.PlatformColors
+import org.jetbrains.compose.resources.stringResource
 import org.koin.mp.KoinPlatform
 
 @Composable
@@ -117,27 +129,27 @@ private fun DownloadScreenContent(
             when (uiState) {
                 is DownloadUiState.Idle ->
                     SvdTopBar(
-                        title = "New download",
-                        actionLabel = "Tips",
+                        title = stringResource(Res.string.topbar_new_download),
+                        actionLabel = stringResource(Res.string.action_tips),
                     )
                 is DownloadUiState.Extracting ->
-                    SvdTopBar(title = "New download")
+                    SvdTopBar(title = stringResource(Res.string.topbar_new_download))
                 is DownloadUiState.FormatSelection ->
                     SvdTopBar(
-                        title = "Select format",
-                        actionLabel = "Back",
+                        title = stringResource(Res.string.topbar_select_format),
+                        actionLabel = stringResource(Res.string.action_back),
                         onActionClick = { onIntent(DownloadIntent.BackToIdleClicked) },
                     )
                 is DownloadUiState.Downloading ->
                     SvdTopBar(
-                        title = "Downloading",
-                        actionLabel = "Hide",
+                        title = stringResource(Res.string.topbar_downloading),
+                        actionLabel = stringResource(Res.string.action_hide),
                         onActionClick = { onIntent(DownloadIntent.NewDownloadClicked) },
                     )
                 is DownloadUiState.Done ->
-                    SvdTopBar(title = "Complete")
+                    SvdTopBar(title = stringResource(Res.string.topbar_complete))
                 is DownloadUiState.Error ->
-                    SvdTopBar(title = "Error")
+                    SvdTopBar(title = stringResource(Res.string.topbar_error))
             }
         },
     ) { innerPadding ->
@@ -202,12 +214,12 @@ private fun DownloadScreenContent(
                         Spacer(modifier = Modifier.height(Spacing.SectionGap))
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             GradientButton(
-                                text = "Download",
+                                text = stringResource(Res.string.action_download),
                                 onClick = { onIntent(DownloadIntent.DownloadClicked) },
                                 modifier = Modifier.weight(1f),
                             )
                             SecondaryButton(
-                                text = "Share",
+                                text = stringResource(Res.string.action_share),
                                 onClick = { onIntent(DownloadIntent.ShareFormatClicked) },
                                 modifier = Modifier.weight(1f),
                             )

@@ -270,6 +270,101 @@ class ServerResponseMapperTest {
     }
 
     @Test
+    fun mapToMetadata_excludesStoryboardAndMhtmlFormats() {
+        val response =
+            ServerExtractResponse(
+                title = "Test",
+                thumbnail = null,
+                duration = null,
+                uploader = null,
+                formats =
+                    listOf(
+                        ServerFormatDto(
+                            formatId = "sb0",
+                            ext = "mhtml",
+                            resolution = "48x27",
+                            filesize = null,
+                            url = "https://example.com/sb.mhtml",
+                            vcodec = "none",
+                            acodec = "none",
+                        ),
+                        ServerFormatDto(
+                            formatId = "sb1",
+                            ext = "storyboard",
+                            resolution = null,
+                            filesize = null,
+                            url = "https://example.com/sb1",
+                            vcodec = "none",
+                            acodec = "none",
+                        ),
+                        ServerFormatDto(
+                            formatId = "22",
+                            ext = "mp4",
+                            resolution = "1280x720",
+                            filesize = 10_000_000L,
+                            url = "https://example.com/v.mp4",
+                            vcodec = "avc1",
+                            acodec = "mp4a",
+                        ),
+                    ),
+            )
+
+        val metadata = mapper.mapToMetadata(response, sourceUrl)
+
+        assertEquals(1, metadata.formats.size)
+        assertEquals("22", metadata.formats[0].formatId)
+    }
+
+    @Test
+    fun mapToMetadata_sortsVideoFormatsBestFirst_audioLast() {
+        val response =
+            ServerExtractResponse(
+                title = "Test",
+                thumbnail = null,
+                duration = null,
+                uploader = null,
+                // Deliberately worst-first (yt-dlp default order) with audio interleaved.
+                formats =
+                    listOf(
+                        ServerFormatDto(
+                            formatId = "audio",
+                            ext = "m4a",
+                            resolution = null,
+                            filesize = 3_000_000L,
+                            url = "https://example.com/a.m4a",
+                            vcodec = "none",
+                            acodec = "mp4a",
+                        ),
+                        ServerFormatDto(
+                            formatId = "360",
+                            ext = "mp4",
+                            resolution = "640x360",
+                            filesize = null,
+                            url = "https://example.com/360.mp4",
+                            vcodec = "avc1",
+                            acodec = "mp4a",
+                        ),
+                        ServerFormatDto(
+                            formatId = "1080",
+                            ext = "mp4",
+                            resolution = "1920x1080",
+                            filesize = null,
+                            url = "https://example.com/1080.mp4",
+                            vcodec = "avc1",
+                            acodec = "mp4a",
+                        ),
+                    ),
+            )
+
+        val metadata = mapper.mapToMetadata(response, sourceUrl)
+
+        assertEquals(listOf("1080", "360", "audio"), metadata.formats.map { it.formatId })
+        // First non-audio format is the highest-resolution one (the VM's "best" pick).
+        assertFalse(metadata.formats[0].isAudioOnly)
+        assertEquals(1080, metadata.formats[0].resolution)
+    }
+
+    @Test
     fun mapToMetadata_handlesEmptyFormats() {
         val response =
             ServerExtractResponse(

@@ -7,12 +7,9 @@ import com.socialvideodownloader.core.domain.usecase.FindExistingDownloadUseCase
 import com.socialvideodownloader.shared.data.platform.DownloadErrorType
 import com.socialvideodownloader.shared.data.platform.DownloadServiceState
 import com.socialvideodownloader.shared.data.platform.PlatformDownloadManager
-import com.socialvideodownloader.shared.feature.download.ui.DownloadAuthStrings
-import com.socialvideodownloader.shared.network.ServerExtractionException
 import com.socialvideodownloader.shared.network.auth.CookieStore
 import com.socialvideodownloader.shared.network.auth.SupportedPlatform
 import com.socialvideodownloader.shared.network.auth.detectPlatform
-import com.socialvideodownloader.shared.network.auth.detectPlatformFromError
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -31,6 +28,12 @@ import kotlinx.coroutines.launch
  * Contains all state machine logic extracted from the Android DownloadViewModel.
  * Platform-specific concerns (notification permissions, service binding) are
  * delegated back to the Android ViewModel via [PlatformDelegate].
+ *
+ * Threading: [coroutineScope] is expected to be main-confined — on Android it is
+ * `viewModelScope` (Main.immediate), on iOS the SwiftUI-owned main scope. All
+ * mutable bookkeeping fields ([currentUrl], [backgroundDownload], [pendingShareOnly],
+ * [existingRecordId], the cached jobs) are therefore only touched from the main thread
+ * and need no extra synchronization. Do not pass a multi-threaded dispatcher here.
  */
 class SharedDownloadViewModel(
     private val coroutineScope: CoroutineScope,
@@ -71,6 +74,7 @@ class SharedDownloadViewModel(
     private var currentUrl: String = ""
     private var backgroundDownload: DownloadUiState.Downloading? = null
     private var duplicateCheckJob: Job? = null
+    private var extractionJob: Job? = null
     private var pendingShareOnly: Boolean = false
     private var existingRecordId: Long? = null
 
@@ -79,7 +83,11 @@ class SharedDownloadViewModel(
         val url = initialUrl ?: savedUrl
         if (url != null) {
             currentUrl = url
-            _uiState.value = DownloadUiState.Idle(connectedPlatforms = secureCookieStore.connectedPlatforms())
+            _uiState.value =
+                DownloadUiState.Idle(
+                    prefillUrl = url,
+                    connectedPlatforms = secureCookieStore.connectedPlatforms(),
+                )
         }
     }
 
@@ -89,63 +97,96 @@ class SharedDownloadViewModel(
                 val current = _uiState.value
                 when (serviceState) {
                     is DownloadServiceState.Downloading -> {
-                        if (current is DownloadUiState.Downloading) {
+                        // Only update progress for the download we are actively showing.
+                        // startDownload() already creates the Downloading state synchronously,
+                        // so we never reconstruct it here (which would lose isShareMode).
+                        if (current is DownloadUiState.Downloading &&
+                            current.progress.requestId == serviceState.requestId
+                        ) {
                             _uiState.value = current.copy(progress = serviceState.progress)
-                        } else if (current is DownloadUiState.FormatSelection) {
-                            _uiState.value =
-                                DownloadUiState.Downloading(
-                                    metadata = current.metadata,
-                                    progress = serviceState.progress,
-                                    selectedFormatId = current.selectedFormatId,
-                                )
                         }
                     }
                     is DownloadServiceState.Completed -> {
-                        val downloading =
-                            current as? DownloadUiState.Downloading
-                                ?: backgroundDownload?.takeIf { it.progress.requestId == serviceState.requestId }
-                                ?: return@collect
-                        backgroundDownload = null
-                        if (downloading.progress.requestId != serviceState.requestId) return@collect
-                        if (downloading.isShareMode) {
-                            _events.send(DownloadEvent.ShareFile(serviceState.fileUri ?: serviceState.filePath))
-                            _uiState.value =
-                                DownloadUiState.FormatSelection(
-                                    metadata = downloading.metadata,
-                                    selectedFormatId = downloading.selectedFormatId,
-                                )
-                        } else {
-                            _uiState.value =
-                                DownloadUiState.Done(
-                                    metadata = downloading.metadata,
-                                    filePath = serviceState.filePath,
-                                    fileUri = serviceState.fileUri,
-                                )
+                        val foreground =
+                            (current as? DownloadUiState.Downloading)
+                                ?.takeIf { it.progress.requestId == serviceState.requestId }
+                        if (foreground != null) {
+                            if (foreground.isShareMode) {
+                                _events.send(DownloadEvent.ShareFile(serviceState.fileUri ?: serviceState.filePath))
+                                _uiState.value =
+                                    DownloadUiState.FormatSelection(
+                                        metadata = foreground.metadata,
+                                        selectedFormatId = foreground.selectedFormatId,
+                                    )
+                            } else {
+                                _uiState.value =
+                                    DownloadUiState.Done(
+                                        metadata = foreground.metadata,
+                                        filePath = serviceState.filePath,
+                                        fileUri = serviceState.fileUri,
+                                    )
+                            }
+                            return@collect
+                        }
+                        // Terminal event for a backgrounded download (user moved on via
+                        // New Download). Never clobber an active new flow: only surface the
+                        // result when the user is idle; for share-mode just emit the event.
+                        val bg = backgroundDownload?.takeIf { it.progress.requestId == serviceState.requestId }
+                        if (bg != null) {
+                            backgroundDownload = null
+                            if (bg.isShareMode) {
+                                _events.send(DownloadEvent.ShareFile(serviceState.fileUri ?: serviceState.filePath))
+                            } else if (current is DownloadUiState.Idle) {
+                                _uiState.value =
+                                    DownloadUiState.Done(
+                                        metadata = bg.metadata,
+                                        filePath = serviceState.filePath,
+                                        fileUri = serviceState.fileUri,
+                                    )
+                            }
                         }
                     }
                     is DownloadServiceState.Failed -> {
-                        val downloading =
-                            current as? DownloadUiState.Downloading
-                                ?: backgroundDownload?.takeIf { it.progress.requestId == serviceState.requestId }
-                                ?: return@collect
-                        backgroundDownload = null
-                        if (downloading.progress.requestId != serviceState.requestId) return@collect
-                        if (downloading.isShareMode) {
-                            _events.send(
-                                DownloadEvent.ShowError(serviceState.error, message = null),
-                            )
-                            _uiState.value =
-                                DownloadUiState.FormatSelection(
-                                    metadata = downloading.metadata,
-                                    selectedFormatId = downloading.selectedFormatId,
-                                )
-                        } else {
-                            _uiState.value =
-                                DownloadUiState.Error(
-                                    errorType = serviceState.error,
-                                    message = null,
-                                    retryAction = RetryAction.RetryExtraction(currentUrl),
-                                )
+                        val foreground =
+                            (current as? DownloadUiState.Downloading)
+                                ?.takeIf { it.progress.requestId == serviceState.requestId }
+                        if (foreground != null) {
+                            if (foreground.isShareMode) {
+                                _events.send(DownloadEvent.ShowError(serviceState.error, message = null))
+                                _uiState.value =
+                                    DownloadUiState.FormatSelection(
+                                        metadata = foreground.metadata,
+                                        selectedFormatId = foreground.selectedFormatId,
+                                    )
+                            } else {
+                                _uiState.value =
+                                    DownloadUiState.Error(
+                                        errorType = serviceState.error,
+                                        message = null,
+                                        // Retry the request's own source URL, not the possibly-changed currentUrl.
+                                        retryAction = RetryAction.RetryExtraction(foreground.metadata.sourceUrl),
+                                    )
+                            }
+                            return@collect
+                        }
+                        val bg = backgroundDownload?.takeIf { it.progress.requestId == serviceState.requestId }
+                        if (bg != null) {
+                            backgroundDownload = null
+                            if (bg.isShareMode) {
+                                _events.send(DownloadEvent.ShowError(serviceState.error, message = null))
+                            } else if (current is DownloadUiState.Idle) {
+                                _uiState.value =
+                                    DownloadUiState.Error(
+                                        errorType = serviceState.error,
+                                        message = null,
+                                        retryAction = RetryAction.RetryExtraction(bg.metadata.sourceUrl),
+                                    )
+                            } else {
+                                // User is mid-another-flow: don't clobber it with an Error state,
+                                // but still surface the failure so a backgrounded download never
+                                // fails silently.
+                                _events.send(DownloadEvent.ShowError(serviceState.error, message = null))
+                            }
                         }
                     }
                     is DownloadServiceState.Cancelled -> {
@@ -157,9 +198,21 @@ class SharedDownloadViewModel(
                                     metadata = current.metadata,
                                     selectedFormatId = current.selectedFormatId,
                                 )
+                        } else {
+                            backgroundDownload?.takeIf { it.progress.requestId == serviceState.requestId }
+                                ?.let { backgroundDownload = null }
                         }
                     }
-                    is DownloadServiceState.Idle -> Unit
+                    is DownloadServiceState.Idle -> {
+                        // Drop a stale backgrounded download once the manager no longer tracks
+                        // it (e.g. its process died without emitting a terminal event). Guarded
+                        // by activeRequestId so an actively-running background download is never
+                        // discarded; this only frees a dead reference.
+                        val bg = backgroundDownload
+                        if (bg != null && bg.progress.requestId != platformDownloadManager.activeRequestId) {
+                            backgroundDownload = null
+                        }
+                    }
                     is DownloadServiceState.Queued -> {
                         // Platform layer may show its own toast/snackbar for "queued"
                         // No shared state change needed
@@ -210,8 +263,10 @@ class SharedDownloadViewModel(
                 val existing = findExistingDownload(url)
                 val current = _uiState.value
                 if (current is DownloadUiState.Idle) {
+                    // copy() so an active prefillUrl (e.g. from a share intent) survives the
+                    // duplicate-found update instead of being dropped.
                     _uiState.value =
-                        DownloadUiState.Idle(
+                        current.copy(
                             existingDownload = existing,
                             connectedPlatforms = secureCookieStore.connectedPlatforms(),
                         )
@@ -222,11 +277,14 @@ class SharedDownloadViewModel(
     private fun handleExtract() {
         if (currentUrl.isBlank()) return
         duplicateCheckJob?.cancel()
-        _uiState.value = DownloadUiState.Extracting(currentUrl)
+        extractionJob?.cancel()
+        val url = currentUrl
+        _uiState.value = DownloadUiState.Extracting(url)
 
-        coroutineScope.launch {
-            extractWithRetry(currentUrl)
-        }
+        extractionJob =
+            coroutineScope.launch {
+                extractWithRetry(url)
+            }
     }
 
     /**
@@ -242,11 +300,27 @@ class SharedDownloadViewModel(
             val result = extractVideoInfo(url)
             result
                 .onSuccess { metadata ->
+                    // Guard against a superseded extraction (a newer URL was started via
+                    // prefill / login-retry while this one was in flight). Cancellation alone
+                    // can't cover this: there is no suspension point between the network return
+                    // and this state write, so a cancelled continuation would still run.
+                    if (!isCurrentExtraction(url)) return
+                    // Prefer the first video format (formats are expected pre-sorted
+                    // best-first by the extractor); fall back to any audio-only format.
                     val bestFormatId =
-                        metadata.formats
-                            .firstOrNull { !it.isAudioOnly }?.formatId
+                        metadata.formats.firstOrNull { !it.isAudioOnly }?.formatId
                             ?: metadata.formats.firstOrNull()?.formatId
-                            ?: ""
+                    if (bestFormatId == null) {
+                        // Extraction succeeded but yielded no usable formats — treat as a failure
+                        // instead of dropping the user into a dead-end empty FormatSelection.
+                        _uiState.value =
+                            DownloadUiState.Error(
+                                errorType = DownloadErrorType.EXTRACTION_FAILED,
+                                message = null,
+                                retryAction = RetryAction.RetryExtraction(url),
+                            )
+                        return
+                    }
                     _uiState.value =
                         DownloadUiState.FormatSelection(
                             metadata = metadata,
@@ -257,25 +331,31 @@ class SharedDownloadViewModel(
                 .onFailure { error ->
                     if (error is CancellationException) throw error
 
-                    val errorType = mapErrorToType(error)
+                    val errorType = DownloadErrorClassifier.classify(error, url)
                     val isTransient = isTransientError(errorType)
 
                     if (isTransient && attempt < maxRetryAttempts) {
                         attempt++
                         val backoffMs = retryBaseDelayMs * (1L shl (attempt - 1)) // 1s, 2s, 4s
                         delay(backoffMs)
-                        // Only retry if still in Extracting state (user hasn't navigated away)
-                        if (_uiState.value !is DownloadUiState.Extracting) return
+                        // Only retry if still extracting THIS url (user hasn't navigated away
+                        // or started a different extraction).
+                        if (!isCurrentExtraction(url)) return
                     } else {
+                        if (!isCurrentExtraction(url)) return
                         val platform = if (errorType == DownloadErrorType.AUTH_REQUIRED) detectPlatform(url) else null
                         // If cookies exist but extraction still failed, show "Reconnect" label
                         // but DON'T clear cookies — they may still be valid for retry.
                         // Cookies are only replaced when the user completes a new login.
                         val isReconnect = platform != null && secureCookieStore.isConnected(platform)
+                        // The UI resolves user-facing text from [errorType] via string resources.
+                        // Only pass the raw error through for UNKNOWN as a last-resort technical
+                        // detail (an arbitrary extractor error is inherently un-localizable).
+                        val rawDetail = if (errorType == DownloadErrorType.UNKNOWN) error.message else null
                         _uiState.value =
                             DownloadUiState.Error(
                                 errorType = errorType,
-                                message = friendlyErrorMessage(error),
+                                message = rawDetail,
                                 retryAction = RetryAction.RetryExtraction(url),
                                 platformForAuth = platform,
                                 isReconnect = isReconnect,
@@ -284,6 +364,16 @@ class SharedDownloadViewModel(
                     }
                 }
         }
+    }
+
+    /**
+     * True while the VM is still showing [DownloadUiState.Extracting] for [url].
+     * Extraction results (success, no-format, terminal error) are applied only when
+     * current, so a superseded extraction can never clobber the live state.
+     */
+    private fun isCurrentExtraction(url: String): Boolean {
+        val state = _uiState.value
+        return state is DownloadUiState.Extracting && state.url == url
     }
 
     /**
@@ -314,7 +404,12 @@ class SharedDownloadViewModel(
     fun onNotificationPermissionResult(granted: Boolean) {
         // On Android, if the user denied the permission, the RequestNotificationPermission
         // event was already emitted before the launcher was shown. We still proceed.
-        startDownload(pendingShareOnly)
+        // [pendingShareOnly] is only valid within this single permission-request window
+        // (set by startDownloadWithPermissionCheck); read it once and reset so a stale
+        // value can never leak into a later, unrelated flow.
+        val shareOnly = pendingShareOnly
+        pendingShareOnly = false
+        startDownload(shareOnly)
     }
 
     private fun handleShareFormat() {
@@ -527,10 +622,14 @@ class SharedDownloadViewModel(
     ) {
         if (success && currentUrl.isNotBlank()) {
             // Auto-retry extraction after successful login
-            _uiState.value = DownloadUiState.Extracting(currentUrl)
-            coroutineScope.launch {
-                extractWithRetry(currentUrl)
-            }
+            duplicateCheckJob?.cancel()
+            extractionJob?.cancel()
+            val url = currentUrl
+            _uiState.value = DownloadUiState.Extracting(url)
+            extractionJob =
+                coroutineScope.launch {
+                    extractWithRetry(url)
+                }
         }
     }
 
@@ -545,94 +644,6 @@ class SharedDownloadViewModel(
     /** Cancel the coroutine scope when the ViewModel is cleared. */
     fun cleanup() {
         coroutineScope.cancel()
-    }
-
-    private fun friendlyErrorMessage(error: Throwable): String {
-        val raw = error.message ?: return "An unexpected error occurred"
-        val lower = raw.lowercase()
-
-        // Auth-required: platform-specific message
-        val platform = detectPlatform(currentUrl)
-        if (platform != null) {
-            val authKeywords =
-                listOf("sign in", "login required", "must be logged in", "inappropriate", "age-restricted", "age restricted", "nsfw")
-            if (authKeywords.any { lower.contains(it) }) {
-                return DownloadAuthStrings.authRequiredMessage(platform.displayName)
-            }
-        }
-
-        return when {
-            lower.contains("private video") || lower.contains("is private") ->
-                "This video is private and cannot be accessed."
-            lower.contains("not available") || lower.contains("not found") ||
-                lower.contains("been removed") || lower.contains("been deleted") ->
-                "This video is unavailable. It may have been removed or is not available in your region."
-            lower.contains("copyright") ->
-                "This video is blocked due to a copyright claim."
-            lower.contains("unsupported url") ->
-                "This URL is not supported. Please try a different link."
-            else -> raw
-        }
-    }
-
-    private fun mapErrorToType(error: Throwable): DownloadErrorType {
-        val message = error.message ?: return DownloadErrorType.UNKNOWN
-
-        // Check for auth-required errors on supported platforms (before ServerExtractionException
-        // short-circuit, because the WS proxy wraps yt-dlp auth errors as ServerExtractionException)
-        val authKeywords =
-            listOf("sign in", "login required", "must be logged in", "inappropriate", "age-restricted", "age restricted", "nsfw")
-        val lower = message.lowercase()
-        if (authKeywords.any { lower.contains(it) } && detectPlatform(currentUrl) != null) {
-            return DownloadErrorType.AUTH_REQUIRED
-        }
-
-        // Fallback: if yt-dlp error has a platform tag (e.g. [youtube]) matching the URL's
-        // platform AND the error contains auth-adjacent keywords, offer auth as a recovery option.
-        // Without the keyword check, generic errors like "Video unavailable" on YouTube URLs
-        // would incorrectly show "Login required" UI.
-        val authFallbackKeywords =
-            listOf(
-                "login",
-                "sign in",
-                "private",
-                "restricted",
-                "members only",
-                "subscriber",
-                "authenticate",
-                "credentials",
-            )
-        val hasAuthHint = authFallbackKeywords.any { it in lower }
-        val platformFromUrl = detectPlatform(currentUrl)
-        val platformFromError = detectPlatformFromError(message)
-        if (platformFromUrl != null && platformFromUrl == platformFromError && hasAuthHint) {
-            return DownloadErrorType.AUTH_REQUIRED
-        }
-
-        if (error is ServerExtractionException) {
-            return DownloadErrorType.EXTRACTION_FAILED
-        }
-
-        return when {
-            message.contains("Unsupported URL", ignoreCase = true) -> DownloadErrorType.UNSUPPORTED_URL
-            // Server unreachable / backend down (check before generic "unavailable")
-            message.contains("Connection refused", ignoreCase = true) ||
-                message.contains("ECONNREFUSED", ignoreCase = true) ||
-                message.contains("server error", ignoreCase = true) ||
-                message.contains("502", ignoreCase = true) ||
-                message.contains("503", ignoreCase = true) ||
-                message.contains("504", ignoreCase = true) -> DownloadErrorType.SERVER_UNAVAILABLE
-            message.contains("unavailable", ignoreCase = true) ||
-                message.contains("private", ignoreCase = true) -> DownloadErrorType.EXTRACTION_FAILED
-            message.contains("network", ignoreCase = true) ||
-                message.contains("connect", ignoreCase = true) ||
-                message.contains("timed out", ignoreCase = true) ||
-                message.contains("timeout", ignoreCase = true) ||
-                message.contains("internet", ignoreCase = true) -> DownloadErrorType.NETWORK_ERROR
-            message.contains("space", ignoreCase = true) ||
-                message.contains("storage", ignoreCase = true) -> DownloadErrorType.STORAGE_FULL
-            else -> DownloadErrorType.UNKNOWN
-        }
     }
 }
 

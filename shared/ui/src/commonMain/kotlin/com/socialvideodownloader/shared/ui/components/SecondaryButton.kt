@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -37,10 +36,7 @@ fun SecondaryButton(
                 .clip(shapes.control)
                 .alpha(if (enabled) 1f else 0.5f)
                 .border(1.dp, SvdBorder, shapes.control)
-                .semantics(mergeDescendants = true) {
-                    role = Role.Button
-                    contentDescription = text
-                }
+                .semantics(mergeDescendants = true) { role = Role.Button }
                 .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {

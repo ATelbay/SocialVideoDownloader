@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Common actions -->
+    <string name="action_open">Open</string>
+    <string name="action_share">Share</string>
+    <string name="action_new_download">New Download</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_cancel_download">Cancel Download</string>
+    <string name="action_dismiss">Dismiss</string>
+    <string name="action_paste">Paste</string>
+    <string name="action_download">Download</string>
+    <string name="action_tips">Tips</string>
+    <string name="action_back">Back</string>
+    <string name="action_hide">Hide</string>
+
+    <!-- Top bar titles -->
+    <string name="topbar_new_download">New download</string>
+    <string name="topbar_select_format">Select format</string>
+    <string name="topbar_downloading">Downloading</string>
+    <string name="topbar_complete">Complete</string>
+    <string name="topbar_error">Error</string>
+
+    <!-- Idle / hero -->
+    <string name="idle_hero_title">Download Videos\nFrom Anywhere</string>
+    <string name="idle_hero_subtitle">Paste any social media URL to get started</string>
+    <string name="idle_extract_button">EXTRACT VIDEO</string>
+    <string name="idle_supports_sites">Supports 1700+ sites</string>
+
+    <!-- URL input -->
+    <string name="url_input_hint">Paste a video link</string>
+
+    <!-- Extracting -->
+    <string name="extracting_label">Extracting video info…</string>
+
+    <!-- Format selection -->
+    <string name="format_video_quality">VIDEO QUALITY</string>
+    <string name="format_audio_quality">AUDIO QUALITY</string>
+    <string name="format_selected_label">Selected Format</string>
+    <string name="format_unknown_size">Unknown size</string>
+
+    <!-- Progress -->
+    <string name="progress_downloading">Downloading video…</string>
+    <string name="progress_finalizing">Finalizing video…</string>
+
+    <!-- Complete -->
+    <string name="download_complete_title">Download Complete!</string>
+    <string name="download_complete_subtitle">Saved to your Downloads folder</string>
+
+    <!-- Existing download banner -->
+    <string name="existing_already_downloaded">ALREADY DOWNLOADED</string>
+
+    <!-- Platform connection -->
+    <string name="platform_connected">Connected</string>
+    <string name="auth_connect_label">Connect %1$s</string>
+    <string name="auth_reconnect_label">Reconnect %1$s</string>
+    <string name="auth_disconnect_label">Disconnect</string>
+
+    <!-- Error titles -->
+    <string name="error_network_title">Network error</string>
+    <string name="error_server_title">Server unavailable</string>
+    <string name="error_extraction_title">Failed to extract</string>
+    <string name="error_unsupported_title">Unsupported URL</string>
+    <string name="error_storage_title">Storage full</string>
+    <string name="error_download_title">Download failed</string>
+    <string name="error_auth_title">Login required</string>
+    <string name="error_copyright_title">Copyright claim</string>
+    <string name="error_unknown_title">Something went wrong</string>
+
+    <!-- Error bodies -->
+    <string name="error_network_body">Network error. Check your connection and try again.</string>
+    <string name="error_server_body">Download server is unavailable. Try again later.</string>
+    <string name="error_extraction_body">Could not extract video info. The video may be private or unavailable.</string>
+    <string name="error_unsupported_body">This URL is not supported.</string>
+    <string name="error_storage_body">Not enough storage space to save the download.</string>
+    <string name="error_download_body">Download failed. Please try again.</string>
+    <string name="error_auth_body">Authentication required to download this content.</string>
+    <string name="error_copyright_body">This video is blocked due to a copyright claim.</string>
+    <string name="error_unknown_body">Something went wrong. Please try again.</string>
+</resources>

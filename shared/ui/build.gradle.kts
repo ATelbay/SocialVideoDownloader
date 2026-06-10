@@ -13,6 +13,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(composeExt.dependencies.materialIconsExtended)
+            implementation(composeExt.dependencies.components.uiToolingPreview)
             implementation(libs.coil3.compose)
             implementation(libs.coil3.network.ktor3)
         }

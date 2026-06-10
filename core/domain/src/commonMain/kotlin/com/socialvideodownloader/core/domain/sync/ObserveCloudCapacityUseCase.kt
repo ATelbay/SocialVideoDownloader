@@ -2,6 +2,7 @@ package com.socialvideodownloader.core.domain.sync
 
 import com.socialvideodownloader.core.domain.repository.BillingRepository
 import com.socialvideodownloader.core.domain.repository.CloudBackupRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -17,6 +18,7 @@ class ObserveCloudCapacityUseCase(
     private val cloudBackupRepository: CloudBackupRepository,
     private val billingRepository: BillingRepository,
 ) {
+    @OptIn(ExperimentalCoroutinesApi::class)
     operator fun invoke(): Flow<CloudCapacity> =
         billingRepository.observeTier().flatMapLatest { tier ->
             flow {

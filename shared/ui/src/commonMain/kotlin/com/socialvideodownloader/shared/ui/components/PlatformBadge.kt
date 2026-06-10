@@ -47,13 +47,13 @@ fun PlatformBadge(
                 .border(1.dp, SvdBorder, shapes.pill)
                 .padding(vertical = Spacing.ChipPaddingV, horizontal = Spacing.ChipPaddingH),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.GapMd),
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             tint = SvdPrimaryStrong,
-            modifier = Modifier.size(14.dp),
+            modifier = Modifier.size(Spacing.IconXs),
         )
         Text(
             text = platformName,

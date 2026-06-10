@@ -1,22 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Format Selection -->
-    <string name="download_button">Download</string>
-
-    <!-- Download Progress -->
+    <!-- Notification action -->
     <string name="download_cancel">Cancel</string>
 
-    <!-- Download Complete -->
-    <string name="download_open">Open</string>
-    <string name="download_share">Share</string>
-    <string name="download_new">New Download</string>
-
-    <!-- Error -->
-    <string name="download_retry">Retry</string>
+    <!-- Error messages (ErrorMessageMapper → notifications) -->
     <string name="download_error_unsupported_url">This URL is not supported. Try a link from a supported platform.</string>
     <string name="download_error_unavailable">This video is unavailable. It may be private or removed.</string>
     <string name="download_error_network">No internet connection. Check your network and try again.</string>
     <string name="download_error_storage">Not enough storage space. Free up space and try again.</string>
+    <string name="download_error_copyright">This video is blocked due to a copyright claim.</string>
     <string name="download_error_generic">Something went wrong. Please try again.</string>
 
     <!-- Notifications -->
@@ -24,59 +16,4 @@
     <string name="notification_speed_eta">%1$s · ETA %2$s</string>
     <string name="notification_download_complete">Download complete</string>
     <string name="notification_download_failed">Download failed</string>
-
-    <!-- Screen titles -->
-    <string name="download_screen_title">New download</string>
-    <string name="download_title_select_format">Select format</string>
-    <string name="download_title_downloading">Downloading</string>
-    <string name="download_title_complete">Complete</string>
-    <string name="download_title_error">Error</string>
-
-    <!-- Top bar actions -->
-    <string name="download_action_tips">Tips</string>
-    <string name="download_action_back">Back</string>
-    <string name="download_action_hide">Hide</string>
-
-    <!-- Existing download banner -->
-    <string name="download_already_downloaded">Already downloaded</string>
-    <string name="download_existing_open">Open</string>
-    <string name="download_existing_share">Share</string>
-    <string name="download_existing_downloaded_on">Downloaded %s</string>
-
-    <!-- Idle state -->
-    <string name="download_hero_title">Download Videos\nFrom Anywhere</string>
-    <string name="download_hero_subtitle">Paste any social media URL to get started</string>
-    <string name="download_paste_button">Paste</string>
-    <string name="download_url_input_placeholder">Paste a video link</string>
-    <string name="download_supported_platforms_label">SUPPORTED PLATFORMS</string>
-    <string name="download_footer_text">Supports 1700+ sites</string>
-
-    <!-- Format selection -->
-    <string name="download_format_info_unknown_size">Unknown size</string>
-    <string name="download_video_quality_label">VIDEO QUALITY</string>
-    <string name="download_audio_quality_label">AUDIO QUALITY</string>
-    <string name="download_selected_format">Selected Format</string>
-
-    <!-- Download state -->
-    <string name="download_extract_video">EXTRACT VIDEO</string>
-    <string name="download_extracting_status">Extracting video info…</string>
-    <string name="download_downloading_status">Downloading video…</string>
-    <string name="download_finalizing_status">Finalizing video…</string>
-    <string name="download_cancel_download">Cancel Download</string>
-    <string name="download_speed">Speed</string>
-    <string name="download_eta">ETA</string>
-    <string name="download_size">Size</string>
-
-    <!-- Complete state -->
-    <string name="download_complete_message">Download Complete!</string>
-    <string name="download_saved_message">Saved to your Downloads folder</string>
-    <string name="download_new_download">New Download</string>
-
-    <!-- Error state -->
-    <string name="download_error_title">Failed to extract</string>
-
-    <!-- Snackbar / Permission messages -->
-    <string name="download_queued">Download queued</string>
-    <string name="notification_permission_rationale">Notifications are disabled — you won\'t see download progress in the notification shade</string>
-    <string name="notification_permission_denied">Notification permission denied</string>
 </resources>

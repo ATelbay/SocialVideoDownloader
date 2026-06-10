@@ -53,7 +53,9 @@ class SharedHistoryViewModel(
     private val _openMenuItemId = MutableStateFlow<Long?>(null)
     private val _deleteConfirmation = MutableStateFlow<DeleteConfirmationState?>(null)
 
-    private val _effect = MutableSharedFlow<HistoryEffect>()
+    // One-shot effects: buffer one item so emit() from a launched coroutine never suspends waiting
+    // for a collector (e.g. when the screen is briefly not subscribed).
+    private val _effect = MutableSharedFlow<HistoryEffect>(extraBufferCapacity = 1)
     val effect: SharedFlow<HistoryEffect> = _effect.asSharedFlow()
 
     private val _allItems = MutableStateFlow<List<HistoryItem>>(emptyList())
@@ -66,7 +68,7 @@ class SharedHistoryViewModel(
     private val _restoreState = MutableStateFlow<RestoreState>(RestoreState.Idle)
     private val _isSignedIn = MutableStateFlow(cloudAuthService.isAuthenticated())
     private val _isSigningIn = MutableStateFlow(false)
-    private val _signInError = MutableStateFlow<String?>(null)
+    private val _hasSignInError = MutableStateFlow(false)
 
     val cloudBackupState: StateFlow<CloudBackupState> =
         combine(
@@ -75,7 +77,7 @@ class SharedHistoryViewModel(
             _restoreState,
             _isSignedIn,
             _isSigningIn,
-            _signInError,
+            _hasSignInError,
         ) { values ->
             CloudBackupState(
                 isCloudBackupEnabled = values[0] as Boolean,
@@ -85,7 +87,7 @@ class SharedHistoryViewModel(
                 isSigningIn = values[4] as Boolean,
                 userName = if (values[3] as Boolean) cloudAuthService.getDisplayName() else null,
                 userPhotoUrl = if (values[3] as Boolean) cloudAuthService.getPhotoUrl() else null,
-                signInError = values[5] as String?,
+                hasSignInError = values[5] as Boolean,
             )
         }.stateIn(coroutineScope, SharingStarted.WhileSubscribed(5_000), CloudBackupState())
 
@@ -174,25 +176,28 @@ class SharedHistoryViewModel(
             is HistoryIntent.ToggleCloudBackup -> handleToggleCloudBackup()
             is HistoryIntent.SignInWithGoogle -> handleSignInWithGoogle(intent.idToken)
             is HistoryIntent.SignInCancelled -> _isSigningIn.value = false
-            is HistoryIntent.SignInFailed -> handleSignInFailed(intent.message)
+            is HistoryIntent.SignInFailed -> handleSignInFailed()
             is HistoryIntent.SignOutCloud -> handleSignOut()
-            is HistoryIntent.DismissSignInError -> _signInError.value = null
+            is HistoryIntent.DismissSignInError -> _hasSignInError.value = false
             is HistoryIntent.RestoreFromCloud -> handleRestoreFromCloud()
             is HistoryIntent.DismissRestoreDialog -> _restoreState.value = RestoreState.Idle
         }
     }
 
     private fun handleRestoreFromCloud() {
+        // Guard against a second restore starting while one is already running. Local dedup is an
+        // in-memory snapshot per run, so concurrent restores could insert duplicate rows.
+        if (_restoreState.value is RestoreState.InProgress) return
         coroutineScope.launch {
             _restoreState.value = RestoreState.InProgress(current = 0, total = 0)
             val result =
                 restoreFromCloudUseCase { current, total ->
                     _restoreState.value = RestoreState.InProgress(current = current, total = total)
                 }
-            val restoreError = result.error
+            val restoreErrorReason = result.errorReason
             _restoreState.value =
-                if (restoreError != null) {
-                    RestoreState.Error(restoreError)
+                if (restoreErrorReason != null) {
+                    RestoreState.Error(restoreErrorReason)
                 } else {
                     RestoreState.Completed(restored = result.restored, skipped = result.skipped)
                 }
@@ -203,22 +208,15 @@ class SharedHistoryViewModel(
         coroutineScope.launch {
             if (!_isSignedIn.value) {
                 if (_isSigningIn.value) return@launch
-                _signInError.value = null
+                _hasSignInError.value = false
                 _isSigningIn.value = true
                 _effect.emit(HistoryEffect.LaunchGoogleSignIn)
             } else if (_isCloudBackupEnabled.value) {
                 disableCloudBackupUseCase()
             } else {
-                val isFirstEnable = !backupPreferences.hasEverEnabled()
-                backupPreferences.setBackupEnabled(true)
-                backupPreferences.setHasEverEnabled(true)
-                if (isFirstEnable) {
-                    val existing = downloadRepository.getCompletedSnapshot()
-                    for (record in existing) {
-                        syncManager.syncNewRecord(record)
-                    }
-                }
-                syncManager.processPendingOperations()
+                // Already authenticated — re-enable without re-running Google sign-in.
+                // Reuses the use case so backfill/flush logic lives in exactly one place.
+                enableCloudBackupUseCase()
             }
         }
     }
@@ -226,20 +224,22 @@ class SharedHistoryViewModel(
     private fun handleSignInWithGoogle(idToken: String) {
         coroutineScope.launch {
             _isSigningIn.value = true
-            _signInError.value = null
+            _hasSignInError.value = false
             try {
                 enableCloudBackupUseCase(idToken)
                 updateAuthState()
             } catch (e: Exception) {
-                _signInError.value = e.message
+                _hasSignInError.value = true
             } finally {
                 _isSigningIn.value = false
             }
         }
     }
 
-    private fun handleSignInFailed(message: String?) {
-        _signInError.value = message ?: "Google sign-in failed"
+    private fun handleSignInFailed() {
+        // The platform layer logs the underlying cause; the UI only needs to know a failure happened
+        // so it can show a generic, localized message.
+        _hasSignInError.value = true
         _isSigningIn.value = false
     }
 
@@ -257,6 +257,27 @@ class SharedHistoryViewModel(
     private fun handleTapUpgrade() {
         coroutineScope.launch {
             _effect.emit(HistoryEffect.LaunchUpgradeFlow)
+        }
+    }
+
+    /**
+     * Surfaces the outcome of a platform purchase flow as a user-visible message. Kept here (not in
+     * the platform delegate) so all history messaging stays in the shared layer. Cancellation is
+     * silent — the user chose to back out.
+     */
+    fun onPurchaseResult(result: com.socialvideodownloader.core.domain.repository.BillingResult) {
+        val messageType =
+            when (result) {
+                is com.socialvideodownloader.core.domain.repository.BillingResult.Success ->
+                    HistoryMessageType.PURCHASE_SUCCESS
+                is com.socialvideodownloader.core.domain.repository.BillingResult.Pending ->
+                    HistoryMessageType.PURCHASE_PENDING
+                is com.socialvideodownloader.core.domain.repository.BillingResult.Error ->
+                    HistoryMessageType.PURCHASE_FAILED
+                is com.socialvideodownloader.core.domain.repository.BillingResult.Cancelled -> return
+            }
+        coroutineScope.launch {
+            _effect.emit(HistoryEffect.ShowMessage(messageType))
         }
     }
 

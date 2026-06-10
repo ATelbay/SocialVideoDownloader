@@ -1,6 +1,7 @@
 package com.socialvideodownloader.feature.history.ui
 
 import app.cash.turbine.test
+import com.socialvideodownloader.core.billing.PurchaseFlowLauncher
 import com.socialvideodownloader.core.domain.model.SyncStatus
 import com.socialvideodownloader.core.domain.repository.BillingRepository
 import com.socialvideodownloader.core.domain.sync.BackupPreferences
@@ -8,6 +9,7 @@ import com.socialvideodownloader.core.domain.sync.CloudAuthService
 import com.socialvideodownloader.core.domain.sync.DisableCloudBackupUseCase
 import com.socialvideodownloader.core.domain.sync.EnableCloudBackupUseCase
 import com.socialvideodownloader.core.domain.sync.ObserveCloudCapacityUseCase
+import com.socialvideodownloader.core.domain.sync.RestoreErrorReason
 import com.socialvideodownloader.core.domain.sync.RestoreFromCloudUseCase
 import com.socialvideodownloader.core.domain.sync.RestoreResult
 import com.socialvideodownloader.core.domain.sync.SyncManager
@@ -15,6 +17,7 @@ import com.socialvideodownloader.feature.history.testdouble.FakeDownloadReposito
 import com.socialvideodownloader.feature.history.testdouble.FakeHistoryFileManager
 import com.socialvideodownloader.feature.history.testutil.MainDispatcherRule
 import com.socialvideodownloader.shared.data.platform.PlatformClipboard
+import com.socialvideodownloader.shared.feature.history.DeleteHistoryItemUseCaseShared
 import com.socialvideodownloader.shared.feature.history.HistoryIntent.DismissRestoreDialog
 import com.socialvideodownloader.shared.feature.history.HistoryIntent.RestoreFromCloud
 import com.socialvideodownloader.shared.feature.history.RestoreState.Completed
@@ -50,6 +53,7 @@ class HistoryViewModelRestoreTest {
     private val restoreFromCloudUseCase = mockk<RestoreFromCloudUseCase>()
     private val cloudAuthService = mockk<CloudAuthService>(relaxed = true)
     private val clipboard = mockk<PlatformClipboard>(relaxed = true)
+    private val purchaseFlowLauncher = mockk<PurchaseFlowLauncher>(relaxed = true)
 
     private val isBackupEnabledFlow = MutableStateFlow(false)
     private val syncStatusFlow = MutableStateFlow<SyncStatus>(SyncStatus.Idle)
@@ -65,6 +69,7 @@ class HistoryViewModelRestoreTest {
         HistoryViewModel(
             downloadRepository = repository,
             fileManager = fileManager,
+            deleteHistoryItemUseCase = DeleteHistoryItemUseCaseShared(repository, fileManager),
             observeCloudCapacity = observeCloudCapacity,
             billingRepository = billingRepository,
             enableCloudBackupUseCase = enableCloudBackupUseCase,
@@ -74,6 +79,7 @@ class HistoryViewModelRestoreTest {
             restoreFromCloudUseCase = restoreFromCloudUseCase,
             cloudAuthService = cloudAuthService,
             clipboard = clipboard,
+            purchaseFlowLauncher = purchaseFlowLauncher,
         )
 
     @Test
@@ -123,7 +129,7 @@ class HistoryViewModelRestoreTest {
                     restored = 0,
                     skipped = 0,
                     failed = 0,
-                    error = "Encryption key no longer available",
+                    errorReason = RestoreErrorReason.KEY_UNAVAILABLE,
                 )
             val vm = createViewModel()
 
@@ -141,7 +147,7 @@ class HistoryViewModelRestoreTest {
 
                 val error = states.filterIsInstance<Error>().firstOrNull()
                 assertTrue(error != null, "Expected an Error state")
-                assertTrue(error!!.message.contains("key", ignoreCase = true))
+                assertEquals(RestoreErrorReason.KEY_UNAVAILABLE, error!!.reason)
 
                 cancelAndIgnoreRemainingEvents()
             }

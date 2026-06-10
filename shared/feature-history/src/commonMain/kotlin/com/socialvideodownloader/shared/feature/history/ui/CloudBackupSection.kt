@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.socialvideodownloader.core.domain.model.SyncStatus
 import com.socialvideodownloader.shared.feature.history.CloudBackupState
+import com.socialvideodownloader.shared.ui.theme.SvdPrimary
 
 @Composable
 fun CloudBackupSection(
@@ -63,14 +64,14 @@ fun CloudBackupSection(
                     style = MaterialTheme.typography.bodyLarge,
                 )
                 if (state.isSigningIn) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = SvdPrimary)
                 } else {
                     Button(onClick = onToggleBackup) {
                         Text(text = signInLabel)
                     }
                 }
             }
-            if (state.signInError != null) {
+            if (state.hasSignInError) {
                 Text(
                     text = signInFailedMessage,
                     style = MaterialTheme.typography.bodySmall,

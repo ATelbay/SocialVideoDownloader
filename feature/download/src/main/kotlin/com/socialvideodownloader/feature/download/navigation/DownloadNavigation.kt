@@ -23,10 +23,21 @@ data class PlatformLoginRoute(val platformName: String)
 fun NavGraphBuilder.downloadScreen(navController: NavController) {
     composable<DownloadRoute> { backStackEntry ->
         val route = backStackEntry.toRoute<DownloadRoute>()
+        // The platform-login destination writes its result back into this entry's
+        // savedStateHandle (see PlatformLoginRoute below). Pass the handle access as
+        // a flow + consume lambda so DownloadScreen stays NavController-free.
+        val savedStateHandle = backStackEntry.savedStateHandle
         DownloadScreen(
             initialUrl = route.initialUrl,
             existingRecordId = route.existingRecordId,
-            navController = navController,
+            onNavigateToPlatformLogin = { platform ->
+                navController.navigate(PlatformLoginRoute(platform.name))
+            },
+            platformLoginResultFlow =
+                savedStateHandle.getStateFlow<String?>("platformLoginResult", null),
+            onConsumePlatformLoginResult = {
+                savedStateHandle["platformLoginResult"] = null
+            },
         )
     }
 

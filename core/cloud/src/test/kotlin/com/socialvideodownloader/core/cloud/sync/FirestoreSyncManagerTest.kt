@@ -1,10 +1,6 @@
 package com.socialvideodownloader.core.cloud.sync
 
 import app.cash.turbine.test
-import com.socialvideodownloader.core.data.local.DownloadDao
-import com.socialvideodownloader.core.data.local.DownloadEntity
-import com.socialvideodownloader.core.data.local.SyncQueueDao
-import com.socialvideodownloader.core.data.local.SyncQueueEntity
 import com.socialvideodownloader.core.domain.model.DownloadRecord
 import com.socialvideodownloader.core.domain.model.DownloadStatus
 import com.socialvideodownloader.core.domain.model.SyncStatus
@@ -12,6 +8,10 @@ import com.socialvideodownloader.core.domain.repository.CloudBackupRepository
 import com.socialvideodownloader.core.domain.sync.BackupPreferences
 import com.socialvideodownloader.core.domain.sync.CloudAuthService
 import com.socialvideodownloader.core.domain.sync.EncryptionService
+import com.socialvideodownloader.shared.data.local.DownloadDao
+import com.socialvideodownloader.shared.data.local.DownloadEntity
+import com.socialvideodownloader.shared.data.local.SyncQueueDao
+import com.socialvideodownloader.shared.data.local.SyncQueueEntity
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -145,7 +145,7 @@ class FirestoreSyncManagerTest {
         }
 
     @Test
-    fun `syncNewRecord triggers LRU eviction when at tier limit`() =
+    fun `syncNewRecord delegates capacity enforcement to repository`() =
         runTest(testDispatcher) {
             coEvery { cloudBackupRepository.getCloudRecordCount() } returns 1000
             coEvery { cloudBackupRepository.getTierLimit() } returns 1000
@@ -153,7 +153,10 @@ class FirestoreSyncManagerTest {
 
             syncManager.syncNewRecord(testRecord)
 
-            coVerify { cloudBackupRepository.evictOldestRecords(1) }
+            // Tier-limit + LRU eviction now live inside the repository's uploadRecord (so they apply
+            // to the queued-upload path too); the manager must not orchestrate eviction itself.
+            coVerify(exactly = 1) { cloudBackupRepository.uploadRecord(testRecord) }
+            coVerify(exactly = 0) { cloudBackupRepository.evictOldestRecords(any()) }
         }
 
     @Test

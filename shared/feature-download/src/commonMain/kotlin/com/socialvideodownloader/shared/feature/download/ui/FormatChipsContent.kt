@@ -21,6 +21,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.socialvideodownloader.core.domain.model.VideoFormatOption
+import com.socialvideodownloader.shared.feature.download.generated.resources.Res
+import com.socialvideodownloader.shared.feature.download.generated.resources.format_audio_quality
+import com.socialvideodownloader.shared.feature.download.generated.resources.format_selected_label
+import com.socialvideodownloader.shared.feature.download.generated.resources.format_unknown_size
+import com.socialvideodownloader.shared.feature.download.generated.resources.format_video_quality
 import com.socialvideodownloader.shared.ui.components.FormatChip
 import com.socialvideodownloader.shared.ui.theme.LocalAppShapes
 import com.socialvideodownloader.shared.ui.theme.Spacing
@@ -28,6 +33,7 @@ import com.socialvideodownloader.shared.ui.theme.SvdBorder
 import com.socialvideodownloader.shared.ui.theme.SvdForeground
 import com.socialvideodownloader.shared.ui.theme.SvdSubtleForeground
 import com.socialvideodownloader.shared.ui.theme.SvdSurfaceAlt
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun FormatChipsContent(
@@ -43,6 +49,8 @@ fun FormatChipsContent(
         remember(formats, selectedFormatId) {
             formats.find { it.formatId == selectedFormatId }
         }
+
+    val unknownSize = stringResource(Res.string.format_unknown_size)
 
     val sectionLabelStyle =
         TextStyle(
@@ -63,7 +71,7 @@ fun FormatChipsContent(
         if (videoFormats.isNotEmpty()) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    text = "VIDEO QUALITY",
+                    text = stringResource(Res.string.format_video_quality),
                     style = sectionLabelStyle,
                     color = SvdSubtleForeground,
                 )
@@ -85,7 +93,7 @@ fun FormatChipsContent(
         if (audioFormats.isNotEmpty()) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    text = "AUDIO QUALITY",
+                    text = stringResource(Res.string.format_audio_quality),
                     style = sectionLabelStyle,
                     color = SvdSubtleForeground,
                 )
@@ -116,7 +124,7 @@ fun FormatChipsContent(
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
-                text = "Selected Format",
+                text = stringResource(Res.string.format_selected_label),
                 style = sectionLabelStyle,
                 color = SvdSubtleForeground,
             )
@@ -130,7 +138,7 @@ fun FormatChipsContent(
                     color = SvdForeground,
                 )
                 Text(
-                    text = selectedFormat?.fileSizeBytes?.let { formatFileSize(it) } ?: "Unknown size",
+                    text = selectedFormat?.fileSizeBytes?.let { formatFileSize(it) } ?: unknownSize,
                     style = statsStyle,
                     color = SvdForeground,
                 )
@@ -141,7 +149,7 @@ fun FormatChipsContent(
 
 private fun formatChipLabel(format: VideoFormatOption): String =
     if (format.resolution != null) {
-        "${format.resolution}p \u00b7 ${format.ext.uppercase()}"
+        "${format.resolution}p · ${format.ext.uppercase()}"
     } else {
         format.label
     }

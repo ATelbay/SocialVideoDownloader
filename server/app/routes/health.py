@@ -8,6 +8,8 @@ from typing import Optional
 
 from fastapi import APIRouter, Header, HTTPException
 
+from app.config import settings
+
 _venv_bin = os.path.dirname(sys.executable)
 _start_time = time.time()
 
@@ -32,7 +34,7 @@ async def health():
 
 @router.post("/update-ytdlp")
 async def update_ytdlp(x_api_key: Optional[str] = Header(default=None)):
-    update_api_key = os.environ.get("UPDATE_API_KEY", "")
+    update_api_key = settings.UPDATE_API_KEY
     if not update_api_key:
         raise HTTPException(status_code=403, detail="Endpoint disabled")
     if x_api_key != update_api_key:

@@ -4,10 +4,10 @@ import com.socialvideodownloader.core.domain.file.FileAccessManager
 import com.socialvideodownloader.core.domain.repository.DownloadRepository
 
 /**
- * KMP-compatible version of the history delete use case.
+ * KMP-compatible history delete use case.
  *
- * Mirrors the logic from [com.socialvideodownloader.feature.history.domain.DeleteHistoryItemUseCase]
- * but removes the Hilt @Inject annotation so it can live in commonMain.
+ * Lives in commonMain without any Hilt @Inject annotation; the Android graph
+ * provides it via Hilt's UseCaseModule.
  */
 class DeleteHistoryItemUseCaseShared(
     private val repository: DownloadRepository,

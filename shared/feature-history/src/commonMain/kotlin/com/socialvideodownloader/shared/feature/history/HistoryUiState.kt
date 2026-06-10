@@ -2,6 +2,7 @@ package com.socialvideodownloader.shared.feature.history
 
 import com.socialvideodownloader.core.domain.model.DownloadStatus
 import com.socialvideodownloader.core.domain.sync.CloudCapacity
+import com.socialvideodownloader.core.domain.sync.RestoreErrorReason
 
 data class HistoryListItem(
     val id: Long,
@@ -35,7 +36,7 @@ data class CloudBackupState(
     val isSigningIn: Boolean = false,
     val userName: String? = null,
     val userPhotoUrl: String? = null,
-    val signInError: String? = null,
+    val hasSignInError: Boolean = false,
 )
 
 sealed interface RestoreState {
@@ -45,7 +46,7 @@ sealed interface RestoreState {
 
     data class Completed(val restored: Int, val skipped: Int) : RestoreState
 
-    data class Error(val message: String) : RestoreState
+    data class Error(val reason: RestoreErrorReason) : RestoreState
 }
 
 sealed interface HistoryUiState {
@@ -58,7 +59,6 @@ sealed interface HistoryUiState {
         val items: List<HistoryListItem>,
         val openMenuItemId: Long? = null,
         val deleteConfirmation: DeleteConfirmationState? = null,
-        val isDeleting: Boolean = false,
         val cloudCapacity: CloudCapacity? = null,
     ) : HistoryUiState
 }

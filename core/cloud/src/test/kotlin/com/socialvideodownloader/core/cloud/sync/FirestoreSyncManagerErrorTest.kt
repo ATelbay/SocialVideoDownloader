@@ -1,15 +1,15 @@
 package com.socialvideodownloader.core.cloud.sync
 
 import app.cash.turbine.test
-import com.socialvideodownloader.core.data.local.DownloadDao
-import com.socialvideodownloader.core.data.local.DownloadEntity
-import com.socialvideodownloader.core.data.local.SyncQueueDao
-import com.socialvideodownloader.core.data.local.SyncQueueEntity
 import com.socialvideodownloader.core.domain.model.SyncStatus
 import com.socialvideodownloader.core.domain.repository.CloudBackupRepository
 import com.socialvideodownloader.core.domain.sync.BackupPreferences
 import com.socialvideodownloader.core.domain.sync.CloudAuthService
 import com.socialvideodownloader.core.domain.sync.EncryptionService
+import com.socialvideodownloader.shared.data.local.DownloadDao
+import com.socialvideodownloader.shared.data.local.DownloadEntity
+import com.socialvideodownloader.shared.data.local.SyncQueueDao
+import com.socialvideodownloader.shared.data.local.SyncQueueEntity
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every

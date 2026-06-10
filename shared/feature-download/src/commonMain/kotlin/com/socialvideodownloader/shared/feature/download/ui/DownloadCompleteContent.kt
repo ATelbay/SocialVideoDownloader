@@ -30,6 +30,12 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.socialvideodownloader.core.domain.model.VideoMetadata
+import com.socialvideodownloader.shared.feature.download.generated.resources.Res
+import com.socialvideodownloader.shared.feature.download.generated.resources.action_new_download
+import com.socialvideodownloader.shared.feature.download.generated.resources.action_open
+import com.socialvideodownloader.shared.feature.download.generated.resources.action_share
+import com.socialvideodownloader.shared.feature.download.generated.resources.download_complete_subtitle
+import com.socialvideodownloader.shared.feature.download.generated.resources.download_complete_title
 import com.socialvideodownloader.shared.ui.components.TextActionLink
 import com.socialvideodownloader.shared.ui.components.VideoInfoCard
 import com.socialvideodownloader.shared.ui.theme.LocalAppShapes
@@ -43,6 +49,7 @@ import com.socialvideodownloader.shared.ui.theme.SvdSuccess
 import com.socialvideodownloader.shared.ui.theme.SvdSuccessSoft
 import com.socialvideodownloader.shared.ui.theme.SvdWarning
 import com.socialvideodownloader.shared.ui.tokens.PlatformColors
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun DownloadCompleteContent(
@@ -53,6 +60,8 @@ fun DownloadCompleteContent(
     modifier: Modifier = Modifier,
 ) {
     val shapes = LocalAppShapes.current
+    val labelOpen = stringResource(Res.string.action_open)
+    val labelShare = stringResource(Res.string.action_share)
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(24.dp),
@@ -87,13 +96,13 @@ fun DownloadCompleteContent(
                 )
             }
             Text(
-                text = "Download Complete!",
+                text = stringResource(Res.string.download_complete_title),
                 style = MaterialTheme.typography.headlineMedium,
                 color = SvdForeground,
                 textAlign = TextAlign.Center,
             )
             Text(
-                text = "Saved to your Downloads folder",
+                text = stringResource(Res.string.download_complete_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = SvdMutedForeground,
                 textAlign = TextAlign.Center,
@@ -111,7 +120,7 @@ fun DownloadCompleteContent(
                         .border(1.dp, SvdPrimaryStrong, shapes.control)
                         .semantics(mergeDescendants = true) {
                             role = Role.Button
-                            contentDescription = "Open"
+                            contentDescription = labelOpen
                         }
                         .clickable(onClick = onOpenClicked),
                 contentAlignment = Alignment.Center,
@@ -127,7 +136,7 @@ fun DownloadCompleteContent(
                         modifier = Modifier.size(18.dp),
                     )
                     Text(
-                        text = "Open",
+                        text = labelOpen,
                         style = MaterialTheme.typography.labelLarge,
                         color = SvdPrimaryStrong,
                     )
@@ -144,7 +153,7 @@ fun DownloadCompleteContent(
                         .background(Brush.verticalGradient(listOf(SvdPrimary, SvdWarning)))
                         .semantics(mergeDescendants = true) {
                             role = Role.Button
-                            contentDescription = "Share"
+                            contentDescription = labelShare
                         }
                         .clickable(onClick = onShareClicked),
                 contentAlignment = Alignment.Center,
@@ -160,7 +169,7 @@ fun DownloadCompleteContent(
                         modifier = Modifier.size(18.dp),
                     )
                     Text(
-                        text = "Share",
+                        text = labelShare,
                         style = MaterialTheme.typography.labelLarge,
                         color = SvdBg,
                     )
@@ -169,7 +178,7 @@ fun DownloadCompleteContent(
         }
 
         TextActionLink(
-            text = "New Download",
+            text = stringResource(Res.string.action_new_download),
             onClick = onNewDownloadClicked,
         )
     }

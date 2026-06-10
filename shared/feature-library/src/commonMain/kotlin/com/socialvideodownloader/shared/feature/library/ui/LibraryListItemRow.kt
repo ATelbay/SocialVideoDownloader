@@ -39,6 +39,9 @@ import com.socialvideodownloader.shared.ui.theme.SvdSubtleForeground
 import com.socialvideodownloader.shared.ui.theme.SvdSurface
 import com.socialvideodownloader.shared.ui.theme.SvdSurfaceStrong
 
+/** Decorative middle-dot separator between metadata fields (not user-facing copy). */
+private const val METADATA_SEPARATOR = "·"
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LibraryListItemRow(
@@ -122,7 +125,7 @@ fun LibraryListItemRow(
                             color = SvdSubtleForeground,
                         )
                         Text(
-                            text = "·",
+                            text = METADATA_SEPARATOR,
                             style = MaterialTheme.typography.bodySmall,
                             color = SvdSubtleForeground,
                         )
@@ -134,7 +137,7 @@ fun LibraryListItemRow(
                             color = SvdSubtleForeground,
                         )
                         Text(
-                            text = "·",
+                            text = METADATA_SEPARATOR,
                             style = MaterialTheme.typography.bodySmall,
                             color = SvdSubtleForeground,
                         )

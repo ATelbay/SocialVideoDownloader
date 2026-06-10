@@ -28,6 +28,9 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.socialvideodownloader.shared.feature.download.generated.resources.Res
+import com.socialvideodownloader.shared.feature.download.generated.resources.action_cancel
+import com.socialvideodownloader.shared.feature.download.generated.resources.extracting_label
 import com.socialvideodownloader.shared.ui.theme.LocalAppShapes
 import com.socialvideodownloader.shared.ui.theme.Spacing
 import com.socialvideodownloader.shared.ui.theme.SvdBorder
@@ -37,6 +40,7 @@ import com.socialvideodownloader.shared.ui.theme.SvdMutedForeground
 import com.socialvideodownloader.shared.ui.theme.SvdPrimary
 import com.socialvideodownloader.shared.ui.theme.SvdSubtleForeground
 import com.socialvideodownloader.shared.ui.theme.SvdSurface
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun ExtractingContent(
@@ -45,6 +49,7 @@ fun ExtractingContent(
     modifier: Modifier = Modifier,
 ) {
     val shapes = LocalAppShapes.current
+    val labelCancel = stringResource(Res.string.action_cancel)
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(32.dp),
@@ -90,7 +95,7 @@ fun ExtractingContent(
                 modifier = Modifier.size(56.dp),
             )
             Text(
-                text = "Extracting video info\u2026",
+                text = stringResource(Res.string.extracting_label),
                 style = MaterialTheme.typography.bodyMedium,
                 color = SvdMutedForeground,
             )
@@ -106,13 +111,13 @@ fun ExtractingContent(
                     .border(1.dp, SvdBorderStrong, shapes.control)
                     .semantics(mergeDescendants = true) {
                         role = Role.Button
-                        contentDescription = "Cancel"
+                        contentDescription = labelCancel
                     }
                     .clickable(onClick = onCancelClicked),
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = "Cancel",
+                text = labelCancel,
                 style = MaterialTheme.typography.labelLarge,
                 color = SvdForeground,
             )

@@ -11,12 +11,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.socialvideodownloader.feature.download.navigation.PlatformLoginRoute
 import com.socialvideodownloader.shared.feature.download.DownloadIntent
 import com.socialvideodownloader.shared.feature.download.platform.PlatformActions
 import com.socialvideodownloader.shared.network.auth.SupportedPlatform
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import com.socialvideodownloader.shared.feature.download.ui.DownloadScreen as SharedDownloadScreen
 
 @Composable
@@ -24,7 +23,9 @@ fun DownloadScreen(
     viewModel: DownloadViewModel = hiltViewModel(),
     initialUrl: String? = null,
     existingRecordId: Long? = null,
-    navController: NavController = rememberNavController(),
+    onNavigateToPlatformLogin: (SupportedPlatform) -> Unit = {},
+    platformLoginResultFlow: StateFlow<String?>? = null,
+    onConsumePlatformLoginResult: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -42,28 +43,26 @@ fun DownloadScreen(
         }
     }
 
-    // Navigate to platform login screen via Android-only channel (not shared events)
+    // Navigate to platform login screen via Android-only channel (not shared events).
+    // Navigation is provided as a lambda so this screen stays decoupled from NavController.
     LaunchedEffect(Unit) {
         viewModel.platformLoginNav.collect { platform ->
-            navController.navigate(PlatformLoginRoute(platform.name))
+            onNavigateToPlatformLogin(platform)
         }
     }
 
-    // Observe platform login result passed back via savedStateHandle from PlatformLoginRoute.
-    // Clear any stale value on first composition to avoid spurious re-extraction after process death.
+    // Clear any stale platform-login result on first composition to avoid spurious
+    // re-extraction after process death.
     LaunchedEffect(Unit) {
-        navController.currentBackStackEntry?.savedStateHandle?.set<String?>("platformLoginResult", null)
+        onConsumePlatformLoginResult()
     }
 
-    val loginResult by navController.currentBackStackEntry
-        ?.savedStateHandle
-        ?.getStateFlow<String?>("platformLoginResult", null)
-        ?.collectAsStateWithLifecycle(null)
-        ?: remember { androidx.compose.runtime.mutableStateOf(null) }
+    val resultFlow = platformLoginResultFlow ?: remember { MutableStateFlow(null) }
+    val loginResult by resultFlow.collectAsStateWithLifecycle(null)
 
     LaunchedEffect(loginResult) {
         val result = loginResult ?: return@LaunchedEffect
-        navController.currentBackStackEntry?.savedStateHandle?.set<String?>("platformLoginResult", null)
+        onConsumePlatformLoginResult()
         val parts = result.split(":")
         if (parts.size == 2) {
             val platformName = parts[0]

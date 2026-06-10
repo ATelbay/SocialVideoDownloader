@@ -30,6 +30,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.socialvideodownloader.core.domain.model.ExistingDownload
+import com.socialvideodownloader.shared.feature.download.generated.resources.Res
+import com.socialvideodownloader.shared.feature.download.generated.resources.action_dismiss
+import com.socialvideodownloader.shared.feature.download.generated.resources.action_open
+import com.socialvideodownloader.shared.feature.download.generated.resources.action_share
+import com.socialvideodownloader.shared.feature.download.generated.resources.existing_already_downloaded
 import com.socialvideodownloader.shared.ui.theme.LocalAppShapes
 import com.socialvideodownloader.shared.ui.theme.Spacing
 import com.socialvideodownloader.shared.ui.theme.SvdAccent
@@ -37,6 +42,7 @@ import com.socialvideodownloader.shared.ui.theme.SvdBorder
 import com.socialvideodownloader.shared.ui.theme.SvdForeground
 import com.socialvideodownloader.shared.ui.theme.SvdSubtleForeground
 import com.socialvideodownloader.shared.ui.theme.SvdSurface
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun ExistingDownloadBanner(
@@ -62,7 +68,7 @@ fun ExistingDownloadBanner(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "ALREADY DOWNLOADED",
+                    text = stringResource(Res.string.existing_already_downloaded),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = SvdAccent,
@@ -72,7 +78,7 @@ fun ExistingDownloadBanner(
                 IconButton(onClick = onDismissClicked) {
                     Icon(
                         imageVector = Icons.Outlined.Close,
-                        contentDescription = "Dismiss",
+                        contentDescription = stringResource(Res.string.action_dismiss),
                         tint = SvdSubtleForeground,
                         modifier = Modifier.size(16.dp),
                     )
@@ -133,7 +139,7 @@ fun ExistingDownloadBanner(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "Open",
+                        text = stringResource(Res.string.action_open),
                         color = SvdAccent,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 13.sp,
@@ -151,7 +157,7 @@ fun ExistingDownloadBanner(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "Share",
+                        text = stringResource(Res.string.action_share),
                         color = SvdSubtleForeground,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 13.sp,

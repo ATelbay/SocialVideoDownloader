@@ -2,52 +2,88 @@ import UIKit
 import UniformTypeIdentifiers
 
 class ShareViewController: UIViewController {
+    private static let appGroup = "group.com.socialvideodownloader.shared"
+    private static let sharedURLKey = "SharedURL"
+
     override func viewDidLoad() {
         super.viewDidLoad()
         handleSharedItems()
     }
 
     private func handleSharedItems() {
-        guard let extensionItems = extensionContext?.inputItems as? [NSExtensionItem] else {
-            extensionContext?.completeRequest(returningItems: nil)
+        let providers = (extensionContext?.inputItems as? [NSExtensionItem])?
+            .compactMap { $0.attachments }
+            .flatMap { $0 } ?? []
+
+        // Find the first attachment we can extract a URL from. A share carries a single link, so
+        // we resolve the first match and ignore the rest.
+        if let urlProvider = providers.first(where: {
+            $0.hasItemConformingToTypeIdentifier(UTType.url.identifier)
+        }) {
+            urlProvider.loadItem(forTypeIdentifier: UTType.url.identifier) { [weak self] item, _ in
+                let urlString = Self.urlString(fromURLItem: item)
+                self?.finish(with: urlString)
+            }
             return
         }
 
-        for item in extensionItems {
-            guard let attachments = item.attachments else { continue }
-            for provider in attachments {
-                if provider.hasItemConformingToTypeIdentifier(UTType.url.identifier) {
-                    provider.loadItem(forTypeIdentifier: UTType.url.identifier) { [weak self] item, _ in
-                        if let url = item as? URL {
-                            self?.saveSharedUrl(url.absoluteString)
-                        } else if let urlData = item as? Data,
-                                  let url = URL(dataRepresentation: urlData, relativeTo: nil) {
-                            self?.saveSharedUrl(url.absoluteString)
-                        }
-                    }
-                    return
-                }
-                if provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) {
-                    provider.loadItem(forTypeIdentifier: UTType.plainText.identifier) { [weak self] item, _ in
-                        if let text = item as? String, text.hasPrefix("http"), URL(string: text) != nil {
-                            self?.saveSharedUrl(text)
-                        }
-                    }
-                    return
-                }
+        if let textProvider = providers.first(where: {
+            $0.hasItemConformingToTypeIdentifier(UTType.plainText.identifier)
+        }) {
+            textProvider.loadItem(forTypeIdentifier: UTType.plainText.identifier) { [weak self] item, _ in
+                let urlString = Self.sanitizedURLString(from: item as? String)
+                self?.finish(with: urlString)
             }
+            return
         }
-        extensionContext?.completeRequest(returningItems: nil)
+
+        // No URL/text attachment present — nothing to do.
+        completeRequest()
+    }
+
+    /// Persists [urlString] (when non-nil) for the main app and always completes the request,
+    /// so the extension never hangs even when extraction fails.
+    private func finish(with urlString: String?) {
+        if let urlString {
+            saveSharedUrl(urlString)
+        }
+        completeRequest()
     }
 
     private func saveSharedUrl(_ urlString: String) {
-        let userDefaults = UserDefaults(suiteName: "group.com.socialvideodownloader.shared")
-        userDefaults?.set(urlString, forKey: "SharedURL")
-        userDefaults?.synchronize()
+        // The extension cannot open URLs directly. The main app picks the URL up from the shared
+        // App Group on its next foreground (scenePhase == .active check in App.swift).
+        let userDefaults = UserDefaults(suiteName: Self.appGroup)
+        userDefaults?.set(urlString, forKey: Self.sharedURLKey)
+    }
 
-        // The extension cannot open URLs directly.
-        // The main app picks up the URL from the shared App Group UserDefaults
-        // when it becomes active (scenePhase == .active check in App.swift).
+    private func completeRequest() {
         extensionContext?.completeRequest(returningItems: nil)
+    }
+
+    // MARK: - Pure helpers (no UIKit / extension state — unit-testable)
+
+    /// Extracts an absolute URL string from a loaded `UTType.url` item, accepting both `URL` and the
+    /// data-representation form some apps provide.
+    static func urlString(fromURLItem item: Any?) -> String? {
+        if let url = item as? URL {
+            return url.absoluteString
+        }
+        if let urlData = item as? Data,
+           let url = URL(dataRepresentation: urlData, relativeTo: nil) {
+            return url.absoluteString
+        }
+        return nil
+    }
+
+    /// Validates that shared plain text is an http(s) link and returns it, or `nil` otherwise.
+    static func sanitizedURLString(from text: String?) -> String? {
+        guard let text = text?.trimmingCharacters(in: .whitespacesAndNewlines),
+              text.hasPrefix("http"),
+              let url = URL(string: text),
+              url.scheme == "http" || url.scheme == "https" else {
+            return nil
+        }
+        return text
     }
 }

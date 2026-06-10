@@ -18,13 +18,13 @@ import androidx.compose.material.icons.outlined.History
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -40,19 +40,35 @@ import com.socialvideodownloader.shared.ui.theme.SvdPrimaryStrong
 import com.socialvideodownloader.shared.ui.theme.SvdSubtleForeground
 import com.socialvideodownloader.shared.ui.theme.SvdSurface
 
+/**
+ * A single tab in [PillNavigationBar]. The [label] is supplied by the caller so it can be
+ * localized via platform string resources — the design system stays string-free.
+ */
+@Immutable
+data class PillNavItem(
+    val label: String,
+    val icon: ImageVector,
+)
+
+/**
+ * Canonical icons for the app's primary navigation destinations. Centralized here so the
+ * Android and iOS shells share one icon set instead of choosing (and potentially diverging on)
+ * their own.
+ */
+object SvdNavIcons {
+    val Download: ImageVector = Icons.Outlined.Download
+    val Library: ImageVector = Icons.Outlined.FolderOpen
+    val History: ImageVector = Icons.Outlined.History
+}
+
 @Composable
 fun PillNavigationBar(
+    items: List<PillNavItem>,
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val shapes = LocalAppShapes.current
-    val tabs =
-        listOf(
-            TabData(label = "Download", icon = Icons.Outlined.Download),
-            TabData(label = "Library", icon = Icons.Outlined.FolderOpen),
-            TabData(label = "History", icon = Icons.Outlined.History),
-        )
 
     Box(
         modifier =
@@ -76,29 +92,28 @@ fun PillNavigationBar(
                     .border(width = 1.dp, color = SvdBorder, shape = shapes.pill)
                     .padding(Spacing.NavBarInternalPadding),
         ) {
-            tabs.forEachIndexed { index, tab ->
+            items.forEachIndexed { index, tab ->
                 val isSelected = index == selectedIndex
                 Column(
                     modifier =
                         Modifier
                             .weight(1f)
-                            .heightIn(min = 54.dp)
+                            .heightIn(min = Spacing.NavTabMinHeight)
                             .clip(shapes.navTab)
                             .background(if (isSelected) SvdPrimarySoft else Color.Transparent)
                             .semantics(mergeDescendants = true) {
                                 role = Role.Tab
-                                contentDescription = tab.label
                                 selected = isSelected
                             }
                             .clickable { onSelect(index) },
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.GapXs, Alignment.CenterVertically),
                 ) {
                     Icon(
                         imageVector = tab.icon,
                         contentDescription = null,
                         tint = if (isSelected) SvdPrimaryStrong else SvdSubtleForeground,
-                        modifier = Modifier.size(18.dp),
+                        modifier = Modifier.size(Spacing.IconMd),
                     )
                     Text(
                         text = tab.label,
@@ -112,5 +127,3 @@ fun PillNavigationBar(
         }
     }
 }
-
-private data class TabData(val label: String, val icon: ImageVector)

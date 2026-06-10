@@ -52,7 +52,10 @@ fun PlatformLoginScreen(
 
     DisposableEffect(Unit) {
         onDispose {
-            // Ensure cookies are cleaned up even if composable is disposed
+            // Destroy the WebView to avoid leaking it when leaving the login screen.
+            // Cookies persist in the shared CookieManager (not in this instance), so
+            // "Reconnect" still skips a full re-login.
+            webViewRef?.destroy()
         }
     }
 

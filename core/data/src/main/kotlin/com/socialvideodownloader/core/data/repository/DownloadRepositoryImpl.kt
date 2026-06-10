@@ -1,15 +1,15 @@
 package com.socialvideodownloader.core.data.repository
 
-import com.socialvideodownloader.core.data.local.DownloadDao
-import com.socialvideodownloader.core.data.local.SyncQueueDao
-import com.socialvideodownloader.core.data.local.SyncQueueEntity
-import com.socialvideodownloader.core.data.local.toDomain
-import com.socialvideodownloader.core.data.local.toEntity
 import com.socialvideodownloader.core.domain.model.DownloadRecord
 import com.socialvideodownloader.core.domain.model.DownloadStatus
 import com.socialvideodownloader.core.domain.repository.DownloadRepository
 import com.socialvideodownloader.core.domain.sync.BackupPreferences
 import com.socialvideodownloader.core.domain.sync.SyncManager
+import com.socialvideodownloader.shared.data.local.DownloadDao
+import com.socialvideodownloader.shared.data.local.SyncQueueDao
+import com.socialvideodownloader.shared.data.local.SyncQueueEntity
+import com.socialvideodownloader.shared.data.local.toDomain
+import com.socialvideodownloader.shared.data.local.toEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -34,7 +34,12 @@ class DownloadRepositoryImpl
 
         override suspend fun insert(record: DownloadRecord): Long {
             val id = downloadDao.insert(record.toEntity())
-            if (record.status == DownloadStatus.COMPLETED && backupPreferences.observeIsBackupEnabled().first()) {
+            // Records already marked SYNCED came FROM the cloud (e.g. restore) — re-queuing them would
+            // pointlessly re-upload data we just downloaded, so only enqueue genuinely new records.
+            if (record.status == DownloadStatus.COMPLETED &&
+                record.syncStatus != "SYNCED" &&
+                backupPreferences.observeIsBackupEnabled().first()
+            ) {
                 syncQueueDao.insert(
                     SyncQueueEntity(
                         downloadId = id,

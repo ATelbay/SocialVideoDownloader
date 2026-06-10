@@ -11,7 +11,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.socialvideodownloader.core.domain.sync.RestoreErrorReason
 import com.socialvideodownloader.shared.feature.history.RestoreState
+import com.socialvideodownloader.shared.ui.theme.SvdPrimary
 
 @Composable
 fun RestoreDialog(
@@ -20,6 +22,7 @@ fun RestoreDialog(
     progressText: (current: Int, total: Int) -> String,
     completedText: (restored: Int, skipped: Int) -> String,
     keyLostText: String,
+    genericErrorText: String,
     onDismiss: () -> Unit,
 ) {
     when (restoreState) {
@@ -38,7 +41,7 @@ fun RestoreDialog(
                                 modifier = Modifier.padding(top = 8.dp),
                             )
                         } else {
-                            CircularProgressIndicator()
+                            CircularProgressIndicator(color = SvdPrimary)
                         }
                     }
                 },
@@ -66,10 +69,9 @@ fun RestoreDialog(
                 text = {
                     Text(
                         text =
-                            if (restoreState.message.contains("key", ignoreCase = true)) {
-                                keyLostText
-                            } else {
-                                restoreState.message
+                            when (restoreState.reason) {
+                                RestoreErrorReason.KEY_UNAVAILABLE -> keyLostText
+                                RestoreErrorReason.GENERIC -> genericErrorText
                             },
                     )
                 },

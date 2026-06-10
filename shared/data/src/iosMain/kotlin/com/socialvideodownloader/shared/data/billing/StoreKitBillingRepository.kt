@@ -59,13 +59,13 @@ class StoreKitBillingRepository(
     /**
      * Initiate the StoreKit 2 purchase flow.
      *
-     * On iOS, [activityRef] is ignored — StoreKit 2 presents its own UI on top
-     * of the key window without needing an Activity reference.
+     * Not part of [BillingRepository]: launching a purchase is platform-specific
+     * (Android needs an Activity, iOS does not), so each platform exposes its own
+     * entry point. StoreKit 2 presents its own UI on top of the key window.
      *
      * Updates [observeTier] on successful purchase.
      */
-    override suspend fun launchPurchaseFlow(activityRef: Any): BillingResult {
-        // Note: activityRef is an Android concept. On iOS, StoreKit manages its own window.
+    suspend fun launchPurchaseFlow(): BillingResult {
         // TODO: Call billingProvider.purchase() which calls StoreKit 2 Product.purchase().
         val result = billingProvider.purchase()
         if (result is BillingResult.Success) {

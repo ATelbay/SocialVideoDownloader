@@ -19,15 +19,21 @@ import com.socialvideodownloader.core.domain.usecase.ExtractVideoInfoUseCase
 import com.socialvideodownloader.core.domain.usecase.FindExistingDownloadUseCase
 import com.socialvideodownloader.shared.data.billing.StoreKitBillingRepository
 import com.socialvideodownloader.shared.data.billing.StubBillingProvider
+import com.socialvideodownloader.shared.data.cloud.CloudBackupRepositoryImpl
+import com.socialvideodownloader.shared.data.cloud.CloudHistoryDataSource
 import com.socialvideodownloader.shared.data.cloud.IosBackupPreferences
 import com.socialvideodownloader.shared.data.cloud.IosCloudAuthService
-import com.socialvideodownloader.shared.data.cloud.IosCloudBackupRepository
 import com.socialvideodownloader.shared.data.cloud.IosConnectivityObserver
 import com.socialvideodownloader.shared.data.cloud.IosEncryptionService
 import com.socialvideodownloader.shared.data.cloud.IosSyncManager
+import com.socialvideodownloader.shared.data.cloud.PlatformFirestoreCloudHistoryDataSource
 import com.socialvideodownloader.shared.data.cloud.StubAuthProvider
 import com.socialvideodownloader.shared.data.cloud.StubConnectivityProvider
 import com.socialvideodownloader.shared.data.cloud.StubFirestoreProvider
+import com.socialvideodownloader.shared.data.local.ALL_MIGRATIONS
+import com.socialvideodownloader.shared.data.local.AppDatabase
+import com.socialvideodownloader.shared.data.local.DownloadDao
+import com.socialvideodownloader.shared.data.local.SyncQueueDao
 import com.socialvideodownloader.shared.data.platform.IosClipboard
 import com.socialvideodownloader.shared.data.platform.IosDownloadManager
 import com.socialvideodownloader.shared.data.platform.IosFileAccessManager
@@ -37,7 +43,10 @@ import com.socialvideodownloader.shared.data.platform.PlatformClipboard
 import com.socialvideodownloader.shared.data.platform.PlatformDownloadManager
 import com.socialvideodownloader.shared.data.platform.PlatformFileStorage
 import com.socialvideodownloader.shared.data.platform.PlatformStringProvider
+import com.socialvideodownloader.shared.data.platform.createDatabaseBuilder
+import com.socialvideodownloader.shared.data.repository.DownloadRepositoryImpl
 import com.socialvideodownloader.shared.data.repository.ServerOnlyVideoExtractorRepository
+import kotlinx.coroutines.Dispatchers
 import org.koin.dsl.module
 import platform.Foundation.NSUserDefaults
 
@@ -56,6 +65,21 @@ import platform.Foundation.NSUserDefaults
  */
 val iosDataModule =
     module {
+
+        // -------------------------------------------------------------------------
+        // Room KMP database — iOS owns the only Koin-managed instance.
+        // (On Android the database lives in the Hilt graph in :core:data.)
+        // -------------------------------------------------------------------------
+
+        single<AppDatabase> {
+            createDatabaseBuilder()
+                .addMigrations(*ALL_MIGRATIONS)
+                .build()
+        }
+        single<DownloadDao> { get<AppDatabase>().downloadDao() }
+        single<SyncQueueDao> { get<AppDatabase>().syncQueueDao() }
+        single<DownloadRepositoryImpl> { DownloadRepositoryImpl(get()) }
+        single<DownloadRepository> { get<DownloadRepositoryImpl>() }
 
         // -------------------------------------------------------------------------
         // Phase 6: Core platform implementations
@@ -101,12 +125,18 @@ val iosDataModule =
             IosConnectivityObserver(connectivityProvider = get<StubConnectivityProvider>())
         }
 
-        // Firestore cloud backup: stub Firestore provider until Firebase CocoaPod is integrated
-        // TODO: Replace StubFirestoreProvider with a real FirestoreProvider implemented in Swift
+        // Firestore cloud backup: the data source is a thin adapter over the Swift Firestore provider;
+        // all backup logic (counter, capacity, eviction, encryption) lives in CloudBackupRepositoryImpl.
+        // TODO: Replace StubFirestoreProvider with a real FirestoreProvider implemented in Swift.
+        single<CloudHistoryDataSource> {
+            PlatformFirestoreCloudHistoryDataSource(firestoreProvider = StubFirestoreProvider())
+        }
         single<CloudBackupRepository> {
-            IosCloudBackupRepository(
-                firestoreProvider = StubFirestoreProvider(),
-                encryptionService = get(),
+            CloudBackupRepositoryImpl(
+                authService = get<CloudAuthService>(),
+                encryptionService = get<EncryptionService>(),
+                dataSource = get<CloudHistoryDataSource>(),
+                ioDispatcher = Dispatchers.Default,
             )
         }
 
@@ -114,6 +144,7 @@ val iosDataModule =
         single<SyncManager> {
             IosSyncManager(
                 syncQueueDao = get(),
+                downloadDao = get(),
                 cloudBackupRepository = get(),
                 cloudAuthService = get(),
                 backupPreferences = get(),

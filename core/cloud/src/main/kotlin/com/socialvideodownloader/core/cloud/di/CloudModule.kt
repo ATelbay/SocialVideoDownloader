@@ -3,7 +3,9 @@ package com.socialvideodownloader.core.cloud.di
 import com.socialvideodownloader.core.cloud.auth.FirebaseCloudAuthService
 import com.socialvideodownloader.core.cloud.encryption.KeystoreEncryptionService
 import com.socialvideodownloader.core.cloud.preferences.CloudBackupPreferences
+import com.socialvideodownloader.core.cloud.repository.CloudHistoryDataSource
 import com.socialvideodownloader.core.cloud.repository.FirestoreCloudBackupRepository
+import com.socialvideodownloader.core.cloud.repository.FirestoreCloudHistoryDataSource
 import com.socialvideodownloader.core.cloud.sync.FirestoreSyncManager
 import com.socialvideodownloader.core.domain.repository.CloudBackupRepository
 import com.socialvideodownloader.core.domain.sync.BackupPreferences
@@ -26,6 +28,10 @@ abstract class CloudModule {
     @Binds
     @Singleton
     abstract fun bindEncryptionService(impl: KeystoreEncryptionService): EncryptionService
+
+    @Binds
+    @Singleton
+    abstract fun bindCloudHistoryDataSource(impl: FirestoreCloudHistoryDataSource): CloudHistoryDataSource
 
     @Binds
     @Singleton

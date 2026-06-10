@@ -2,30 +2,39 @@ package com.socialvideodownloader.feature.download.ui
 
 import android.content.Context
 import com.socialvideodownloader.feature.download.R
+import com.socialvideodownloader.shared.data.platform.DownloadErrorType
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
+/**
+ * Localizes a [DownloadErrorType] into user-facing notification text.
+ *
+ * Classification (raw [Throwable] → [DownloadErrorType]) is owned by the shared
+ * `DownloadErrorClassifier`, so this mapper is a pure enum → string resolver and
+ * cannot drift from the in-app error UI, which resolves the same enum.
+ */
 class ErrorMessageMapper
     @Inject
     constructor(
         @ApplicationContext private val context: Context,
     ) {
-        fun map(exception: Throwable): String {
-            val message = exception.message ?: return context.getString(R.string.download_error_generic)
-            return when {
-                message.contains("Unsupported URL", ignoreCase = true) ->
+        fun map(errorType: DownloadErrorType): String =
+            when (errorType) {
+                DownloadErrorType.UNSUPPORTED_URL ->
                     context.getString(R.string.download_error_unsupported_url)
-                message.contains("unavailable", ignoreCase = true) ||
-                    message.contains("private", ignoreCase = true) ->
-                    context.getString(R.string.download_error_unavailable)
-                message.contains("network", ignoreCase = true) ||
-                    message.contains("connect", ignoreCase = true) ||
-                    message.contains("internet", ignoreCase = true) ->
+                DownloadErrorType.NETWORK_ERROR ->
                     context.getString(R.string.download_error_network)
-                message.contains("space", ignoreCase = true) ||
-                    message.contains("storage", ignoreCase = true) ->
+                DownloadErrorType.STORAGE_FULL ->
                     context.getString(R.string.download_error_storage)
-                else -> context.getString(R.string.download_error_generic)
+                DownloadErrorType.EXTRACTION_FAILED ->
+                    context.getString(R.string.download_error_unavailable)
+                DownloadErrorType.COPYRIGHT ->
+                    context.getString(R.string.download_error_copyright)
+                DownloadErrorType.SERVER_UNAVAILABLE,
+                DownloadErrorType.AUTH_REQUIRED,
+                DownloadErrorType.DOWNLOAD_FAILED,
+                DownloadErrorType.UNKNOWN,
+                ->
+                    context.getString(R.string.download_error_generic)
             }
-        }
     }

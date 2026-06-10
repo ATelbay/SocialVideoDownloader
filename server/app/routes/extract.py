@@ -4,10 +4,12 @@ import asyncio
 from typing import Optional
 
 import yt_dlp
-from fastapi import APIRouter, Header, HTTPException, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from pydantic import BaseModel
 
 from app.config import settings
+from app.rate_limit import enforce_rate_limit
+from app.security import UnsafeUrlError, validate_public_url
 from app.ytdlp_opts import FormatInfo, filter_formats, get_ydl_opts
 
 router = APIRouter(tags=["extract"])
@@ -21,6 +23,7 @@ class ExtractResponse(BaseModel):
     title: str
     thumbnail: Optional[str]
     duration: Optional[float]
+    uploader: Optional[str]
     formats: list[FormatInfo]
 
 
@@ -29,13 +32,15 @@ async def extract_video_info(
     request_body: ExtractRequest,
     request: Request,
     x_api_key: Optional[str] = Header(default=None),
+    _rate_limit: None = Depends(enforce_rate_limit),
 ) -> ExtractResponse:
     if settings.EXTRACT_API_KEY and x_api_key != settings.EXTRACT_API_KEY:
         raise HTTPException(status_code=401, detail="Invalid API key")
 
-    url = request_body.url.strip() if request_body.url else ""
-    if not url:
-        raise HTTPException(status_code=400, detail="URL must not be empty")
+    try:
+        url = validate_public_url(request_body.url)
+    except UnsafeUrlError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     # Handle optional platform cookies
     cookies_b64 = request.headers.get("X-Platform-Cookies")
@@ -55,7 +60,12 @@ async def extract_video_info(
 
     try:
         try:
-            info = await asyncio.to_thread(_extract)
+            info = await asyncio.wait_for(
+                asyncio.to_thread(_extract),
+                timeout=settings.EXTRACT_TIMEOUT_SECONDS,
+            )
+        except asyncio.TimeoutError as exc:
+            raise HTTPException(status_code=504, detail="Extraction timed out") from exc
         except yt_dlp.utils.DownloadError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
         except yt_dlp.utils.ExtractorError as exc:
@@ -78,5 +88,6 @@ async def extract_video_info(
         title=info.get("title", ""),
         thumbnail=info.get("thumbnail"),
         duration=info.get("duration"),
+        uploader=info.get("uploader"),
         formats=filter_formats(info),
     )

@@ -21,6 +21,14 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.socialvideodownloader.shared.di.generated.resources.Res
+import com.socialvideodownloader.shared.di.generated.resources.nav_tab_download
+import com.socialvideodownloader.shared.di.generated.resources.nav_tab_history
+import com.socialvideodownloader.shared.di.generated.resources.nav_tab_library
+import com.socialvideodownloader.shared.di.generated.resources.size_unit_b
+import com.socialvideodownloader.shared.di.generated.resources.size_unit_gb
+import com.socialvideodownloader.shared.di.generated.resources.size_unit_kb
+import com.socialvideodownloader.shared.di.generated.resources.size_unit_mb
 import com.socialvideodownloader.shared.feature.download.DownloadIntent
 import com.socialvideodownloader.shared.feature.download.SharedDownloadViewModel
 import com.socialvideodownloader.shared.feature.download.ui.DownloadScreen
@@ -30,19 +38,23 @@ import com.socialvideodownloader.shared.feature.history.platform.shareFile
 import com.socialvideodownloader.shared.feature.history.platform.triggerGoogleSignIn
 import com.socialvideodownloader.shared.feature.history.ui.GoogleSignInResult
 import com.socialvideodownloader.shared.feature.history.ui.HistoryScreen
-import com.socialvideodownloader.shared.feature.history.ui.HistoryStrings
 import com.socialvideodownloader.shared.feature.history.ui.formatTimestamp
+import com.socialvideodownloader.shared.feature.history.ui.rememberHistoryStrings
 import com.socialvideodownloader.shared.feature.library.SharedLibraryViewModel
 import com.socialvideodownloader.shared.feature.library.ui.LibraryScreen
-import com.socialvideodownloader.shared.feature.library.ui.LibraryStrings
+import com.socialvideodownloader.shared.feature.library.ui.rememberLibraryStrings
+import com.socialvideodownloader.shared.ui.components.PillNavItem
 import com.socialvideodownloader.shared.ui.components.PillNavigationBar
+import com.socialvideodownloader.shared.ui.components.SvdNavIcons
 import com.socialvideodownloader.shared.ui.theme.SvdBg
 import com.socialvideodownloader.shared.ui.theme.SvdTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.parameter.parametersOf
 import org.koin.mp.KoinPlatform
+import platform.Foundation.NSLog
 import com.socialvideodownloader.shared.feature.download.platform.PlatformActions as DownloadPlatformActions
 
 private const val DEST_DOWNLOAD = "download"
@@ -56,6 +68,18 @@ fun SharedApp() {
     SvdTheme {
         val navController = rememberNavController()
         var selectedTab by rememberSaveable { mutableStateOf(0) }
+
+        val sizeUnitB = stringResource(Res.string.size_unit_b)
+        val sizeUnitKb = stringResource(Res.string.size_unit_kb)
+        val sizeUnitMb = stringResource(Res.string.size_unit_mb)
+        val sizeUnitGb = stringResource(Res.string.size_unit_gb)
+
+        val navItems =
+            listOf(
+                PillNavItem(stringResource(Res.string.nav_tab_download), SvdNavIcons.Download),
+                PillNavItem(stringResource(Res.string.nav_tab_library), SvdNavIcons.Library),
+                PillNavItem(stringResource(Res.string.nav_tab_history), SvdNavIcons.History),
+            )
 
         val downloadVm =
             remember {
@@ -129,18 +153,18 @@ fun SharedApp() {
                                     restoreState = true
                                 }
                             },
-                            strings = defaultLibraryStrings(),
+                            strings = rememberLibraryStrings(),
                         )
                     }
                     composable(DEST_HISTORY) {
                         HistoryScreen(
                             viewModel = historyVm,
-                            strings = defaultHistoryStrings(),
+                            strings = rememberHistoryStrings(),
                             formattedDate = { epochMillis ->
                                 formatEpochMillis(epochMillis)
                             },
                             formattedSize = { bytes ->
-                                formatBytes(bytes)
+                                formatBytes(bytes, sizeUnitB, sizeUnitKb, sizeUnitMb, sizeUnitGb)
                             },
                             onNavigateToDownload = { initialUrl, _ ->
                                 selectedTab = 0
@@ -164,7 +188,10 @@ fun SharedApp() {
                             onLaunchGoogleSignIn = {
                                 triggerGoogleSignIn().fold(
                                     onSuccess = { GoogleSignInResult.Success(it) },
-                                    onFailure = { GoogleSignInResult.Failed(it.message) },
+                                    onFailure = {
+                                        NSLog("Google sign-in failed: ${it.message}")
+                                        GoogleSignInResult.Failed
+                                    },
                                 )
                             },
                             onLaunchUpgradeFlow = {
@@ -182,6 +209,7 @@ fun SharedApp() {
                         .background(SvdBg),
             ) {
                 PillNavigationBar(
+                    items = navItems,
                     selectedIndex = selectedTab,
                     onSelect = { index ->
                         selectedTab = index
@@ -209,76 +237,20 @@ fun SharedApp() {
     }
 }
 
-private fun formatBytes(bytes: Long): String {
-    if (bytes < 1024) return "$bytes B"
+private fun formatBytes(
+    bytes: Long,
+    unitB: String,
+    unitKb: String,
+    unitMb: String,
+    unitGb: String,
+): String {
+    if (bytes < 1024) return "$bytes $unitB"
     val kb = bytes / 1024.0
-    if (kb < 1024) return "${kb.toInt()} KB"
+    if (kb < 1024) return "${kb.toInt()} $unitKb"
     val mb = kb / 1024.0
-    if (mb < 1024) return "${(mb * 10).toInt() / 10.0} MB"
+    if (mb < 1024) return "${(mb * 10).toInt() / 10.0} $unitMb"
     val gb = mb / 1024.0
-    return "${(gb * 100).toInt() / 100.0} GB"
+    return "${(gb * 100).toInt() / 100.0} $unitGb"
 }
 
 private fun formatEpochMillis(epochMillis: Long): String = formatTimestamp(epochMillis)
-
-private fun defaultLibraryStrings() =
-    LibraryStrings(
-        screenTitle = "Library",
-        emptyTitle = "No downloads yet",
-        emptyDescription = "Videos you download will appear here",
-        startDownloading = "Start downloading",
-        openError = "Could not open file",
-        shareError = "Could not share file",
-        deleted = "File deleted",
-    )
-
-private fun defaultHistoryStrings() =
-    HistoryStrings(
-        screenTitle = "History",
-        filterActionLabel = "Search",
-        searchHint = "Search downloads…",
-        emptyTitle = "No history yet",
-        emptyDescription = "Your download history will appear here",
-        noResultsDescription = "No results for your search",
-        startDownloadingLabel = "Start downloading",
-        startNewDownloadLabel = "New download",
-        restoreButtonLabel = "Restore from cloud",
-        capacityBannerText = { used, limit -> "$used of $limit backups used" },
-        capacityUpgradeLabel = "Upgrade",
-        okLabel = "OK",
-        restoreProgressText = { current, total -> "Restoring $current of $total…" },
-        restoreCompletedText = { restored, skipped -> "Restored $restored, skipped $skipped" },
-        restoreKeyLostText = "Encryption key not found. Restore unavailable.",
-        deleteTitle = "Delete download",
-        deleteBodyText = "Are you sure you want to delete this download?",
-        deleteFilesLabel = "Also delete file from device",
-        deleteCancelLabel = "Cancel",
-        deleteConfirmLabel = "Delete",
-        bottomSheetCopyLinkLabel = "Copy link",
-        bottomSheetShareLabel = "Share",
-        bottomSheetDeleteLabel = "Delete",
-        upgradeTitle = "Upgrade to Pro",
-        upgradeDescription = "Unlock unlimited cloud backup for all your downloads",
-        upgradePriceLabel = "from \$1.99 / month",
-        upgradeBuyLabel = "Upgrade",
-        upgradeCancelLabel = "Not now",
-        cloudBackupToggleLabel = "Cloud backup",
-        cloudSignInLabel = "Sign in",
-        cloudSignOutLabel = "Sign out",
-        cloudSignedInAs = "Signed in as",
-        cloudSignInFailedMessage = "Sign-in failed. Please try again.",
-        cloudBackupDisabledText = "Backup disabled",
-        cloudBackupNeverText = "Never synced",
-        cloudBackupSyncingText = "Syncing…",
-        cloudBackupSyncedText = { time -> "Last synced $time" },
-        cloudBackupPausedText = "Backup paused",
-        cloudBackupErrorText = "Backup error",
-        msgDeleted = "Download deleted",
-        msgAllDeleted = "All downloads deleted",
-        msgLinkCopied = "Link copied",
-        msgCloudSyncError = "Cloud sync error",
-        msgFileUnavailable = "File unavailable",
-        msgDeleteFileFailed = "Could not delete file",
-        msgOpenError = "Could not open file",
-        msgShareError = "Could not share file",
-    )

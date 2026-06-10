@@ -38,6 +38,7 @@ compose-multiplatform = "1.9.3"
 navigation-compose-multiplatform = "2.9.1"
 coil3 = "3.1.0"
 securityCrypto = "1.1.0-alpha06"
+kotlincryptoHash = "0.7.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -104,6 +105,8 @@ koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = 
 multiplatform-settings = { group = "com.russhwolf", name = "multiplatform-settings", version.ref = "multiplatformSettings" }
 multiplatform-settings-no-arg = { group = "com.russhwolf", name = "multiplatform-settings-no-arg", version.ref = "multiplatformSettings" }
 androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
+# Pure-Kotlin multiplatform SHA-256 for the shared cloud document id (commonMain).
+kotlincrypto-sha2 = { group = "org.kotlincrypto.hash", name = "sha2", version.ref = "kotlincryptoHash" }
 
 # Gradle plugin artifacts for build-logic convention plugins
 android-gradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }

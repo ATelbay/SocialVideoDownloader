@@ -19,6 +19,29 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.socialvideodownloader.shared.data.platform.DownloadErrorType
+import com.socialvideodownloader.shared.feature.download.generated.resources.Res
+import com.socialvideodownloader.shared.feature.download.generated.resources.action_new_download
+import com.socialvideodownloader.shared.feature.download.generated.resources.action_retry
+import com.socialvideodownloader.shared.feature.download.generated.resources.auth_connect_label
+import com.socialvideodownloader.shared.feature.download.generated.resources.auth_reconnect_label
+import com.socialvideodownloader.shared.feature.download.generated.resources.error_auth_body
+import com.socialvideodownloader.shared.feature.download.generated.resources.error_auth_title
+import com.socialvideodownloader.shared.feature.download.generated.resources.error_copyright_body
+import com.socialvideodownloader.shared.feature.download.generated.resources.error_copyright_title
+import com.socialvideodownloader.shared.feature.download.generated.resources.error_download_body
+import com.socialvideodownloader.shared.feature.download.generated.resources.error_download_title
+import com.socialvideodownloader.shared.feature.download.generated.resources.error_extraction_body
+import com.socialvideodownloader.shared.feature.download.generated.resources.error_extraction_title
+import com.socialvideodownloader.shared.feature.download.generated.resources.error_network_body
+import com.socialvideodownloader.shared.feature.download.generated.resources.error_network_title
+import com.socialvideodownloader.shared.feature.download.generated.resources.error_server_body
+import com.socialvideodownloader.shared.feature.download.generated.resources.error_server_title
+import com.socialvideodownloader.shared.feature.download.generated.resources.error_storage_body
+import com.socialvideodownloader.shared.feature.download.generated.resources.error_storage_title
+import com.socialvideodownloader.shared.feature.download.generated.resources.error_unknown_body
+import com.socialvideodownloader.shared.feature.download.generated.resources.error_unknown_title
+import com.socialvideodownloader.shared.feature.download.generated.resources.error_unsupported_body
+import com.socialvideodownloader.shared.feature.download.generated.resources.error_unsupported_title
 import com.socialvideodownloader.shared.network.auth.SupportedPlatform
 import com.socialvideodownloader.shared.ui.components.GradientButton
 import com.socialvideodownloader.shared.ui.components.TextActionLink
@@ -27,6 +50,7 @@ import com.socialvideodownloader.shared.ui.theme.SvdError
 import com.socialvideodownloader.shared.ui.theme.SvdErrorSoft
 import com.socialvideodownloader.shared.ui.theme.SvdForeground
 import com.socialvideodownloader.shared.ui.theme.SvdMutedForeground
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun DownloadErrorContent(
@@ -39,7 +63,36 @@ fun DownloadErrorContent(
     isReconnect: Boolean = false,
     onConnectPlatformClicked: (SupportedPlatform) -> Unit = {},
 ) {
-    val (title, body) = errorPresentation(errorType = errorType, message = message)
+    val title =
+        when (errorType) {
+            DownloadErrorType.NETWORK_ERROR -> stringResource(Res.string.error_network_title)
+            DownloadErrorType.SERVER_UNAVAILABLE -> stringResource(Res.string.error_server_title)
+            DownloadErrorType.EXTRACTION_FAILED -> stringResource(Res.string.error_extraction_title)
+            DownloadErrorType.UNSUPPORTED_URL -> stringResource(Res.string.error_unsupported_title)
+            DownloadErrorType.STORAGE_FULL -> stringResource(Res.string.error_storage_title)
+            DownloadErrorType.DOWNLOAD_FAILED -> stringResource(Res.string.error_download_title)
+            DownloadErrorType.AUTH_REQUIRED -> stringResource(Res.string.error_auth_title)
+            DownloadErrorType.COPYRIGHT -> stringResource(Res.string.error_copyright_title)
+            DownloadErrorType.UNKNOWN -> stringResource(Res.string.error_unknown_title)
+        }
+
+    val fallbackBody =
+        when (errorType) {
+            DownloadErrorType.NETWORK_ERROR -> stringResource(Res.string.error_network_body)
+            DownloadErrorType.SERVER_UNAVAILABLE -> stringResource(Res.string.error_server_body)
+            DownloadErrorType.EXTRACTION_FAILED -> stringResource(Res.string.error_extraction_body)
+            DownloadErrorType.UNSUPPORTED_URL -> stringResource(Res.string.error_unsupported_body)
+            DownloadErrorType.STORAGE_FULL -> stringResource(Res.string.error_storage_body)
+            DownloadErrorType.DOWNLOAD_FAILED -> stringResource(Res.string.error_download_body)
+            DownloadErrorType.AUTH_REQUIRED -> stringResource(Res.string.error_auth_body)
+            DownloadErrorType.COPYRIGHT -> stringResource(Res.string.error_copyright_body)
+            DownloadErrorType.UNKNOWN -> stringResource(Res.string.error_unknown_body)
+        }
+
+    val body =
+        message
+            ?.takeUnless { it.isBlank() || it == errorType.name }
+            ?: fallbackBody
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -82,9 +135,9 @@ fun DownloadErrorContent(
             GradientButton(
                 text =
                     if (isReconnect) {
-                        DownloadAuthStrings.reconnectLabel(platformForAuth.displayName)
+                        stringResource(Res.string.auth_reconnect_label, platformForAuth.displayName)
                     } else {
-                        DownloadAuthStrings.connectLabel(platformForAuth.displayName)
+                        stringResource(Res.string.auth_connect_label, platformForAuth.displayName)
                     },
                 onClick = { onConnectPlatformClicked(platformForAuth) },
                 modifier = Modifier.fillMaxWidth(),
@@ -92,51 +145,15 @@ fun DownloadErrorContent(
         }
 
         GradientButton(
-            text = "Retry",
+            text = stringResource(Res.string.action_retry),
             onClick = onRetryClicked,
             icon = Icons.Outlined.Refresh,
             modifier = Modifier.fillMaxWidth(),
         )
 
         TextActionLink(
-            text = "New Download",
+            text = stringResource(Res.string.action_new_download),
             onClick = onNewDownloadClicked,
         )
     }
-}
-
-private fun errorPresentation(
-    errorType: DownloadErrorType,
-    message: String?,
-): Pair<String, String> {
-    val fallbackBody =
-        when (errorType) {
-            DownloadErrorType.NETWORK_ERROR -> "Network error. Check your connection and try again."
-            DownloadErrorType.SERVER_UNAVAILABLE -> "Download server is unavailable. Try again later."
-            DownloadErrorType.EXTRACTION_FAILED -> "Could not extract video info. The video may be private or unavailable."
-            DownloadErrorType.UNSUPPORTED_URL -> "This URL is not supported."
-            DownloadErrorType.STORAGE_FULL -> "Not enough storage space to save the download."
-            DownloadErrorType.DOWNLOAD_FAILED -> "Download failed. Please try again."
-            DownloadErrorType.AUTH_REQUIRED -> "Authentication required to download this content."
-            DownloadErrorType.UNKNOWN -> "Something went wrong. Please try again."
-        }
-
-    val title =
-        when (errorType) {
-            DownloadErrorType.NETWORK_ERROR -> "Network error"
-            DownloadErrorType.SERVER_UNAVAILABLE -> "Server unavailable"
-            DownloadErrorType.EXTRACTION_FAILED -> "Failed to extract"
-            DownloadErrorType.UNSUPPORTED_URL -> "Unsupported URL"
-            DownloadErrorType.STORAGE_FULL -> "Storage full"
-            DownloadErrorType.DOWNLOAD_FAILED -> "Download failed"
-            DownloadErrorType.AUTH_REQUIRED -> "Login required"
-            DownloadErrorType.UNKNOWN -> "Something went wrong"
-        }
-
-    val body =
-        message
-            ?.takeUnless { it.isBlank() || it == errorType.name }
-            ?: fallbackBody
-
-    return title to body
 }

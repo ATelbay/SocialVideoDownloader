@@ -70,7 +70,6 @@ dependencies {
     implementation(project(":feature:library"))
     implementation(project(":core:domain"))
     implementation(project(":core:data"))
-    implementation(project(":core:ui"))
     implementation(project(":core:cloud"))
     implementation(project(":core:billing"))
     implementation(project(":shared:data"))

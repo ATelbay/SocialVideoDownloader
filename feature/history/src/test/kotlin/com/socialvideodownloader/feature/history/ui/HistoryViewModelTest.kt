@@ -1,6 +1,7 @@
 package com.socialvideodownloader.feature.history.ui
 
 import app.cash.turbine.test
+import com.socialvideodownloader.core.billing.PurchaseFlowLauncher
 import com.socialvideodownloader.core.domain.model.DownloadRecord
 import com.socialvideodownloader.core.domain.model.DownloadStatus
 import com.socialvideodownloader.core.domain.model.SyncStatus
@@ -16,6 +17,7 @@ import com.socialvideodownloader.feature.history.testdouble.FakeDownloadReposito
 import com.socialvideodownloader.feature.history.testdouble.FakeHistoryFileManager
 import com.socialvideodownloader.feature.history.testutil.MainDispatcherRule
 import com.socialvideodownloader.shared.data.platform.PlatformClipboard
+import com.socialvideodownloader.shared.feature.history.DeleteHistoryItemUseCaseShared
 import com.socialvideodownloader.shared.feature.history.DeleteTarget.Single
 import com.socialvideodownloader.shared.feature.history.HistoryEffect.OpenContent
 import com.socialvideodownloader.shared.feature.history.HistoryEffect.RetryDownload
@@ -61,6 +63,7 @@ class HistoryViewModelTest {
     private val restoreFromCloudUseCase = mockk<RestoreFromCloudUseCase>(relaxed = true)
     private val cloudAuthService = mockk<CloudAuthService>(relaxed = true)
     private val clipboard = mockk<PlatformClipboard>(relaxed = true)
+    private val purchaseFlowLauncher = mockk<PurchaseFlowLauncher>(relaxed = true)
     private lateinit var viewModel: HistoryViewModel
 
     private lateinit var testRecords: List<DownloadRecord>
@@ -83,6 +86,7 @@ class HistoryViewModelTest {
         HistoryViewModel(
             downloadRepository = repository,
             fileManager = fileManager,
+            deleteHistoryItemUseCase = DeleteHistoryItemUseCaseShared(repository, fileManager),
             observeCloudCapacity = observeCloudCapacity,
             billingRepository = billingRepository,
             enableCloudBackupUseCase = enableCloudBackupUseCase,
@@ -92,6 +96,7 @@ class HistoryViewModelTest {
             restoreFromCloudUseCase = restoreFromCloudUseCase,
             cloudAuthService = cloudAuthService,
             clipboard = clipboard,
+            purchaseFlowLauncher = purchaseFlowLauncher,
         )
 
     private suspend fun emitRecords(records: List<DownloadRecord>) {
