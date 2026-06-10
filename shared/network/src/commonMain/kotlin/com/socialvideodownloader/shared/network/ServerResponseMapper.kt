@@ -40,12 +40,20 @@ class ServerResponseMapper {
 
     private fun mapFormat(dto: ServerFormatDto): VideoFormatOption {
         val height = parseHeight(dto.resolution)
-        val isAudioOnly = height == null && dto.ext in audioOnlyExtensions
+        val hasVideoCodec = dto.vcodec != null && dto.vcodec != "none"
+        val hasAudioCodec = dto.acodec != null && dto.acodec != "none"
+        // Codec metadata is authoritative when present: audio-only webm/opus streams carry no
+        // resolution but their ext ("webm") is not in audioOnlyExtensions, so the ext heuristic
+        // would misclassify them as video.
+        val isAudioOnly =
+            if (dto.vcodec != null && dto.acodec != null) {
+                hasAudioCodec && !hasVideoCodec
+            } else {
+                height == null && dto.ext in audioOnlyExtensions
+            }
         val label = buildLabel(height, dto.ext, isAudioOnly)
 
-        val isVideoOnly =
-            dto.vcodec != null && dto.vcodec != "none" &&
-                (dto.acodec == null || dto.acodec == "none")
+        val isVideoOnly = hasVideoCodec && !hasAudioCodec
 
         return VideoFormatOption(
             formatId = dto.formatId,

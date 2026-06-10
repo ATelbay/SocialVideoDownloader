@@ -156,6 +156,38 @@ class ServerResponseMapperTest {
     }
 
     @Test
+    fun mapFormat_detectsAudioOnly_forWebmOpus_byCodecs() {
+        // YouTube opus audio streams have ext "webm", which the ext heuristic alone
+        // would misclassify as video — codec metadata must win.
+        val response =
+            ServerExtractResponse(
+                title = "Test",
+                thumbnail = null,
+                duration = null,
+                uploader = null,
+                formats =
+                    listOf(
+                        ServerFormatDto(
+                            formatId = "251",
+                            ext = "webm",
+                            resolution = null,
+                            filesize = 2_500_000L,
+                            url = "https://example.com/a.webm",
+                            vcodec = "none",
+                            acodec = "opus",
+                        ),
+                    ),
+            )
+
+        val metadata = mapper.mapToMetadata(response, sourceUrl)
+
+        val format = metadata.formats[0]
+        assertTrue(format.isAudioOnly)
+        assertFalse(format.isVideoOnly)
+        assertEquals("webm audio", format.label)
+    }
+
+    @Test
     fun mapFormat_parsesResolutionCorrectly_fromWidthxHeight() {
         val response =
             ServerExtractResponse(

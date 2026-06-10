@@ -2,6 +2,7 @@ package com.socialvideodownloader.core.data.remote
 
 import android.content.Context
 import android.util.Log
+import com.socialvideodownloader.core.data.media.StreamMuxer
 import com.socialvideodownloader.core.domain.di.IoDispatcher
 import com.socialvideodownloader.core.domain.model.DownloadRequest
 import com.socialvideodownloader.core.domain.model.VideoMetadata
@@ -31,6 +32,7 @@ class FallbackVideoExtractorRepository
         private val wsApi: WebSocketExtractorApi,
         private val serverApi: ServerVideoExtractorApi,
         private val httpClient: HttpClient,
+        private val streamMuxer: StreamMuxer,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
         @ApplicationContext private val context: Context,
     ) : VideoExtractorRepository {
@@ -80,22 +82,84 @@ class FallbackVideoExtractorRepository
                         request.videoTitle
                             .replace(Regex("[^a-zA-Z0-9._\\-]"), "_")
                             .take(200)
-                    // TODO: add a dedicated `ext` field to DownloadRequest for reliable extension derivation
-                    // formatLabel is built as "$ext audio", "${height}p $ext", or "$ext" — ext is the last word
-                    val ext = request.formatLabel.trim().substringAfterLast(' ').takeIf { it.isNotEmpty() } ?: "mp4"
+                    val ext = request.ext.ifBlank { "mp4" }
                     val outputFile = File(outputDir, "$safeTitle.$ext")
 
-                    downloadToFile(
-                        url = directUrl,
-                        outputFile = outputFile,
-                        requestId = request.id,
-                        onProgress = callback,
-                    )
+                    val audioUrl = request.audioDirectUrl
+                    if (audioUrl != null) {
+                        downloadAndMux(directUrl, audioUrl, outputFile, ext, request.id, callback)
+                    } else {
+                        downloadToFile(
+                            url = directUrl,
+                            outputFile = outputFile,
+                            requestId = request.id,
+                            onProgress = callback,
+                        )
+                    }
                 }
             } else {
                 local.download(request, callback)
             }
         }
+
+        /**
+         * Video-only DASH stream + separate audio stream: fetch both over HTTP and merge them
+         * on-device. yt-dlp's `+bestaudio` merge never runs on this path, so without this step
+         * the saved file would have no audio track.
+         */
+        private suspend fun downloadAndMux(
+            videoUrl: String,
+            audioUrl: String,
+            outputFile: File,
+            containerExt: String,
+            requestId: String,
+            onProgress: (Float, Long, String) -> Unit,
+        ): String {
+            val videoTemp = File(outputFile.parentFile, "${outputFile.nameWithoutExtension}.video.$containerExt")
+            val audioTemp = File(outputFile.parentFile, "${outputFile.nameWithoutExtension}.audio.$containerExt")
+            return try {
+                downloadToFile(videoUrl, videoTemp, requestId) { progress, eta, line ->
+                    onProgress(scaleProgress(progress, 0f, VIDEO_PROGRESS_END), eta, line)
+                }
+                downloadToFile(audioUrl, audioTemp, requestId) { progress, eta, line ->
+                    onProgress(scaleProgress(progress, VIDEO_PROGRESS_END, AUDIO_PROGRESS_END), eta, line)
+                }
+                // Third param is a yt-dlp speed string on the local path; keep it empty here.
+                onProgress(AUDIO_PROGRESS_END, 0L, "")
+                try {
+                    streamMuxer.mux(videoTemp, audioTemp, outputFile, containerExt)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    // Keep the video-only stream rather than failing the whole download —
+                    // this matches the pre-mux behavior for devices/codecs MediaMuxer rejects.
+                    Log.w(TAG, "On-device mux failed, saving video without audio", e)
+                    outputFile.delete()
+                    if (!videoTemp.renameTo(outputFile)) {
+                        videoTemp.copyTo(outputFile, overwrite = true)
+                    }
+                }
+                onProgress(100f, 0L, "")
+                outputFile.absolutePath
+            } catch (e: Exception) {
+                outputFile.delete()
+                throw e
+            } finally {
+                videoTemp.delete()
+                audioTemp.delete()
+            }
+        }
+
+        private fun scaleProgress(
+            progress: Float,
+            start: Float,
+            end: Float,
+        ): Float =
+            if (progress < 0f) {
+                start
+            } else {
+                start + (progress.coerceAtMost(100f) / 100f) * (end - start)
+            }
 
         private suspend fun downloadToFile(
             url: String,
@@ -147,5 +211,11 @@ class FallbackVideoExtractorRepository
 
         companion object {
             private const val TAG = "FallbackExtractor"
+
+            // Progress segments for the two-stream download: video 0-85%, audio 85-95%,
+            // then muxing finishes at 100%. Monotonic so the service's progress-drop
+            // muxing heuristic never falsely triggers.
+            private const val VIDEO_PROGRESS_END = 85f
+            private const val AUDIO_PROGRESS_END = 95f
         }
     }

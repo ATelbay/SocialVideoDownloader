@@ -2,6 +2,7 @@ package com.socialvideodownloader.shared.feature.download
 
 import com.socialvideodownloader.core.domain.model.DownloadProgress
 import com.socialvideodownloader.core.domain.model.DownloadRequest
+import com.socialvideodownloader.core.domain.model.bestMuxCompatibleAudio
 import com.socialvideodownloader.core.domain.usecase.ExtractVideoInfoUseCase
 import com.socialvideodownloader.core.domain.usecase.FindExistingDownloadUseCase
 import com.socialvideodownloader.shared.data.platform.DownloadErrorType
@@ -459,6 +460,18 @@ class SharedDownloadViewModel(
                 .find { it.formatId == state.selectedFormatId } ?: return
         val requestId = generateUuid()
 
+        // Direct-URL downloads (server extraction path) fetch a single stream over HTTP, so a
+        // video-only DASH format would produce a silent file. Attach a mux-compatible audio
+        // stream URL so the platform downloader can merge both on-device.
+        val audioDirectUrl =
+            if (selectedFormat.isVideoOnly && selectedFormat.directDownloadUrl != null) {
+                state.metadata.formats
+                    .bestMuxCompatibleAudio(selectedFormat.ext)
+                    ?.directDownloadUrl
+            } else {
+                null
+            }
+
         val request =
             DownloadRequest(
                 id = requestId,
@@ -473,6 +486,7 @@ class SharedDownloadViewModel(
                 shareOnly = shareOnly,
                 existingRecordId = existingRecordId,
                 directDownloadUrl = selectedFormat.directDownloadUrl,
+                audioDirectUrl = audioDirectUrl,
             )
 
         _uiState.value =
