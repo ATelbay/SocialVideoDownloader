@@ -22,6 +22,7 @@ import platform.Foundation.NSFileManager
 import platform.Foundation.NSLock
 import platform.Foundation.NSLog
 import platform.Foundation.NSProcessInfo
+import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSURL
 import platform.Foundation.NSURLSession
 import platform.Foundation.NSURLSessionConfiguration
@@ -35,6 +36,12 @@ private const val BACKGROUND_SESSION_ID = "com.socialvideodownloader.ios.downloa
 private const val SVD_DIRECTORY = "SocialVideoDownloader"
 private const val BACKGROUND_SESSION_UNAVAILABLE_CODE = 4097L
 private const val NS_URL_ERROR_UNKNOWN = -1L
+private const val MUX_STAGING_DIRECTORY = "svd_mux"
+private const val MUX_AUDIO_FILE_NAME = "audio.m4a"
+
+// AVFoundation cannot read webm, so on-device muxing is limited to mp4/m4v containers;
+// webm video-only formats keep the existing single-stream (no audio) behavior.
+private val MUX_COMPATIBLE_EXTS = setOf("mp4", "m4v")
 
 /**
  * iOS implementation of [PlatformDownloadManager] using NSURLSession background downloads.
@@ -44,6 +51,10 @@ private const val NS_URL_ERROR_UNKNOWN = -1L
  * - On completion the file is moved from the system temp location to
  *   `Documents/SocialVideoDownloader/`.
  * - State is exposed as a [StateFlow] consumed by [SharedDownloadViewModel].
+ * - Video-only mp4/m4v formats with [DownloadRequest.audioDirectUrl] download both streams
+ *   sequentially and merge them on-device via [IosStreamMuxer]; webm stays single-stream
+ *   (AVFoundation cannot read webm). If the app is killed between the two stages the second
+ *   stage is lost — the same in-memory-registry limitation as single-stream downloads.
  */
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 class IosDownloadManager : PlatformDownloadManager {
@@ -60,11 +71,19 @@ class IosDownloadManager : PlatformDownloadManager {
         FOREGROUND,
     }
 
+    private enum class MuxStage {
+        VIDEO,
+        AUDIO,
+    }
+
     private class ActiveDownload(
         val request: DownloadRequest,
-        val task: NSURLSessionDownloadTask,
+        var task: NSURLSessionDownloadTask,
         val sessionMode: SessionMode,
         var hasReportedProgress: Boolean = false,
+        val isMux: Boolean = false,
+        var stage: MuxStage = MuxStage.VIDEO,
+        var stagedVideoUrl: NSURL? = null,
     )
 
     // Map requestId → active download so we can cancel by ID.
@@ -112,6 +131,8 @@ class IosDownloadManager : PlatformDownloadManager {
             active
         }
 
+    private val streamMuxer = IosStreamMuxer()
+
     private val delegate = DownloadSessionDelegate()
     private val backgroundSession: NSURLSession by lazy {
         val config =
@@ -134,11 +155,23 @@ class IosDownloadManager : PlatformDownloadManager {
             val activeDownload = peekByTaskId(taskId) ?: return@onProgress
             activeDownload.hasReportedProgress = true
             val request = activeDownload.request
-            val progress =
+            val rawProgress =
                 if (totalExpected > 0) {
                     totalWritten.toFloat() / totalExpected.toFloat()
                 } else {
                     -1f
+                }
+            val progress =
+                if (activeDownload.isMux) {
+                    // Two-stream downloads map each stream into its segment of the overall
+                    // progress; the remaining 0.95..1 is the on-device mux + finalize.
+                    when (activeDownload.stage) {
+                        MuxStage.VIDEO -> scaleMuxProgress(rawProgress, 0f, MUX_VIDEO_PROGRESS_END)
+                        MuxStage.AUDIO ->
+                            scaleMuxProgress(rawProgress, MUX_VIDEO_PROGRESS_END, MUX_AUDIO_PROGRESS_END)
+                    }
+                } else {
+                    rawProgress
                 }
             val speedBytesPerSec = bytesWritten // crude approximation per callback
             _downloadState.value =
@@ -164,12 +197,21 @@ class IosDownloadManager : PlatformDownloadManager {
         delegate.onCompleted = onCompleted@{ taskId, tempUrl ->
             val activeDownload = removeByTaskId(taskId) ?: return@onCompleted
             val request = activeDownload.request
-            activeRequestId = null
             log(
                 "download_completed requestId=${request.id} " +
-                    "mode=${activeDownload.sessionMode.name.lowercase()} title=${request.videoTitle}",
+                    "mode=${activeDownload.sessionMode.name.lowercase()} " +
+                    "stage=${if (activeDownload.isMux) activeDownload.stage.name.lowercase() else "single"} " +
+                    "title=${request.videoTitle}",
             )
 
+            if (activeDownload.isMux) {
+                // The download stays active across the audio stage and the mux, so
+                // activeRequestId is cleared inside the mux handlers instead of here.
+                handleMuxStageCompleted(activeDownload, tempUrl)
+                return@onCompleted
+            }
+
+            activeRequestId = null
             try {
                 // URLSession's temporary file may be removed as soon as this callback returns,
                 // so finalize it synchronously while the location is still valid.
@@ -198,6 +240,9 @@ class IosDownloadManager : PlatformDownloadManager {
             val activeDownload = removeByTaskId(taskId) ?: return@onFailed
             val request = activeDownload.request
             if (activeRequestId == request.id) activeRequestId = null
+            // The foreground fallback below restarts from the VIDEO stage, so the staging
+            // directory is safe to drop on any failure path.
+            if (activeDownload.isMux) cleanupMuxStaging(request.id)
 
             val code = error?.code?.toLong()
             val domain = error?.domain ?: "unknown"
@@ -271,6 +316,7 @@ class IosDownloadManager : PlatformDownloadManager {
     override fun cancelDownload(requestId: String) {
         val activeDownload = removeByRequestId(requestId) ?: return
         activeDownload.task.cancel()
+        if (activeDownload.isMux) cleanupMuxStaging(requestId)
         // Delegate onFailed with NSURLErrorCancelled (-999) handles state update.
     }
 
@@ -307,10 +353,168 @@ class IosDownloadManager : PlatformDownloadManager {
             }
 
         val task = session.downloadTaskWithURL(url)
-        val activeDownload = ActiveDownload(request = request, task = task, sessionMode = sessionMode)
+        val activeDownload =
+            ActiveDownload(
+                request = request,
+                task = task,
+                sessionMode = sessionMode,
+                isMux = shouldMux(request),
+            )
         registerDownload(activeDownload)
         activeRequestId = request.id
         task.resume()
+    }
+
+    // --- Two-stream (video + audio) mux support ---
+
+    /**
+     * Single decision point for the two-stream path: the shared ViewModel provides
+     * [DownloadRequest.audioDirectUrl] for video-only formats, and AVFoundation can only
+     * mux mp4/m4v containers (webm stays single-stream, a known iOS limitation).
+     */
+    private fun shouldMux(request: DownloadRequest): Boolean =
+        request.audioDirectUrl != null && request.ext.lowercase() in MUX_COMPATIBLE_EXTS
+
+    /**
+     * Runs synchronously inside the delegate callback: NSURLSession's temp file is only
+     * guaranteed to exist until the callback returns, so each stage's file is staged
+     * (moved into our own temp directory) before anything asynchronous happens.
+     */
+    private fun handleMuxStageCompleted(
+        activeDownload: ActiveDownload,
+        tempUrl: NSURL,
+    ) {
+        val request = activeDownload.request
+        try {
+            when (activeDownload.stage) {
+                MuxStage.VIDEO -> {
+                    activeDownload.stagedVideoUrl =
+                        stageMuxFile(tempUrl, request.id, "video.${request.ext}")
+                    startAudioStage(activeDownload)
+                }
+                MuxStage.AUDIO -> {
+                    val stagedAudioUrl = stageMuxFile(tempUrl, request.id, MUX_AUDIO_FILE_NAME)
+                    val stagedVideoUrl = activeDownload.stagedVideoUrl
+                    scope.launch { finishMux(request, stagedVideoUrl, stagedAudioUrl) }
+                }
+            }
+        } catch (e: Exception) {
+            log(
+                "mux_stage_failed requestId=${request.id} " +
+                    "stage=${activeDownload.stage.name.lowercase()} message=${e.message ?: "unknown"}",
+            )
+            cleanupMuxStaging(request.id)
+            if (activeRequestId == request.id) activeRequestId = null
+            _downloadState.value =
+                DownloadServiceState.Failed(
+                    requestId = request.id,
+                    error = classifyFinalizeError(e),
+                )
+        }
+    }
+
+    private fun startAudioStage(activeDownload: ActiveDownload) {
+        val request = activeDownload.request
+        val audioUrlString =
+            request.audioDirectUrl
+                ?: throw StorageException("audioDirectUrl missing for mux download")
+        val audioUrl =
+            NSURL.URLWithString(audioUrlString)
+                ?: throw StorageException("Invalid audio URL: $audioUrlString")
+        val session =
+            when (activeDownload.sessionMode) {
+                SessionMode.BACKGROUND -> backgroundSession
+                SessionMode.FOREGROUND -> foregroundSession
+            }
+        // The video-stage entry was already removed from both maps by onCompleted, so
+        // re-registering under the new taskIdentifier is the only bookkeeping needed.
+        activeDownload.task = session.downloadTaskWithURL(audioUrl)
+        activeDownload.stage = MuxStage.AUDIO
+        registerDownload(activeDownload)
+        activeDownload.task.resume()
+        log("mux_audio_stage_started requestId=${request.id}")
+    }
+
+    private suspend fun finishMux(
+        request: DownloadRequest,
+        stagedVideoUrl: NSURL?,
+        stagedAudioUrl: NSURL,
+    ) {
+        try {
+            val videoUrl = stagedVideoUrl ?: throw StorageException("Staged video stream is missing")
+            val outputUrl =
+                muxStagingDir(request.id)?.URLByAppendingPathComponent("out.${request.ext}")
+                    ?: throw StorageException("Cannot build mux output URL")
+            val muxed = streamMuxer.mux(videoUrl, stagedAudioUrl, outputUrl)
+            if (!muxed) {
+                // Keep the video-only stream rather than failing the whole download —
+                // parity with the Android fallback for streams the platform muxer rejects.
+                log("mux_failed requestId=${request.id} -> falling_back_to_video_only")
+            }
+            val destPath = moveToDownloads(if (muxed) outputUrl else videoUrl, request.videoTitle, request.ext)
+            _downloadState.value =
+                DownloadServiceState.Completed(
+                    requestId = request.id,
+                    filePath = destPath,
+                    fileUri = "file://$destPath",
+                )
+        } catch (e: Exception) {
+            log("mux_finalize_failed requestId=${request.id} message=${e.message ?: "unknown"}")
+            _downloadState.value =
+                DownloadServiceState.Failed(
+                    requestId = request.id,
+                    error = classifyFinalizeError(e),
+                )
+        } finally {
+            if (activeRequestId == request.id) activeRequestId = null
+            cleanupMuxStaging(request.id)
+        }
+    }
+
+    private fun stageMuxFile(
+        tempUrl: NSURL,
+        requestId: String,
+        fileName: String,
+    ): NSURL {
+        val dir =
+            muxStagingDir(requestId)
+                ?: throw StorageException("Cannot resolve mux staging directory")
+        ensureDirectory(dir)
+        val destUrl =
+            dir.URLByAppendingPathComponent(fileName)
+                ?: throw StorageException("Cannot build mux staging URL")
+
+        val fileManager = NSFileManager.defaultManager
+        destUrl.path?.let { path ->
+            if (fileManager.fileExistsAtPath(path)) {
+                fileManager.removeItemAtURL(destUrl, error = null)
+            }
+        }
+        memScoped {
+            val moveError = alloc<ObjCObjectVar<NSError?>>()
+            if (!fileManager.moveItemAtURL(tempUrl, toURL = destUrl, error = moveError.ptr)) {
+                val copyError = alloc<ObjCObjectVar<NSError?>>()
+                if (!fileManager.copyItemAtURL(tempUrl, toURL = destUrl, error = copyError.ptr)) {
+                    throw StorageException(
+                        "Failed to stage mux stream " +
+                            "(move: ${moveError.value?.localizedDescription ?: "unknown"}; " +
+                            "copy: ${copyError.value?.localizedDescription ?: "unknown"})",
+                    )
+                }
+                fileManager.removeItemAtURL(tempUrl, error = null)
+            }
+        }
+        return destUrl
+    }
+
+    private fun muxStagingDir(requestId: String): NSURL? =
+        NSURL.fileURLWithPath(NSTemporaryDirectory())
+            .URLByAppendingPathComponent(MUX_STAGING_DIRECTORY)
+            ?.URLByAppendingPathComponent(requestId)
+
+    private fun cleanupMuxStaging(requestId: String) {
+        val dir = muxStagingDir(requestId) ?: return
+        NSFileManager.defaultManager.removeItemAtURL(dir, error = null)
     }
 
     private fun shouldFallbackToForeground(

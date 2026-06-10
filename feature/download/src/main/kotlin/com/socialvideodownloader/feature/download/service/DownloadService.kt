@@ -343,6 +343,7 @@ class DownloadService : Service() {
             shareOnly = intent.getBooleanExtra(EXTRA_SHARE_ONLY, false),
             existingRecordId = existingRecordId,
             directDownloadUrl = intent.getStringExtra(EXTRA_DIRECT_DOWNLOAD_URL),
+            audioDirectUrl = intent.getStringExtra(EXTRA_AUDIO_DIRECT_URL),
             ext = intent.getStringExtra(EXTRA_EXT) ?: "mp4",
         )
     }
@@ -371,6 +372,7 @@ class DownloadService : Service() {
         const val EXTRA_IS_VIDEO_ONLY = "extra_is_video_only"
         const val EXTRA_SHARE_ONLY = "extra_share_only"
         const val EXTRA_DIRECT_DOWNLOAD_URL = "extra_direct_download_url"
+        const val EXTRA_AUDIO_DIRECT_URL = "extra_audio_direct_url"
         const val EXTRA_EXISTING_RECORD_ID = "extra_existing_record_id"
         const val EXTRA_EXT = "extra_ext"
     }

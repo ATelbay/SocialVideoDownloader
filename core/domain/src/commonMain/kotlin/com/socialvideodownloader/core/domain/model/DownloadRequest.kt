@@ -13,4 +13,10 @@ data class DownloadRequest(
     val shareOnly: Boolean = false,
     val existingRecordId: Long? = null,
     val directDownloadUrl: String? = null,
+    /**
+     * Direct URL of a mux-compatible audio stream. Set only when [isVideoOnly] is true and the
+     * download uses [directDownloadUrl] (server extraction path), so the platform downloader can
+     * fetch both streams and merge them on-device.
+     */
+    val audioDirectUrl: String? = null,
 )
