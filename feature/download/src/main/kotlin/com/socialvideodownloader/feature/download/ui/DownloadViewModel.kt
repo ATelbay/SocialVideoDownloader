@@ -25,6 +25,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -135,9 +136,16 @@ class DownloadViewModel
 
         override fun onCleared() {
             // Only sweep leftover share temp files when the service is not active.
+            // Detached from viewModelScope (already cancelled here); self-cancels once the
+            // one-shot cleanup finishes so the scope doesn't linger.
             if (serviceStateHolder.state.value is DownloadServiceState.Idle) {
-                CoroutineScope(ioDispatcher).launch {
-                    java.io.File(context.cacheDir, DownloadService.SHARE_TEMP_DIR).deleteRecursively()
+                val cleanupScope = CoroutineScope(ioDispatcher)
+                cleanupScope.launch {
+                    try {
+                        java.io.File(context.cacheDir, DownloadService.SHARE_TEMP_DIR).deleteRecursively()
+                    } finally {
+                        cleanupScope.cancel()
+                    }
                 }
             }
             // Do NOT call shared.cleanup() — viewModelScope is cancelled by super.onCleared(),
@@ -149,6 +157,8 @@ class DownloadViewModel
             return when (serviceState) {
                 is DownloadServiceState.Idle -> SharedDownloadServiceState.Idle
                 is DownloadServiceState.Queued ->
+                    // The shared VM ignores Queued (no state change), so the title placeholder
+                    // is never read — the service queue only tracks request IDs.
                     SharedDownloadServiceState.Queued(
                         requestId = serviceState.pendingIds.firstOrNull() ?: "",
                         videoTitle = "",
@@ -159,6 +169,8 @@ class DownloadViewModel
                         progress = serviceState.progress,
                     )
                 is DownloadServiceState.Completed ->
+                    // The service emits a single content URI (MediaStore or FileProvider);
+                    // it belongs in the fileUri slot, with filePath as the required fallback.
                     SharedDownloadServiceState.Completed(
                         requestId = serviceState.requestId,
                         filePath = serviceState.filePath,
@@ -167,30 +179,12 @@ class DownloadViewModel
                 is DownloadServiceState.Failed ->
                     SharedDownloadServiceState.Failed(
                         requestId = serviceState.requestId,
-                        error = parseErrorType(serviceState.error),
+                        error = serviceState.errorType,
                     )
                 is DownloadServiceState.Cancelled ->
                     SharedDownloadServiceState.Cancelled(
                         requestId = serviceState.requestId,
                     )
-            }
-        }
-
-        private fun parseErrorType(error: String): com.socialvideodownloader.shared.data.platform.DownloadErrorType {
-            val lower = error.lowercase()
-            return when {
-                "network" in lower || "connect" in lower || "timeout" in lower ->
-                    com.socialvideodownloader.shared.data.platform.DownloadErrorType.NETWORK_ERROR
-                "unsupported" in lower || "not supported" in lower ->
-                    com.socialvideodownloader.shared.data.platform.DownloadErrorType.UNSUPPORTED_URL
-                "storage" in lower || "no space" in lower || "disk" in lower ->
-                    com.socialvideodownloader.shared.data.platform.DownloadErrorType.STORAGE_FULL
-                "extract" in lower ->
-                    com.socialvideodownloader.shared.data.platform.DownloadErrorType.EXTRACTION_FAILED
-                "server" in lower || "503" in lower || "502" in lower ->
-                    com.socialvideodownloader.shared.data.platform.DownloadErrorType.SERVER_UNAVAILABLE
-                else ->
-                    com.socialvideodownloader.shared.data.platform.DownloadErrorType.DOWNLOAD_FAILED
             }
         }
     }

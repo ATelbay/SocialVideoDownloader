@@ -20,7 +20,9 @@ val SvdWarning = Color(0xFFF2B84B)
 val SvdAccent = Color(0xFF1E8C7A)
 val SvdAccentSoft = Color(0xFFD9F1EC)
 val SvdOnSurface = Color(0xFF222222)
-val SvdOnSurfaceVariant = Color(0xFF777777)
+
+// Darkened from #777777 (~4.46:1 on white, just under WCAG AA) to ~5.3:1 for secondary text.
+val SvdOnSurfaceVariant = Color(0xFF6B6B6B)
 val SvdForeground = Color(0xFF1F2328)
 val SvdMutedForeground = Color(0xFF5E6672)
 val SvdSubtleForeground = Color(0xFF7D8794)
@@ -31,6 +33,7 @@ val SvdSuccessSoft = Color(0xFFDDF4E8)
 val SvdError = Color(0xFFD32F2F)
 val SvdErrorSoft = Color(0xFFFDE5E3)
 val SvdShadow = Color(0x1A000000)
+val SvdThumbnailScrim = Color(0x33000000)
 
 val SvdColorScheme =
     lightColorScheme(
@@ -86,6 +89,7 @@ data class ExtendedColors(
     val successSoft: Color,
     val errorSoft: Color,
     val shadow: Color,
+    val thumbnailScrim: Color,
 )
 
 val SvdExtendedColors =
@@ -108,6 +112,7 @@ val SvdExtendedColors =
         successSoft = SvdSuccessSoft,
         errorSoft = SvdErrorSoft,
         shadow = SvdShadow,
+        thumbnailScrim = SvdThumbnailScrim,
     )
 
 val LocalExtendedColors = staticCompositionLocalOf { SvdExtendedColors }

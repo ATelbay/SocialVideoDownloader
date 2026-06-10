@@ -9,6 +9,7 @@ import com.socialvideodownloader.shared.data.platform.PlatformDownloadManager
 import com.socialvideodownloader.shared.data.platform.PlatformFileStorage
 import com.socialvideodownloader.shared.data.platform.PlatformStringProvider
 import com.socialvideodownloader.shared.data.platform.androidContext
+import kotlinx.coroutines.Dispatchers
 import org.koin.dsl.module
 
 /**
@@ -24,7 +25,9 @@ val androidDataModule =
         }
 
         single<PlatformFileStorage> {
-            AndroidFileStorage(context = androidContext)
+            // Dispatchers.IO is supplied here at the DI composition root, not hardcoded
+            // inside the adapter, so the storage class stays testable.
+            AndroidFileStorage(context = androidContext, ioDispatcher = Dispatchers.IO)
         }
 
         single<PlatformClipboard> {

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -19,7 +20,9 @@ import com.socialvideodownloader.feature.download.navigation.DownloadRoute
 import com.socialvideodownloader.feature.history.navigation.HistoryRoute
 import com.socialvideodownloader.feature.library.navigation.LibraryRoute
 import com.socialvideodownloader.navigation.AppNavHost
+import com.socialvideodownloader.shared.ui.components.PillNavItem
 import com.socialvideodownloader.shared.ui.components.PillNavigationBar
+import com.socialvideodownloader.shared.ui.components.SvdNavIcons
 import com.socialvideodownloader.shared.ui.theme.SvdBg
 import com.socialvideodownloader.shared.ui.theme.SvdThemeAndroid
 import dagger.hilt.android.AndroidEntryPoint
@@ -59,11 +62,19 @@ class MainActivity : ComponentActivity() {
                         else -> 0
                     }
 
+                val navItems =
+                    listOf(
+                        PillNavItem(stringResource(R.string.nav_download), SvdNavIcons.Download),
+                        PillNavItem(stringResource(R.string.nav_library), SvdNavIcons.Library),
+                        PillNavItem(stringResource(R.string.nav_history), SvdNavIcons.History),
+                    )
+
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     containerColor = SvdBg,
                     bottomBar = {
                         PillNavigationBar(
+                            items = navItems,
                             selectedIndex = selectedIndex,
                             onSelect = { index ->
                                 when (index) {
@@ -103,8 +114,9 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         val url = getSharedUrl(intent) ?: return
-        navController?.navigate(DownloadRoute(initialUrl = url)) {
-            popUpTo(navController!!.graph.startDestinationId) { saveState = true }
+        val controller = navController ?: return
+        controller.navigate(DownloadRoute(initialUrl = url)) {
+            popUpTo(controller.graph.startDestinationId) { saveState = true }
             launchSingleTop = true
             restoreState = false
         }

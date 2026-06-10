@@ -26,6 +26,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.socialvideodownloader.shared.feature.download.generated.resources.Res
+import com.socialvideodownloader.shared.feature.download.generated.resources.action_paste
+import com.socialvideodownloader.shared.feature.download.generated.resources.url_input_hint
 import com.socialvideodownloader.shared.ui.theme.LocalAppShapes
 import com.socialvideodownloader.shared.ui.theme.Spacing
 import com.socialvideodownloader.shared.ui.theme.SvdBorder
@@ -34,6 +37,7 @@ import com.socialvideodownloader.shared.ui.theme.SvdPrimary
 import com.socialvideodownloader.shared.ui.theme.SvdSubtleForeground
 import com.socialvideodownloader.shared.ui.theme.SvdSurface
 import com.socialvideodownloader.shared.ui.theme.SvdSurfaceAlt
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun UrlInputContent(
@@ -43,7 +47,8 @@ fun UrlInputContent(
 ) {
     val shapes = LocalAppShapes.current
     val clipboardManager = LocalClipboardManager.current
-    val hintText = "Paste a video link"
+    val hintText = stringResource(Res.string.url_input_hint)
+    val labelPaste = stringResource(Res.string.action_paste)
 
     val urlTextStyle =
         TextStyle(
@@ -100,7 +105,7 @@ fun UrlInputContent(
                     .background(SvdSurfaceAlt)
                     .semantics(mergeDescendants = true) {
                         role = Role.Button
-                        contentDescription = "Paste"
+                        contentDescription = labelPaste
                     }
                     .clickable {
                         clipboardManager.getText()?.text?.let { text ->
@@ -112,7 +117,7 @@ fun UrlInputContent(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = "Paste",
+                text = labelPaste,
                 style =
                     MaterialTheme.typography.labelSmall.copy(
                         fontSize = 12.sp,

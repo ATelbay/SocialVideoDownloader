@@ -16,6 +16,12 @@ import org.koin.dsl.module
  * [androidx.lifecycle.ViewModel.viewModelScope]; on iOS it is managed by the
  * SwiftUI view.
  *
+ * IMPORTANT: the supplied [CoroutineScope] MUST be main-confined (single-threaded /
+ * Main.immediate). [SharedDownloadViewModel] mutates plain fields without
+ * synchronization and relies on that confinement — do not pass a multi-threaded
+ * dispatcher here. Both production call sites (viewModelScope, the iOS main scope)
+ * satisfy this.
+ *
  * Usage:
  * ```kotlin
  * val vm = getKoin().get<SharedDownloadViewModel> { parametersOf(myScope) }

@@ -8,6 +8,7 @@ import android.provider.MediaStore
 import androidx.annotation.RequiresApi
 import com.socialvideodownloader.core.domain.di.IoDispatcher
 import com.socialvideodownloader.core.domain.repository.MediaStoreRepository
+import com.socialvideodownloader.shared.data.platform.FileNames
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -36,14 +37,7 @@ class MediaStoreRepositoryImpl
                 }
             }
 
-        private fun sanitizeFileName(name: String): String {
-            val sanitized =
-                name.replace(Regex("[/\\\\:*?\"<>|]"), "_")
-                    .trimStart('.')
-                    .take(200)
-                    .ifBlank { "download" }
-            return sanitized
-        }
+        private fun sanitizeFileName(name: String): String = FileNames.sanitize(name)
 
         @RequiresApi(Build.VERSION_CODES.Q)
         private fun saveWithMediaStore(

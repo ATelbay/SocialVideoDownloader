@@ -25,6 +25,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.socialvideodownloader.core.domain.model.ExistingDownload
+import com.socialvideodownloader.shared.feature.download.generated.resources.Res
+import com.socialvideodownloader.shared.feature.download.generated.resources.idle_extract_button
+import com.socialvideodownloader.shared.feature.download.generated.resources.idle_hero_subtitle
+import com.socialvideodownloader.shared.feature.download.generated.resources.idle_hero_title
+import com.socialvideodownloader.shared.feature.download.generated.resources.idle_supports_sites
 import com.socialvideodownloader.shared.network.auth.SupportedPlatform
 import com.socialvideodownloader.shared.ui.components.GradientButton
 import com.socialvideodownloader.shared.ui.components.PlatformBadge
@@ -33,6 +38,7 @@ import com.socialvideodownloader.shared.ui.theme.SvdForeground
 import com.socialvideodownloader.shared.ui.theme.SvdMutedForeground
 import com.socialvideodownloader.shared.ui.theme.SvdPrimarySoft
 import com.socialvideodownloader.shared.ui.theme.SvdPrimaryStrong
+import org.jetbrains.compose.resources.stringResource
 
 private val supportedPlatforms = listOf("YouTube", "Instagram", "TikTok", "Twitter", "Vimeo", "Facebook")
 
@@ -85,7 +91,7 @@ fun IdleContent(
             }
 
             Text(
-                text = "Download Videos\nFrom Anywhere",
+                text = stringResource(Res.string.idle_hero_title),
                 style =
                     MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold,
@@ -96,7 +102,7 @@ fun IdleContent(
             )
 
             Text(
-                text = "Paste any social media URL to get started",
+                text = stringResource(Res.string.idle_hero_subtitle),
                 style =
                     MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Normal,
@@ -137,14 +143,14 @@ fun IdleContent(
         }
 
         GradientButton(
-            text = "EXTRACT VIDEO",
+            text = stringResource(Res.string.idle_extract_button),
             onClick = onExtractClicked,
             icon = Icons.Outlined.Download,
             modifier = Modifier.fillMaxWidth(),
         )
 
         Text(
-            text = "Supports 1700+ sites",
+            text = stringResource(Res.string.idle_supports_sites),
             style =
                 MaterialTheme.typography.labelMedium.copy(
                     fontSize = 13.sp,

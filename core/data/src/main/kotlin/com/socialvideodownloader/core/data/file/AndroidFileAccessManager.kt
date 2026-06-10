@@ -42,7 +42,16 @@ class AndroidFileAccessManager
             withContext(ioDispatcher) {
                 try {
                     val uri = contentUri.toUri()
-                    context.contentResolver.openInputStream(uri)?.use { true } ?: false
+                    when (uri.scheme) {
+                        // Plain filesystem path: a stat is far cheaper than opening a stream.
+                        "file" -> File(uri.path ?: return@withContext false).exists()
+                        // content:// (MediaStore / FileProvider): open just the descriptor and close
+                        // it immediately, avoiding the InputStream allocation per item per emission.
+                        else ->
+                            context.contentResolver
+                                .openAssetFileDescriptor(uri, "r")
+                                ?.use { true } ?: false
+                    }
                 } catch (_: Exception) {
                     false
                 }

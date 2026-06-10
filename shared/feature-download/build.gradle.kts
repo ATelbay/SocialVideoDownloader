@@ -4,6 +4,10 @@ plugins {
 
 val composeExt = the<org.jetbrains.compose.ComposeExtension>()
 
+compose.resources {
+    packageOfResClass = "com.socialvideodownloader.shared.feature.download.generated.resources"
+}
+
 kotlin {
     sourceSets {
         commonMain.dependencies {

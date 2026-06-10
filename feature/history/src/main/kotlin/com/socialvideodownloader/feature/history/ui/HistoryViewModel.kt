@@ -1,7 +1,9 @@
 package com.socialvideodownloader.feature.history.ui
 
+import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.socialvideodownloader.core.billing.PurchaseFlowLauncher
 import com.socialvideodownloader.core.domain.file.FileAccessManager
 import com.socialvideodownloader.core.domain.repository.BillingRepository
 import com.socialvideodownloader.core.domain.repository.DownloadRepository
@@ -39,6 +41,7 @@ class HistoryViewModel
     constructor(
         private val downloadRepository: DownloadRepository,
         private val fileManager: FileAccessManager,
+        private val deleteHistoryItemUseCase: DeleteHistoryItemUseCaseShared,
         private val observeCloudCapacity: ObserveCloudCapacityUseCase,
         private val billingRepository: BillingRepository,
         private val enableCloudBackupUseCase: EnableCloudBackupUseCase,
@@ -48,17 +51,14 @@ class HistoryViewModel
         private val restoreFromCloudUseCase: RestoreFromCloudUseCase,
         private val cloudAuthService: CloudAuthService,
         private val clipboard: PlatformClipboard,
+        private val purchaseFlowLauncher: PurchaseFlowLauncher,
     ) : ViewModel() {
         internal val shared =
             SharedHistoryViewModel(
                 coroutineScope = viewModelScope,
                 downloadRepository = downloadRepository,
                 fileManager = fileManager,
-                deleteHistoryItemUseCase =
-                    DeleteHistoryItemUseCaseShared(
-                        repository = downloadRepository,
-                        fileManager = fileManager,
-                    ),
+                deleteHistoryItemUseCase = deleteHistoryItemUseCase,
                 observeCloudCapacity = observeCloudCapacity,
                 billingRepository = billingRepository,
                 enableCloudBackupUseCase = enableCloudBackupUseCase,
@@ -76,8 +76,9 @@ class HistoryViewModel
 
         fun onIntent(intent: HistoryIntent) = shared.onIntent(intent)
 
-        /** Called by the screen with the Activity reference required by Google Play Billing. */
-        suspend fun launchPurchaseFlow(activity: Any) {
-            billingRepository.launchPurchaseFlow(activity)
+        /** Called by the screen with the Activity required by Google Play Billing. */
+        suspend fun launchPurchaseFlow(activity: Activity) {
+            val result = purchaseFlowLauncher.launchPurchaseFlow(activity)
+            shared.onPurchaseResult(result)
         }
     }

@@ -8,8 +8,17 @@ class EnableCloudBackupUseCase(
     private val syncManager: SyncManager,
     private val downloadRepository: DownloadRepository,
 ) {
-    suspend operator fun invoke(idToken: String) {
-        authService.signInWithGoogleCredential(idToken)
+    /**
+     * Enable cloud backup.
+     *
+     * @param idToken Google credential to sign in with. Pass `null` when the user is already
+     *   authenticated (e.g. re-enabling the toggle after a previous sign-in) to skip sign-in
+     *   while still running the first-enable backfill and pending-sync flush.
+     */
+    suspend operator fun invoke(idToken: String? = null) {
+        if (idToken != null) {
+            authService.signInWithGoogleCredential(idToken)
+        }
         val isFirstEnable = !preferences.hasEverEnabled()
         preferences.setBackupEnabled(true)
         preferences.setHasEverEnabled(true)

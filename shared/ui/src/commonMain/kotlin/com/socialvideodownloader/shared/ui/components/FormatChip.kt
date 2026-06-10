@@ -5,10 +5,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -35,7 +35,8 @@ fun FormatChip(
     val border = if (selected) null else BorderStroke(1.dp, SvdBorder)
     val labelColor = if (selected) SvdPrimaryStrong else SvdForeground
     val fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold
-    val isSelected = selected
+    // Local copy disambiguates the param from the SemanticsPropertyReceiver.selected property below.
+    val chipSelected = selected
 
     Surface(
         onClick = onClick,
@@ -43,11 +44,12 @@ fun FormatChip(
         color = backgroundColor,
         border = border,
         modifier =
-            modifier.semantics(mergeDescendants = true) {
-                role = Role.Button
-                contentDescription = label
-                this.selected = isSelected
-            },
+            modifier
+                .minimumInteractiveComponentSize()
+                .semantics(mergeDescendants = true) {
+                    role = Role.Button
+                    this.selected = chipSelected
+                },
     ) {
         Text(
             text = label,

@@ -27,7 +27,15 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.socialvideodownloader.core.domain.model.DownloadStatus
 import com.socialvideodownloader.shared.feature.history.HistoryListItem
+import com.socialvideodownloader.shared.feature.history.generated.resources.Res
+import com.socialvideodownloader.shared.feature.history.generated.resources.status_cancelled
+import com.socialvideodownloader.shared.feature.history.generated.resources.status_completed
+import com.socialvideodownloader.shared.feature.history.generated.resources.status_downloading
+import com.socialvideodownloader.shared.feature.history.generated.resources.status_failed
+import com.socialvideodownloader.shared.feature.history.generated.resources.status_pending
+import com.socialvideodownloader.shared.feature.history.generated.resources.status_queued
 import com.socialvideodownloader.shared.ui.components.StatusBadge
 import com.socialvideodownloader.shared.ui.theme.LocalAppShapes
 import com.socialvideodownloader.shared.ui.theme.Spacing
@@ -37,6 +45,7 @@ import com.socialvideodownloader.shared.ui.theme.SvdMutedForeground
 import com.socialvideodownloader.shared.ui.theme.SvdSubtleForeground
 import com.socialvideodownloader.shared.ui.theme.SvdSurface
 import com.socialvideodownloader.shared.ui.theme.SvdSurfaceStrong
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -138,11 +147,22 @@ fun HistoryListItemRow(
                     }
                 }
 
-                StatusBadge(status = item.status.name)
+                StatusBadge(status = item.status.name, label = statusLabel(item.status))
             }
         }
     }
 }
+
+@Composable
+private fun statusLabel(status: DownloadStatus): String =
+    when (status) {
+        DownloadStatus.COMPLETED -> stringResource(Res.string.status_completed)
+        DownloadStatus.FAILED -> stringResource(Res.string.status_failed)
+        DownloadStatus.DOWNLOADING -> stringResource(Res.string.status_downloading)
+        DownloadStatus.PENDING -> stringResource(Res.string.status_pending)
+        DownloadStatus.QUEUED -> stringResource(Res.string.status_queued)
+        DownloadStatus.CANCELLED -> stringResource(Res.string.status_cancelled)
+    }
 
 private fun extractHost(url: String): String? {
     return try {

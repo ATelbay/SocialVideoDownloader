@@ -22,10 +22,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.socialvideodownloader.shared.feature.download.generated.resources.Res
+import com.socialvideodownloader.shared.feature.download.generated.resources.auth_disconnect_label
+import com.socialvideodownloader.shared.feature.download.generated.resources.platform_connected
 import com.socialvideodownloader.shared.network.auth.SupportedPlatform
 import com.socialvideodownloader.shared.ui.components.SecondaryButton
 import com.socialvideodownloader.shared.ui.theme.SvdForeground
 import com.socialvideodownloader.shared.ui.theme.SvdMutedForeground
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -70,12 +74,12 @@ fun PlatformConnectionChips(
                     color = SvdForeground,
                 )
                 Text(
-                    text = "Connected",
+                    text = stringResource(Res.string.platform_connected),
                     style = MaterialTheme.typography.bodyMedium,
                     color = SvdMutedForeground,
                 )
                 SecondaryButton(
-                    text = DownloadAuthStrings.disconnectLabel,
+                    text = stringResource(Res.string.auth_disconnect_label),
                     onClick = {
                         onDisconnect(platform)
                         selectedPlatform = null

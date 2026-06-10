@@ -10,6 +10,7 @@ import com.socialvideodownloader.shared.feature.library.di.sharedLibraryModule
 import com.socialvideodownloader.shared.network.di.androidNetworkModule
 import com.socialvideodownloader.shared.network.di.networkModule
 import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.GlobalContext
 import org.koin.core.context.startKoin
 
 /**
@@ -24,6 +25,10 @@ import org.koin.core.context.startKoin
  */
 object KoinInitializer {
     fun init(context: Context) {
+        // Guard against double initialization (e.g. multi-process restarts, instrumentation
+        // tests): startKoin throws KoinApplicationAlreadyStartedException if Koin is running.
+        if (GlobalContext.getOrNull() != null) return
+
         // Set the Android context for the shared:data database factory
         androidContext = context.applicationContext
 

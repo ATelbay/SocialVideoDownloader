@@ -37,19 +37,40 @@ class KeystoreEncryptionService
             }
         }
 
+        // The derived key depends only on the (stable) UID, so cache it to avoid
+        // re-running HMAC on every encrypt/decrypt — bulk restore decrypts up to the
+        // tier limit (e.g. 1000) records in one pass. Recomputed when the UID changes.
+        @Volatile
+        private var cachedKey: Pair<String, SecretKeySpec>? = null
+
         /**
          * Derive a deterministic AES-256 key from the user's Firebase UID.
          * HMAC-SHA256(key=salt, data=uid) → 32 bytes → AES key.
          * Same user always gets the same key regardless of device or data clear.
+         *
+         * SECURITY NOTE — this is OBFUSCATION, not confidentiality.
+         * The "salt" ([KEY_DERIVATION_SALT]) is a constant shipped in the APK, and the UID is
+         * NOT secret — it is the Firestore document path (`users/{uid}`) stored next to the
+         * encrypted payload. Anyone with read access to the cloud data (e.g. the project owner,
+         * or via a Firestore-rules misconfiguration) can reproduce this key. So the encryption
+         * protects against casual at-rest inspection only, NOT against a party who can already
+         * read the stored documents.
+         *
+         * This tradeoff is intentional: a deterministic, UID-derived key is what lets a user
+         * restore their backup on a new device (or after clearing app data) with zero extra
+         * input. Real confidentiality would require a user-held secret (passphrase), which breaks
+         * existing backups, needs new UI on both platforms, and makes "forgot passphrase" mean
+         * permanent backup loss — tracked as a separate product decision, not a code-only fix.
          */
         private fun deriveKey(): SecretKeySpec {
             val uid =
                 authService.getCurrentUid()
                     ?: error("Not authenticated — sign in before encrypting")
+            cachedKey?.let { (cachedUid, key) -> if (cachedUid == uid) return key }
             val mac = Mac.getInstance("HmacSHA256")
             mac.init(SecretKeySpec(KEY_DERIVATION_SALT.toByteArray(Charsets.UTF_8), "HmacSHA256"))
             val keyBytes = mac.doFinal(uid.toByteArray(Charsets.UTF_8))
-            return SecretKeySpec(keyBytes, "AES")
+            return SecretKeySpec(keyBytes, "AES").also { cachedKey = uid to it }
         }
 
         override fun encrypt(record: DownloadRecord): ByteArray {

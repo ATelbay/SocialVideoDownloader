@@ -5,6 +5,8 @@ import com.socialvideodownloader.core.domain.model.VideoMetadata
 import com.socialvideodownloader.core.domain.repository.VideoExtractorRepository
 import com.socialvideodownloader.shared.network.ServerVideoExtractorApi
 import com.socialvideodownloader.shared.network.WebSocketExtractorApi
+import kotlinx.coroutines.CancellationException
+import platform.Foundation.NSLog
 
 /**
  * iOS implementation of [VideoExtractorRepository].
@@ -19,8 +21,11 @@ class ServerOnlyVideoExtractorRepository(
     override suspend fun extractInfo(url: String): VideoMetadata {
         return try {
             wsApi.extractViaProxy(url)
+        } catch (e: CancellationException) {
+            // Never swallow cooperative cancellation — let it propagate.
+            throw e
         } catch (e: Exception) {
-            println("WebSocket extraction failed, falling back to REST: ${e.message}")
+            NSLog("SVD_IOS_EXTRACT WebSocket extraction failed, falling back to REST: ${e.message}")
             serverApi.extractInfo(url)
         }
     }

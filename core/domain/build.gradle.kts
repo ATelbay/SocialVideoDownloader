@@ -12,6 +12,7 @@ kotlin {
         commonMain.dependencies {
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.koin.core)
+            implementation(libs.kotlincrypto.sha2)
         }
         commonTest.dependencies {
             implementation(libs.kotlinx.coroutines.test)

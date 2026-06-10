@@ -26,6 +26,11 @@ dependencies {
     implementation(project(":shared:data"))
     implementation(project(":shared:network"))
 
+    // BundledSQLiteDriver for the Hilt-owned Room build of the shared AppDatabase
+    // (mirrors :shared:data's DatabaseFactory.android.kt). room-runtime is provided
+    // transitively by the svd.android.room convention plugin.
+    implementation(libs.androidx.sqlite.bundled)
+
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.ktor.client.core)

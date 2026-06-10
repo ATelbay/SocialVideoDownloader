@@ -2,10 +2,6 @@ package com.socialvideodownloader.core.cloud.sync
 
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuthException
-import com.socialvideodownloader.core.data.local.DownloadDao
-import com.socialvideodownloader.core.data.local.SyncQueueDao
-import com.socialvideodownloader.core.data.local.SyncQueueEntity
-import com.socialvideodownloader.core.data.local.toDomain
 import com.socialvideodownloader.core.domain.di.IoDispatcher
 import com.socialvideodownloader.core.domain.model.DownloadRecord
 import com.socialvideodownloader.core.domain.model.SyncStatus
@@ -14,6 +10,10 @@ import com.socialvideodownloader.core.domain.sync.BackupPreferences
 import com.socialvideodownloader.core.domain.sync.CloudAuthService
 import com.socialvideodownloader.core.domain.sync.EncryptionService
 import com.socialvideodownloader.core.domain.sync.SyncManager
+import com.socialvideodownloader.shared.data.local.DownloadDao
+import com.socialvideodownloader.shared.data.local.SyncQueueDao
+import com.socialvideodownloader.shared.data.local.SyncQueueEntity
+import com.socialvideodownloader.shared.data.local.toDomain
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -53,8 +53,13 @@ class FirestoreSyncManager
                     _syncStatus.value = SyncStatus.Syncing
 
                     var anyFailed = false
+                    var authExpired = false
 
                     for (op in queue) {
+                        // Once auth has expired, every remaining operation will fail the same way —
+                        // stop here instead of burning retry budget on each of them.
+                        if (authExpired) break
+
                         val backoffMs = min(BASE_BACKOFF_MS * (1L shl op.retryCount), MAX_BACKOFF_MS)
                         if (op.retryCount > 0) {
                             delay(backoffMs)
@@ -62,28 +67,38 @@ class FirestoreSyncManager
 
                         runCatching {
                             when (op.operation) {
-                                "UPLOAD" -> processUploadWithReauth(op)
+                                "UPLOAD" -> processUpload(op)
                                 "DELETE" -> processDelete(op)
                             }
                         }.onFailure { error ->
-                            Log.w(TAG, "Operation ${op.operation} id=${op.id} failed: ${error.message}", error)
-                            anyFailed = true
-                            syncQueueDao.updateRetry(
-                                id = op.id,
-                                retryCount = op.retryCount + 1,
-                                lastError = error.message,
-                            )
+                            if (isAuthError(error)) {
+                                // Auth errors are NOT resolved by retry/backoff. Leave the operation in
+                                // the queue untouched (no retryCount bump → not dropped) so it resumes
+                                // after the user re-authenticates, instead of being silently discarded.
+                                Log.w(TAG, "Auth expired — backup paused until re-sign-in (op ${op.id})", error)
+                                authExpired = true
+                            } else {
+                                Log.w(TAG, "Operation ${op.operation} id=${op.id} failed: ${error.message}", error)
+                                anyFailed = true
+                                syncQueueDao.updateRetry(
+                                    id = op.id,
+                                    retryCount = op.retryCount + 1,
+                                    lastError = error.message,
+                                )
+                            }
                         }
                     }
 
                     syncQueueDao.deleteFailedOperations(maxRetries = MAX_RETRIES)
 
-                    if (anyFailed) {
-                        _syncStatus.value = SyncStatus.Paused("Backup paused")
-                    } else {
-                        val timestamp = System.currentTimeMillis()
-                        _syncStatus.value = SyncStatus.Synced(lastSyncTimestamp = timestamp)
-                        backupPreferences.setLastSyncTimestamp(timestamp)
+                    when {
+                        authExpired -> _syncStatus.value = SyncStatus.Paused("Sign in again to resume backup")
+                        anyFailed -> _syncStatus.value = SyncStatus.Paused("Backup paused")
+                        else -> {
+                            val timestamp = System.currentTimeMillis()
+                            _syncStatus.value = SyncStatus.Synced(lastSyncTimestamp = timestamp)
+                            backupPreferences.setLastSyncTimestamp(timestamp)
+                        }
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "processPendingOperations failed: ${e.message}", e)
@@ -95,11 +110,8 @@ class FirestoreSyncManager
             withContext(ioDispatcher) {
                 try {
                     _syncStatus.value = SyncStatus.Syncing
-                    val currentCount = cloudBackupRepository.getCloudRecordCount()
-                    val tierLimit = cloudBackupRepository.getTierLimit()
-                    if (currentCount >= tierLimit) {
-                        cloudBackupRepository.evictOldestRecords(1)
-                    }
+                    // Capacity enforcement (tier limit + LRU eviction) lives in the repository's
+                    // uploadRecord so it applies to every upload path, not just this one.
                     val success = cloudBackupRepository.uploadRecord(record)
                     if (success) {
                         val timestamp = System.currentTimeMillis()
@@ -130,14 +142,7 @@ class FirestoreSyncManager
                 }
             }
 
-        private suspend fun processUploadWithReauth(op: SyncQueueEntity) {
-            try {
-                processUpload(op)
-            } catch (e: FirebaseAuthException) {
-                Log.w(TAG, "Auth expired for op ${op.id} — user must re-authenticate", e)
-                throw e
-            }
-        }
+        private fun isAuthError(error: Throwable): Boolean = error is FirebaseAuthException || error.cause is FirebaseAuthException
 
         private suspend fun processUpload(op: SyncQueueEntity) {
             val entity = downloadDao.getById(op.downloadId) ?: return

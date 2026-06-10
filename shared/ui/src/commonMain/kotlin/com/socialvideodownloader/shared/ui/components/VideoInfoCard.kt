@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Card
@@ -40,6 +39,7 @@ import com.socialvideodownloader.shared.ui.theme.SvdMutedForeground
 import com.socialvideodownloader.shared.ui.theme.SvdPrimarySoft
 import com.socialvideodownloader.shared.ui.theme.SvdPrimaryStrong
 import com.socialvideodownloader.shared.ui.theme.SvdSurface
+import com.socialvideodownloader.shared.ui.theme.extendedColors
 
 @Composable
 fun VideoInfoCard(
@@ -89,13 +89,7 @@ private fun FullVideoInfoCard(
     ) {
         Column {
             // Thumbnail area — edge-to-edge within card, top-only rounding
-            val thumbnailShape =
-                RoundedCornerShape(
-                    topStart = 24.dp,
-                    topEnd = 24.dp,
-                    bottomStart = 0.dp,
-                    bottomEnd = 0.dp,
-                )
+            val thumbnailShape = shapes.cardTop
             Box(
                 modifier =
                     Modifier
@@ -118,16 +112,16 @@ private fun FullVideoInfoCard(
                 Box(
                     modifier =
                         Modifier
-                            .size(44.dp)
+                            .size(Spacing.PlayOverlaySize)
                             .align(Alignment.Center)
-                            .background(Color(0x33000000), shapes.pill),
+                            .background(MaterialTheme.extendedColors.thumbnailScrim, shapes.pill),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = Icons.Filled.PlayArrow,
                         contentDescription = null,
                         tint = SvdPrimaryStrong,
-                        modifier = Modifier.size(26.dp),
+                        modifier = Modifier.size(Spacing.IconXl),
                     )
                 }
 
@@ -138,7 +132,7 @@ private fun FullVideoInfoCard(
                         modifier =
                             Modifier
                                 .align(Alignment.BottomStart)
-                                .padding(10.dp),
+                                .padding(Spacing.InsetSm),
                     )
                 }
             }
@@ -158,7 +152,7 @@ private fun FullVideoInfoCard(
                 )
 
                 if (uploaderName != null) {
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(Spacing.GapXs))
                     Text(
                         text = uploaderName,
                         style =
@@ -218,15 +212,15 @@ private fun CompactVideoInfoCard(
                     imageVector = Icons.Filled.PlayArrow,
                     contentDescription = null,
                     tint = Color.White,
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(Spacing.IconLg),
                 )
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(Spacing.GapLg))
 
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(Spacing.GapSm),
             ) {
                 Text(
                     text = title,

@@ -1,7 +1,6 @@
 package com.socialvideodownloader.shared.feature.library
 
 import com.socialvideodownloader.core.domain.file.FileAccessManager
-import com.socialvideodownloader.core.domain.model.LibraryItem
 import com.socialvideodownloader.core.domain.repository.DownloadRepository
 import com.socialvideodownloader.core.domain.util.PlatformNameResolver
 import kotlinx.coroutines.CoroutineScope
@@ -30,11 +29,11 @@ class SharedLibraryViewModel(
     val uiState: StateFlow<LibraryUiState> =
         downloadRepository.getCompletedDownloads()
             .map { records ->
-                val items: List<LibraryItem> =
+                val items: List<LibraryListItem> =
                     records.mapNotNull { record ->
                         val contentUri = fileManager.resolveContentUri(record) ?: return@mapNotNull null
                         if (!fileManager.isFileAccessible(contentUri)) return@mapNotNull null
-                        LibraryItem(
+                        LibraryListItem(
                             id = record.id,
                             title = record.videoTitle,
                             formatLabel = record.formatLabel.ifBlank { null },
@@ -48,20 +47,7 @@ class SharedLibraryViewModel(
                 if (items.isEmpty()) {
                     LibraryUiState.Empty
                 } else {
-                    LibraryUiState.Content(
-                        items.map { item ->
-                            LibraryListItem(
-                                id = item.id,
-                                title = item.title,
-                                formatLabel = item.formatLabel,
-                                thumbnailUrl = item.thumbnailUrl,
-                                platformName = item.platformName,
-                                completedAt = item.completedAt,
-                                fileSizeBytes = item.fileSizeBytes,
-                                contentUri = item.contentUri,
-                            )
-                        },
-                    )
+                    LibraryUiState.Content(items)
                 }
             }
             .stateIn(coroutineScope, SharingStarted.WhileSubscribed(5_000), LibraryUiState.Loading)

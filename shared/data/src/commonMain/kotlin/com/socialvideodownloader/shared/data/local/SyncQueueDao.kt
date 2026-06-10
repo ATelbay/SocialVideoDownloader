@@ -24,5 +24,5 @@ interface SyncQueueDao {
     )
 
     @Query("DELETE FROM sync_queue WHERE retryCount >= :maxRetries")
-    suspend fun deleteFailedOperations(maxRetries: Int = 5)
+    suspend fun deleteFailedOperations(maxRetries: Int)
 }

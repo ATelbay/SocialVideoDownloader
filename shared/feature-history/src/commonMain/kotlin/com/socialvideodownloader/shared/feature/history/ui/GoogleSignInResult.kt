@@ -11,5 +11,9 @@ sealed interface GoogleSignInResult {
 
     data object Cancelled : GoogleSignInResult
 
-    data class Failed(val message: String?) : GoogleSignInResult
+    /**
+     * A genuine sign-in failure. The platform layer is responsible for logging the underlying
+     * cause; the VM only surfaces a generic, localized message, so no detail is carried here.
+     */
+    data object Failed : GoogleSignInResult
 }

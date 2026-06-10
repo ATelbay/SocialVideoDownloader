@@ -8,17 +8,33 @@ import com.socialvideodownloader.shared.network.dto.ServerFormatDto
 class ServerResponseMapper {
     private val audioOnlyExtensions = setOf("m4a", "mp3", "opus", "ogg", "aac", "flac", "wav")
 
+    /** yt-dlp emits storyboard/preview pseudo-formats that are not downloadable media. */
+    private val excludedExtensions = setOf("mhtml", "storyboard")
+
     fun mapToMetadata(
         response: ServerExtractResponse,
         sourceUrl: String,
     ): VideoMetadata {
+        // Filter junk pseudo-formats and sort best-first so the ViewModel's
+        // "first non-audio format = best" heuristic holds on the server/iOS path
+        // (parity with Android's VideoInfoMapper — the server response order is
+        // yt-dlp's default ascending order and cannot be relied on).
+        val mapped =
+            response.formats
+                .asSequence()
+                .filter { it.ext !in excludedExtensions }
+                .map { mapFormat(it) }
+                .toList()
+        val videoFormats = mapped.filter { !it.isAudioOnly }.sortedByDescending { it.resolution }
+        val audioFormats = mapped.filter { it.isAudioOnly }.sortedByDescending { it.fileSizeBytes }
+
         return VideoMetadata(
             sourceUrl = sourceUrl,
             title = response.title,
             thumbnailUrl = response.thumbnail,
             durationSeconds = response.duration?.toInt() ?: 0,
             author = response.uploader,
-            formats = response.formats.map { mapFormat(it) },
+            formats = videoFormats + audioFormats,
         )
     }
 

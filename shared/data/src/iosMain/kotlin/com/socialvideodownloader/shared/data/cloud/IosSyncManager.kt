@@ -6,8 +6,10 @@ import com.socialvideodownloader.core.domain.repository.CloudBackupRepository
 import com.socialvideodownloader.core.domain.sync.BackupPreferences
 import com.socialvideodownloader.core.domain.sync.CloudAuthService
 import com.socialvideodownloader.core.domain.sync.SyncManager
+import com.socialvideodownloader.shared.data.local.DownloadDao
 import com.socialvideodownloader.shared.data.local.SyncQueueDao
 import com.socialvideodownloader.shared.data.local.SyncQueueEntity
+import com.socialvideodownloader.shared.data.local.toDomain
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -40,6 +42,7 @@ import platform.Foundation.NSTimeIntervalSince1970
  */
 class IosSyncManager(
     private val syncQueueDao: SyncQueueDao,
+    private val downloadDao: DownloadDao,
     private val cloudBackupRepository: CloudBackupRepository,
     private val cloudAuthService: CloudAuthService,
     private val backupPreferences: BackupPreferences,
@@ -200,28 +203,24 @@ class IosSyncManager(
     // ---------------------------------------------------------------------------
 
     private suspend fun processUpload(item: SyncQueueEntity): Boolean {
-        // TODO: Load the DownloadRecord from the database and upload via cloudBackupRepository.uploadRecord().
-        // Requires DownloadDao to be injected — wire this in a future iteration.
-        // Return false so the item stays in the queue rather than being silently discarded.
-        return false
+        // The record may have been deleted locally before its upload was processed. There is nothing
+        // to upload, so drop the stale queue item (return true) instead of looping on it forever — a
+        // missing-record `false` would never bump the retry count and would never clear.
+        val entity = downloadDao.getById(item.downloadId) ?: return true
+        // Capacity enforcement (tier limit + LRU eviction) and counter accounting live inside the
+        // repository's uploadRecord, so every upload path goes through the same invariants.
+        return cloudBackupRepository.uploadRecord(entity.toDomain())
     }
 
     private suspend fun processDelete(item: SyncQueueEntity): Boolean {
-        // TODO: Load the DownloadRecord from DownloadDao by item.downloadId to get the actual sourceUrl,
-        // then call documentIdFor(sourceUrl) to compute the correct document ID.
-        // Requires DownloadDao to be injected — wire this in a future iteration.
-        //
-        // If the record no longer exists locally (already deleted), return true to remove the stale queue item.
-        //
-        // For now, use a placeholder that mirrors IosCloudBackupRepository.documentIdFor() so that at
-        // least the hashing formula is consistent even though sourceUrl is unavailable here.
-        // WARNING: This will NOT produce the correct document ID — the downloadId is not the sourceUrl.
-        // This stub must be replaced once DownloadDao is injected.
-        val placeholderHash =
-            item.downloadId.toString().let { s ->
-                s.hashCode().toLong().and(0xFFFFFFFFL).toString(16) + "_${s.length}"
-            }
-        return cloudBackupRepository.deleteRecord(placeholderHash)
+        // The cloud document id is derived from sourceUrl + createdAt, so we need the original record
+        // to recompute it. If the local record is already gone we cannot derive the id; drop the stale
+        // queue item rather than retrying an operation that can never succeed.
+        val entity = downloadDao.getById(item.downloadId) ?: return true
+        // Must match the id used at upload time (CloudBackupRepositoryImpl.uploadRecord) so the right
+        // document is targeted.
+        val docId = cloudDocumentId(entity.sourceUrl, entity.createdAt)
+        return cloudBackupRepository.deleteRecord(docId)
     }
 
     companion object {

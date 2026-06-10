@@ -16,6 +16,9 @@ android {
 dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:data"))
+    // Room entities/DAOs (DownloadEntity, SyncQueueEntity, DownloadDao, SyncQueueDao) live
+    // in :shared:data; :core:data's dependency on it is not transitive, so depend directly.
+    implementation(project(":shared:data"))
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)

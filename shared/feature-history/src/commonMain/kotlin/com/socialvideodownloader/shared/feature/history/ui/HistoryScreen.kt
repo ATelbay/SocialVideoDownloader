@@ -60,6 +60,7 @@ data class HistoryStrings(
     val screenTitle: String,
     val filterActionLabel: String,
     val searchHint: String,
+    val clearSearchLabel: String,
     val emptyTitle: String,
     val emptyDescription: String,
     val noResultsDescription: String,
@@ -72,6 +73,7 @@ data class HistoryStrings(
     val restoreProgressText: (current: Int, total: Int) -> String,
     val restoreCompletedText: (restored: Int, skipped: Int) -> String,
     val restoreKeyLostText: String,
+    val restoreErrorText: String,
     val deleteTitle: String,
     val deleteBodyText: String,
     val deleteFilesLabel: String,
@@ -97,13 +99,15 @@ data class HistoryStrings(
     val cloudBackupPausedText: String,
     val cloudBackupErrorText: String,
     val msgDeleted: String,
-    val msgAllDeleted: String,
     val msgLinkCopied: String,
     val msgCloudSyncError: String,
     val msgFileUnavailable: String,
     val msgDeleteFileFailed: String,
     val msgOpenError: String,
     val msgShareError: String,
+    val msgPurchaseSuccess: String,
+    val msgPurchasePending: String,
+    val msgPurchaseFailed: String,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -136,11 +140,13 @@ fun HistoryScreen(
                     val msg =
                         when (effect.messageType) {
                             HistoryMessageType.DELETE_SUCCESS -> strings.msgDeleted
-                            HistoryMessageType.DELETE_ALL_SUCCESS -> strings.msgAllDeleted
                             HistoryMessageType.COPY_URL_SUCCESS -> strings.msgLinkCopied
                             HistoryMessageType.CLOUD_SYNC_ERROR -> strings.msgCloudSyncError
                             HistoryMessageType.FILE_UNAVAILABLE -> strings.msgFileUnavailable
                             HistoryMessageType.DELETE_FILE_FAILED -> strings.msgDeleteFileFailed
+                            HistoryMessageType.PURCHASE_SUCCESS -> strings.msgPurchaseSuccess
+                            HistoryMessageType.PURCHASE_PENDING -> strings.msgPurchasePending
+                            HistoryMessageType.PURCHASE_FAILED -> strings.msgPurchaseFailed
                         }
                     snackbarHostState.showSnackbar(msg)
                 }
@@ -171,7 +177,7 @@ fun HistoryScreen(
                         is GoogleSignInResult.Cancelled ->
                             viewModel.onIntent(HistoryIntent.SignInCancelled)
                         is GoogleSignInResult.Failed ->
-                            viewModel.onIntent(HistoryIntent.SignInFailed(result.message))
+                            viewModel.onIntent(HistoryIntent.SignInFailed)
                     }
                 }
             }
@@ -243,7 +249,7 @@ fun HistoryScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
-                                    contentDescription = "Clear search",
+                                    contentDescription = strings.clearSearchLabel,
                                     tint = SvdForeground,
                                     modifier = Modifier.size(18.dp),
                                 )
@@ -302,6 +308,7 @@ fun HistoryScreen(
                     progressText = strings.restoreProgressText,
                     completedText = strings.restoreCompletedText,
                     keyLostText = strings.restoreKeyLostText,
+                    genericErrorText = strings.restoreErrorText,
                     onDismiss = { viewModel.onIntent(HistoryIntent.DismissRestoreDialog) },
                 )
             }

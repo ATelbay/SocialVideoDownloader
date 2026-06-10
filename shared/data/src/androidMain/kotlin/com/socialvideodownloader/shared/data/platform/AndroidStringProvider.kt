@@ -37,7 +37,6 @@ class AndroidStringProvider(
                 StringKey.ERROR_DOWNLOAD_FAILED -> "error_download_failed"
                 StringKey.ERROR_UNKNOWN -> "error_unknown"
                 StringKey.HISTORY_DELETED -> "history_deleted"
-                StringKey.HISTORY_ALL_DELETED -> "history_all_deleted"
                 StringKey.HISTORY_RESTORED -> "history_restored"
                 StringKey.LIBRARY_OPEN_ERROR -> "library_open_error"
                 StringKey.COPY_SUCCESS -> "copy_success"

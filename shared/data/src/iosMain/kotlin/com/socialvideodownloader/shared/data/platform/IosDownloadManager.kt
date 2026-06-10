@@ -2,7 +2,13 @@ package com.socialvideodownloader.shared.data.platform
 
 import com.socialvideodownloader.core.domain.model.DownloadProgress
 import com.socialvideodownloader.core.domain.model.DownloadRequest
+import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.ObjCObjectVar
+import kotlinx.cinterop.alloc
+import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.ptr
+import kotlinx.cinterop.value
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -13,6 +19,7 @@ import kotlinx.coroutines.launch
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSError
 import platform.Foundation.NSFileManager
+import platform.Foundation.NSLock
 import platform.Foundation.NSLog
 import platform.Foundation.NSProcessInfo
 import platform.Foundation.NSURL
@@ -38,7 +45,7 @@ private const val NS_URL_ERROR_UNKNOWN = -1L
  *   `Documents/SocialVideoDownloader/`.
  * - State is exposed as a [StateFlow] consumed by [SharedDownloadViewModel].
  */
-@OptIn(ExperimentalForeignApi::class)
+@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 class IosDownloadManager : PlatformDownloadManager {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -66,6 +73,45 @@ class IosDownloadManager : PlatformDownloadManager {
     // Map taskIdentifier → active download so delegate callbacks can reconstruct context.
     private val activeDownloadsByTaskId = mutableMapOf<Long, ActiveDownload>()
 
+    // NSURLSession delegate callbacks arrive on the session's operation queue while
+    // start/cancel run on coroutine threads, so every access to the two maps above is
+    // serialized through this lock to avoid concurrent-mutation data races.
+    private val stateLock = NSLock()
+
+    private inline fun <T> withStateLock(block: () -> T): T {
+        stateLock.lock()
+        try {
+            return block()
+        } finally {
+            stateLock.unlock()
+        }
+    }
+
+    private fun registerDownload(active: ActiveDownload) =
+        withStateLock {
+            activeDownloadsByRequestId[active.request.id] = active
+            activeDownloadsByTaskId[active.task.taskIdentifier.toLong()] = active
+        }
+
+    /** Reads the active download for a task without removing it. */
+    private fun peekByTaskId(taskId: Long): ActiveDownload? = withStateLock { activeDownloadsByTaskId[taskId] }
+
+    /** Removes and returns the active download for a task, clearing both maps. */
+    private fun removeByTaskId(taskId: Long): ActiveDownload? =
+        withStateLock {
+            val active = activeDownloadsByTaskId.remove(taskId)
+            if (active != null) activeDownloadsByRequestId.remove(active.request.id)
+            active
+        }
+
+    /** Removes and returns the active download for a request id, clearing both maps. */
+    private fun removeByRequestId(requestId: String): ActiveDownload? =
+        withStateLock {
+            val active = activeDownloadsByRequestId.remove(requestId)
+            if (active != null) activeDownloadsByTaskId.remove(active.task.taskIdentifier.toLong())
+            active
+        }
+
     private val delegate = DownloadSessionDelegate()
     private val backgroundSession: NSURLSession by lazy {
         val config =
@@ -85,7 +131,7 @@ class IosDownloadManager : PlatformDownloadManager {
 
     init {
         delegate.onProgress = onProgress@{ taskId, bytesWritten, totalWritten, totalExpected ->
-            val activeDownload = activeDownloadsByTaskId[taskId] ?: return@onProgress
+            val activeDownload = peekByTaskId(taskId) ?: return@onProgress
             activeDownload.hasReportedProgress = true
             val request = activeDownload.request
             val progress =
@@ -116,9 +162,8 @@ class IosDownloadManager : PlatformDownloadManager {
         }
 
         delegate.onCompleted = onCompleted@{ taskId, tempUrl ->
-            val activeDownload = activeDownloadsByTaskId.remove(taskId) ?: return@onCompleted
+            val activeDownload = removeByTaskId(taskId) ?: return@onCompleted
             val request = activeDownload.request
-            activeDownloadsByRequestId.remove(request.id)
             activeRequestId = null
             log(
                 "download_completed requestId=${request.id} " +
@@ -150,9 +195,8 @@ class IosDownloadManager : PlatformDownloadManager {
         }
 
         delegate.onFailed = onFailed@{ taskId, error ->
-            val activeDownload = activeDownloadsByTaskId.remove(taskId) ?: return@onFailed
+            val activeDownload = removeByTaskId(taskId) ?: return@onFailed
             val request = activeDownload.request
-            activeDownloadsByRequestId.remove(request.id)
             if (activeRequestId == request.id) activeRequestId = null
 
             val code = error?.code?.toLong()
@@ -225,8 +269,7 @@ class IosDownloadManager : PlatformDownloadManager {
     }
 
     override fun cancelDownload(requestId: String) {
-        val activeDownload = activeDownloadsByRequestId.remove(requestId) ?: return
-        activeDownloadsByTaskId.remove(activeDownload.task.taskIdentifier.toLong())
+        val activeDownload = removeByRequestId(requestId) ?: return
         activeDownload.task.cancel()
         // Delegate onFailed with NSURLErrorCancelled (-999) handles state update.
     }
@@ -265,8 +308,7 @@ class IosDownloadManager : PlatformDownloadManager {
 
         val task = session.downloadTaskWithURL(url)
         val activeDownload = ActiveDownload(request = request, task = task, sessionMode = sessionMode)
-        activeDownloadsByRequestId[request.id] = activeDownload
-        activeDownloadsByTaskId[task.taskIdentifier.toLong()] = activeDownload
+        registerDownload(activeDownload)
         activeRequestId = request.id
         task.resume()
     }
@@ -323,7 +365,7 @@ class IosDownloadManager : PlatformDownloadManager {
 
         ensureDirectory(destDir)
 
-        val safeTitle = sanitizeFileName(videoTitle).take(100)
+        val safeTitle = FileNames.sanitize(videoTitle, maxLength = 100)
         val safeExt = ext.takeIf { it.isNotEmpty() } ?: "mp4"
         val fileName = "$safeTitle.$safeExt"
         val destUrl =
@@ -334,11 +376,19 @@ class IosDownloadManager : PlatformDownloadManager {
                 .let { uniqueUrl(it) }
 
         val fileManager = NSFileManager.defaultManager
-        val moved = fileManager.moveItemAtURL(tempUrl, toURL = destUrl, error = null)
-        if (!moved) {
-            val copied = fileManager.copyItemAtURL(tempUrl, toURL = destUrl, error = null)
-            if (!copied) throw StorageException("Failed to move downloaded file to Documents")
-            fileManager.removeItemAtURL(tempUrl, error = null)
+        memScoped {
+            val moveError = alloc<ObjCObjectVar<NSError?>>()
+            if (!fileManager.moveItemAtURL(tempUrl, toURL = destUrl, error = moveError.ptr)) {
+                val copyError = alloc<ObjCObjectVar<NSError?>>()
+                if (!fileManager.copyItemAtURL(tempUrl, toURL = destUrl, error = copyError.ptr)) {
+                    throw StorageException(
+                        "Failed to move downloaded file to Documents " +
+                            "(move: ${moveError.value?.localizedDescription ?: "unknown"}; " +
+                            "copy: ${copyError.value?.localizedDescription ?: "unknown"})",
+                    )
+                }
+                fileManager.removeItemAtURL(tempUrl, error = null)
+            }
         }
 
         return destUrl.path ?: throw StorageException("Destination path is nil after move")
@@ -383,11 +433,6 @@ class IosDownloadManager : PlatformDownloadManager {
             counter++
         }
         return base
-    }
-
-    private fun sanitizeFileName(name: String): String {
-        val cleaned = name.replace(Regex("[/\\\\:*?\"<>|]"), "_").trim()
-        return cleaned.ifEmpty { "download" }
     }
 }
 

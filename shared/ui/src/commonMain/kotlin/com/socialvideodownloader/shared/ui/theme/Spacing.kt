@@ -60,4 +60,29 @@ object Spacing {
 
     // Summary bar
     val SummaryBarPadding = 16.dp
+
+    // Minimum interactive touch target (Material accessibility guideline)
+    val MinTouchTarget = 48.dp
+
+    // Icon sizes
+    val IconXs = 14.dp
+    val IconSm = 16.dp
+    val IconMd = 18.dp
+    val IconLg = 20.dp
+    val IconXl = 26.dp
+
+    // Small layout gaps
+    val GapXs = 4.dp
+    val GapSm = 6.dp
+    val GapMd = 8.dp
+    val GapLg = 12.dp
+
+    // Small generic inset (e.g. overlay padding, compact vertical padding)
+    val InsetSm = 10.dp
+
+    // Navigation tab
+    val NavTabMinHeight = 54.dp
+
+    // Thumbnail play overlay
+    val PlayOverlaySize = 44.dp
 }

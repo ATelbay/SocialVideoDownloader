@@ -48,10 +48,14 @@ def filter_formats(info_dict: dict) -> list[FormatInfo]:
         ext = fmt.get("ext") or ""
         format_note = fmt.get("format_note") or ""
         fmt_url = fmt.get("url") or ""
+        format_id = fmt.get("format_id") or ""
 
         if ext == "mhtml":
             continue
         if "storyboard" in format_note.lower():
+            continue
+        # Storyboard formats may omit the note but use ids like "sb0", "sb1".
+        if format_id.startswith("sb") and format_id[2:].isdigit():
             continue
         if not fmt_url:
             continue
@@ -68,7 +72,7 @@ def filter_formats(info_dict: dict) -> list[FormatInfo]:
                 format_id=fmt.get("format_id", ""),
                 ext=ext,
                 resolution=resolution,
-                filesize=fmt.get("filesize"),
+                filesize=fmt.get("filesize") or fmt.get("filesize_approx"),
                 url=fmt_url,
                 vcodec=fmt.get("vcodec"),
                 acodec=fmt.get("acodec"),

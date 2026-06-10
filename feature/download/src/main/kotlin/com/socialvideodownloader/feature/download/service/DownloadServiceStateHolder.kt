@@ -1,6 +1,7 @@
 package com.socialvideodownloader.feature.download.service
 
 import com.socialvideodownloader.core.domain.model.DownloadProgress
+import com.socialvideodownloader.shared.data.platform.DownloadErrorType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +20,7 @@ sealed interface DownloadServiceState {
 
     data class Completed(val requestId: String, val filePath: String) : DownloadServiceState
 
-    data class Failed(val requestId: String, val error: String) : DownloadServiceState
+    data class Failed(val requestId: String, val errorType: DownloadErrorType) : DownloadServiceState
 
     data class Cancelled(val requestId: String) : DownloadServiceState
 }

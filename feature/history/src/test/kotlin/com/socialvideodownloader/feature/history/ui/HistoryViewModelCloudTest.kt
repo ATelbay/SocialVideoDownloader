@@ -1,6 +1,7 @@
 package com.socialvideodownloader.feature.history.ui
 
 import app.cash.turbine.test
+import com.socialvideodownloader.core.billing.PurchaseFlowLauncher
 import com.socialvideodownloader.core.domain.model.SyncStatus
 import com.socialvideodownloader.core.domain.repository.BillingRepository
 import com.socialvideodownloader.core.domain.sync.BackupPreferences
@@ -14,6 +15,7 @@ import com.socialvideodownloader.feature.history.testdouble.FakeDownloadReposito
 import com.socialvideodownloader.feature.history.testdouble.FakeHistoryFileManager
 import com.socialvideodownloader.feature.history.testutil.MainDispatcherRule
 import com.socialvideodownloader.shared.data.platform.PlatformClipboard
+import com.socialvideodownloader.shared.feature.history.DeleteHistoryItemUseCaseShared
 import com.socialvideodownloader.shared.feature.history.HistoryEffect.LaunchGoogleSignIn
 import com.socialvideodownloader.shared.feature.history.HistoryIntent.DismissSignInError
 import com.socialvideodownloader.shared.feature.history.HistoryIntent.SignInFailed
@@ -29,7 +31,6 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -50,6 +51,7 @@ class HistoryViewModelCloudTest {
     private val restoreFromCloudUseCase = mockk<RestoreFromCloudUseCase>(relaxed = true)
     private val cloudAuthService = mockk<CloudAuthService>(relaxed = true)
     private val clipboard = mockk<PlatformClipboard>(relaxed = true)
+    private val purchaseFlowLauncher = mockk<PurchaseFlowLauncher>(relaxed = true)
 
     private val isBackupEnabledFlow = MutableStateFlow(false)
     private val syncStatusFlow = MutableStateFlow<SyncStatus>(SyncStatus.Idle)
@@ -68,6 +70,7 @@ class HistoryViewModelCloudTest {
         HistoryViewModel(
             downloadRepository = repository,
             fileManager = fileManager,
+            deleteHistoryItemUseCase = DeleteHistoryItemUseCaseShared(repository, fileManager),
             observeCloudCapacity = observeCloudCapacity,
             billingRepository = billingRepository,
             enableCloudBackupUseCase = enableCloudBackupUseCase,
@@ -77,6 +80,7 @@ class HistoryViewModelCloudTest {
             restoreFromCloudUseCase = restoreFromCloudUseCase,
             cloudAuthService = cloudAuthService,
             clipboard = clipboard,
+            purchaseFlowLauncher = purchaseFlowLauncher,
         )
 
     @Test
@@ -154,7 +158,7 @@ class HistoryViewModelCloudTest {
             vm.cloudBackupState.test {
                 val state = awaitItem()
                 assertFalse(state.isSigningIn)
-                assertEquals("auth failed", state.signInError)
+                assertTrue(state.hasSignInError)
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -165,12 +169,12 @@ class HistoryViewModelCloudTest {
             every { cloudAuthService.isAuthenticated() } returns false
             val vm = createViewModel()
 
-            vm.onIntent(SignInFailed("credential manager error"))
+            vm.onIntent(SignInFailed)
 
             vm.cloudBackupState.test {
                 val state = awaitItem()
                 assertFalse(state.isSigningIn)
-                assertEquals("credential manager error", state.signInError)
+                assertTrue(state.hasSignInError)
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -181,12 +185,12 @@ class HistoryViewModelCloudTest {
             every { cloudAuthService.isAuthenticated() } returns false
             val vm = createViewModel()
 
-            vm.onIntent(SignInFailed("first failure"))
+            vm.onIntent(SignInFailed)
             vm.onIntent(ToggleCloudBackup)
 
             vm.cloudBackupState.test {
                 val state = awaitItem()
-                assertNull(state.signInError)
+                assertFalse(state.hasSignInError)
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -218,7 +222,7 @@ class HistoryViewModelCloudTest {
 
             vm.cloudBackupState.test {
                 val state = awaitItem()
-                assertNull(state.signInError)
+                assertFalse(state.hasSignInError)
                 cancelAndIgnoreRemainingEvents()
             }
         }

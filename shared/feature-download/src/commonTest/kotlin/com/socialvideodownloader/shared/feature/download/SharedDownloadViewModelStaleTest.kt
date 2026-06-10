@@ -1,77 +1,60 @@
 package com.socialvideodownloader.shared.feature.download
 
-import com.socialvideodownloader.shared.data.platform.DownloadErrorType
 import com.socialvideodownloader.shared.network.auth.SupportedPlatform
-import com.socialvideodownloader.shared.network.auth.detectPlatform
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
+/**
+ * Connected-platform lifecycle: the [DownloadUiState.Idle.connectedPlatforms]
+ * list must reflect the cookie store, and disconnect must update it in place.
+ */
+@OptIn(ExperimentalCoroutinesApi::class)
 class SharedDownloadViewModelStaleTest {
-    @Test
-    fun authError_withStoredCookies_isReconnect() {
-        val url = "https://www.instagram.com/reel/xxx"
-        val platform = detectPlatform(url)
-        assertNotNull(platform)
-
-        val isConnected = true
-        val isReconnect = if (platform != null && isConnected) true else false
-
-        assertTrue(isReconnect)
-    }
+    private val extractor = FakeVideoExtractorRepository.alwaysFails("unused")
 
     @Test
-    fun authError_withoutStoredCookies_isNotReconnect() {
-        val url = "https://www.instagram.com/reel/xxx"
-        val platform = detectPlatform(url)
-        assertNotNull(platform)
+    fun idle_reflectsConnectedPlatformsFromCookieStore() =
+        runTest {
+            val vm =
+                makeVm(
+                    this,
+                    extractor,
+                    cookieStore = FakeCookieStore(connected = setOf(SupportedPlatform.INSTAGRAM)),
+                )
+            advanceUntilIdle()
 
-        val isConnected = false
-        val isReconnect = if (platform != null && isConnected) true else false
+            val state = vm.uiState.value
+            vm.cleanup()
 
-        assertFalse(isReconnect)
-    }
-
-    @Test
-    fun nonAuthError_neverReconnect() {
-        val url = "https://www.instagram.com/reel/xxx"
-        val errorType = DownloadErrorType.NETWORK_ERROR
-
-        val platform = if (errorType == DownloadErrorType.AUTH_REQUIRED) detectPlatform(url) else null
-        val isReconnect = if (platform != null) true else false
-
-        assertFalse(isReconnect)
-        assertNull(platform)
-    }
+            assertIs<DownloadUiState.Idle>(state)
+            assertTrue(SupportedPlatform.INSTAGRAM in state.connectedPlatforms)
+        }
 
     @Test
-    fun uiStateError_includesIsReconnectField() {
-        val state =
-            DownloadUiState.Error(
-                errorType = DownloadErrorType.AUTH_REQUIRED,
-                message = "Auth required",
-                retryAction = RetryAction.RetryExtraction("https://www.instagram.com/reel/xxx"),
-                platformForAuth = SupportedPlatform.INSTAGRAM,
-                isReconnect = true,
-            )
+    fun disconnectPlatform_removesItFromConnectedPlatforms() =
+        runTest {
+            val vm =
+                makeVm(
+                    this,
+                    extractor,
+                    cookieStore =
+                        FakeCookieStore(
+                            connected = setOf(SupportedPlatform.INSTAGRAM, SupportedPlatform.YOUTUBE),
+                        ),
+                )
+            advanceUntilIdle()
 
-        assertTrue(state.isReconnect)
-        assertEquals(SupportedPlatform.INSTAGRAM, state.platformForAuth)
-    }
+            vm.onIntent(DownloadIntent.DisconnectPlatformClicked(SupportedPlatform.INSTAGRAM))
 
-    @Test
-    fun uiStateError_defaultIsReconnectFalse() {
-        val state =
-            DownloadUiState.Error(
-                errorType = DownloadErrorType.NETWORK_ERROR,
-                message = "Network error",
-                retryAction = null,
-            )
+            val state = vm.uiState.value
+            vm.cleanup()
 
-        assertFalse(state.isReconnect)
-        assertNull(state.platformForAuth)
-    }
+            assertIs<DownloadUiState.Idle>(state)
+            assertEquals(listOf(SupportedPlatform.YOUTUBE), state.connectedPlatforms)
+        }
 }

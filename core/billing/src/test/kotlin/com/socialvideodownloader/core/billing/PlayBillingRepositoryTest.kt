@@ -84,15 +84,31 @@ class PlayBillingRepositoryTest {
         }
 
     @Test
-    fun `restorePurchases returns FREE when purchase is not acknowledged`() =
+    fun `restorePurchases grants PAID for owned purchase pending acknowledgement`() =
         runTest {
+            // Ownership of a completed purchase grants PAID; restorePurchasesInternal acknowledges
+            // unacknowledged purchases separately so Google does not auto-refund them.
             val repo = createTestRepo()
 
             val purchase =
                 mockk<Purchase> {
                     every { products } returns listOf(PlayBillingRepository.PRODUCT_ID)
                     every { purchaseState } returns Purchase.PurchaseState.PURCHASED
-                    every { isAcknowledged } returns false
+                }
+
+            val result = repo.restorePurchasesFromList(listOf(purchase))
+            assertEquals(CloudTier.PAID, result)
+        }
+
+    @Test
+    fun `restorePurchases returns FREE for a pending (not yet completed) purchase`() =
+        runTest {
+            val repo = createTestRepo()
+
+            val purchase =
+                mockk<Purchase> {
+                    every { products } returns listOf(PlayBillingRepository.PRODUCT_ID)
+                    every { purchaseState } returns Purchase.PurchaseState.PENDING
                 }
 
             val result = repo.restorePurchasesFromList(listOf(purchase))

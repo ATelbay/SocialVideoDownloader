@@ -19,6 +19,7 @@ import com.socialvideodownloader.core.domain.usecase.ExtractVideoInfoUseCase
 import com.socialvideodownloader.core.domain.usecase.FindExistingDownloadUseCase
 import com.socialvideodownloader.core.domain.usecase.SaveDownloadRecordUseCase
 import com.socialvideodownloader.core.domain.usecase.SaveFileToMediaStoreUseCase
+import com.socialvideodownloader.shared.feature.history.DeleteHistoryItemUseCaseShared
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -81,4 +82,10 @@ object UseCaseModule {
         cloudBackupRepository: CloudBackupRepository,
         downloadRepository: DownloadRepository,
     ): RestoreFromCloudUseCase = RestoreFromCloudUseCase(cloudBackupRepository, downloadRepository)
+
+    @Provides
+    fun provideDeleteHistoryItemUseCaseShared(
+        downloadRepository: DownloadRepository,
+        fileAccessManager: FileAccessManager,
+    ): DeleteHistoryItemUseCaseShared = DeleteHistoryItemUseCaseShared(downloadRepository, fileAccessManager)
 }

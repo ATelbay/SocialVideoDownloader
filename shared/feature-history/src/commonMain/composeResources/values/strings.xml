@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Screen title -->
+    <string name="history_screen_title">History</string>
+    <string name="history_filter_action">Filter</string>
+
+    <!-- Download status badge labels -->
+    <string name="status_completed">Completed</string>
+    <string name="status_failed">Failed</string>
+    <string name="status_downloading">Downloading</string>
+    <string name="status_pending">Pending</string>
+    <string name="status_queued">Queued</string>
+    <string name="status_cancelled">Cancelled</string>
+
+    <!-- Search -->
+    <string name="history_search_hint">Search downloads</string>
+    <string name="history_clear_search">Clear search</string>
+
+    <!-- Empty states -->
+    <string name="history_empty_title">No downloads yet</string>
+    <string name="history_empty_description">Downloaded videos will appear here. Start by pasting a video link!</string>
+    <string name="history_no_results_description">Try a different search term</string>
+
+    <!-- Start prompts -->
+    <string name="history_start_downloading">Start Downloading</string>
+    <string name="history_start_new_download">Start new download</string>
+
+    <!-- Restore -->
+    <string name="cloud_restore_button">Restore from Cloud</string>
+    <string name="cloud_restore_progress">Restoring %1$d of %2$d records…</string>
+    <string name="cloud_restore_complete">Restored %1$d records, %2$d duplicates skipped</string>
+    <string name="cloud_restore_key_lost">Records cannot be decrypted — encryption key no longer available</string>
+    <string name="cloud_restore_error">Restore failed. Please try again.</string>
+
+    <!-- Capacity -->
+    <string name="cloud_capacity_banner">%1$d of %2$d cloud records used</string>
+    <string name="cloud_capacity_upgrade">Upgrade</string>
+
+    <!-- Common -->
+    <string name="common_ok">OK</string>
+
+    <!-- Delete dialog -->
+    <string name="history_delete_title">Delete download?</string>
+    <string name="history_delete_body">This will remove the record from history</string>
+    <string name="history_delete_files_label">Also delete file from storage</string>
+    <string name="history_delete_cancel">Cancel</string>
+    <string name="history_delete_confirm">Delete</string>
+
+    <!-- Bottom sheet -->
+    <string name="history_bottom_sheet_copy_link">Copy Link</string>
+    <string name="history_bottom_sheet_share">Share</string>
+    <string name="history_bottom_sheet_delete">Delete</string>
+
+    <!-- Upgrade / Billing -->
+    <string name="upgrade_title">Unlock More Cloud Storage</string>
+    <string name="upgrade_description">Upgrade to store up to 10,000 cloud records — 10x more than the free tier.</string>
+    <string name="upgrade_price">500 ₸ (~$1) — one-time purchase</string>
+    <string name="upgrade_buy_button">Buy</string>
+
+    <!-- Cloud backup -->
+    <string name="cloud_backup_toggle_label">Cloud Backup</string>
+    <string name="cloud_sign_in">Sign in with Google</string>
+    <string name="cloud_sign_out">Sign out</string>
+    <string name="cloud_signed_in_as">Signed in as %1$s</string>
+    <string name="cloud_signed_in">Signed in</string>
+    <string name="cloud_sign_in_failed">Sign-in failed. Please try again.</string>
+    <string name="cloud_backup_disabled">Cloud backup is off</string>
+    <string name="cloud_backup_never">Not backed up</string>
+    <string name="cloud_backup_syncing">Syncing…</string>
+    <string name="cloud_backup_synced">Last backed up %1$s</string>
+    <string name="cloud_backup_paused">Backup paused</string>
+    <string name="cloud_backup_error">Backup error</string>
+
+    <!-- Snackbar messages -->
+    <string name="history_deleted">Download deleted</string>
+    <string name="history_link_copied">Link copied to clipboard</string>
+    <string name="history_cloud_sync_error">Cloud sync error</string>
+    <string name="history_file_unavailable">File is no longer available</string>
+    <string name="history_delete_file_failed">File could not be deleted from storage</string>
+    <string name="history_open_error">Could not open file</string>
+    <string name="history_share_error">Could not share file</string>
+    <string name="history_purchase_success">Purchase complete — capacity unlocked</string>
+    <string name="history_purchase_pending">Purchase pending — capacity unlocks once payment completes</string>
+    <string name="history_purchase_failed">Purchase failed. Please try again</string>
+</resources>

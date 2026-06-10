@@ -29,6 +29,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.socialvideodownloader.core.domain.model.DownloadProgress
+import com.socialvideodownloader.shared.feature.download.generated.resources.Res
+import com.socialvideodownloader.shared.feature.download.generated.resources.action_cancel_download
+import com.socialvideodownloader.shared.feature.download.generated.resources.progress_downloading
+import com.socialvideodownloader.shared.feature.download.generated.resources.progress_finalizing
 import com.socialvideodownloader.shared.ui.theme.LocalAppShapes
 import com.socialvideodownloader.shared.ui.theme.Spacing
 import com.socialvideodownloader.shared.ui.theme.SvdBorder
@@ -39,6 +43,7 @@ import com.socialvideodownloader.shared.ui.theme.SvdPrimary
 import com.socialvideodownloader.shared.ui.theme.SvdPrimaryStrong
 import com.socialvideodownloader.shared.ui.theme.SvdSurfaceAlt
 import com.socialvideodownloader.shared.ui.theme.SvdSurfaceStrong
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun DownloadProgressContent(
@@ -51,6 +56,9 @@ fun DownloadProgressContent(
         targetValue = progress.progressPercent / 100f,
         label = "progress",
     )
+    val labelCancelDownload = stringResource(Res.string.action_cancel_download)
+    val labelDownloading = stringResource(Res.string.progress_downloading)
+    val labelFinalizing = stringResource(Res.string.progress_finalizing)
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -75,7 +83,7 @@ fun DownloadProgressContent(
             )
 
             Text(
-                text = if (progress.isMuxing) "Finalizing video\u2026" else "Downloading video\u2026",
+                text = if (progress.isMuxing) labelFinalizing else labelDownloading,
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                 color = SvdMutedForeground,
             )
@@ -118,9 +126,9 @@ fun DownloadProgressContent(
                 Text(
                     text =
                         if (progress.isMuxing) {
-                            "\u2014"
+                            "—"
                         } else {
-                            progress.totalBytes?.let { formatFileSize(it) } ?: "\u2014"
+                            progress.totalBytes?.let { formatFileSize(it) } ?: "—"
                         },
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold, fontSize = 13.sp),
                     color = SvdForeground,
@@ -128,7 +136,7 @@ fun DownloadProgressContent(
                 Text(
                     text =
                         if (progress.isMuxing || progress.speedBytesPerSec <= 0) {
-                            "\u2014"
+                            "—"
                         } else {
                             formatSpeed(progress.speedBytesPerSec)
                         },
@@ -148,13 +156,13 @@ fun DownloadProgressContent(
                     .border(1.dp, SvdBorderStrong, shapes.control)
                     .semantics(mergeDescendants = true) {
                         role = Role.Button
-                        contentDescription = "Cancel Download"
+                        contentDescription = labelCancelDownload
                     }
                     .clickable(onClick = onCancelClicked),
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = "Cancel Download",
+                text = labelCancelDownload,
                 style =
                     MaterialTheme.typography.labelLarge.copy(
                         fontSize = 14.sp,

@@ -9,6 +9,7 @@ import com.socialvideodownloader.shared.network.auth.SupportedPlatform
 import com.socialvideodownloader.shared.network.auth.detectPlatform
 import com.socialvideodownloader.shared.network.dto.ServerExtractResponse
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.websocket.webSocket
 import io.ktor.client.request.headers
 import io.ktor.client.request.request
@@ -34,7 +35,14 @@ class WebSocketExtractorApi(
     private val secureCookieStore: CookieStore,
 ) {
     // Separate plain client for executing proxied HTTP requests — no ContentNegotiation needed.
-    private val rawClient = HttpClient { }
+    private val rawClient =
+        HttpClient {
+            install(HttpTimeout) {
+                connectTimeoutMillis = 10_000
+                requestTimeoutMillis = 60_000
+                socketTimeoutMillis = 60_000
+            }
+        }
 
     suspend fun extractViaProxy(url: String): VideoMetadata {
         val wsUrl =
@@ -51,6 +59,8 @@ class WebSocketExtractorApi(
                 buildJsonObject {
                     put("type", "extract_request")
                     put("url", url)
+                    // Authenticate the WS session with the same key as HTTP /extract.
+                    ServerConfig.extractApiKey?.takeIf { it.isNotEmpty() }?.let { put("api_key", it) }
                     // Include cookies for pre-seeding yt-dlp's cookie jar
                     val platform = detectPlatform(url)
                     if (platform != null) {
@@ -82,7 +92,14 @@ class WebSocketExtractorApi(
 
                         val responseFrame =
                             try {
-                                // Inject platform cookies into proxied request headers
+                                // SSRF guard: the server dictates these URLs, so only allow
+                                // public http(s) targets — never loopback/private/link-local.
+                                if (!isProxyUrlAllowed(reqUrl)) {
+                                    throw IllegalArgumentException("Blocked proxied URL")
+                                }
+
+                                // Inject platform cookies into proxied request headers,
+                                // skipping names the server already set to avoid duplicates.
                                 val mergedHeaders = reqHeaders.toMutableMap()
                                 val reqHost =
                                     try {
@@ -100,14 +117,17 @@ class WebSocketExtractorApi(
                                     if (cookies != null) {
                                         val pairs = NetscapeCookieParser.parseToNameValuePairs(cookies)
                                         if (pairs.isNotEmpty()) {
-                                            val cookieString = pairs.joinToString("; ") { "${it.first}=${it.second}" }
                                             val existing = mergedHeaders["Cookie"] ?: mergedHeaders["cookie"] ?: ""
-                                            mergedHeaders["Cookie"] =
-                                                if (existing.isNotBlank()) {
-                                                    "$existing; $cookieString"
-                                                } else {
-                                                    cookieString
-                                                }
+                                            val existingNames =
+                                                existing.split(";")
+                                                    .mapNotNull { it.substringBefore("=").trim().ifEmpty { null } }
+                                                    .toSet()
+                                            val fresh = pairs.filter { it.first !in existingNames }
+                                            if (fresh.isNotEmpty()) {
+                                                val cookieString = fresh.joinToString("; ") { "${it.first}=${it.second}" }
+                                                mergedHeaders["Cookie"] =
+                                                    if (existing.isNotBlank()) "$existing; $cookieString" else cookieString
+                                            }
                                         }
                                     }
                                 }

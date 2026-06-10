@@ -9,19 +9,22 @@ interface BillingRepository {
 
     /** Check and restore purchases on app launch. */
     suspend fun restorePurchases(): CloudTier
-
-    /**
-     * Initiate purchase flow.
-     * [activityRef] is expected to be an android.app.Activity at runtime;
-     * typed as Any here to keep :core:domain free of Android SDK.
-     */
-    suspend fun launchPurchaseFlow(activityRef: Any): BillingResult
 }
 
+/**
+ * Result of a platform purchase flow.
+ *
+ * The purchase flow itself is launched through a platform-specific entry point
+ * (Android: PurchaseFlowLauncher with an Activity; iOS: StoreKit) rather than
+ * this domain repository, so the contract stays free of platform UI types.
+ */
 sealed interface BillingResult {
     data object Success : BillingResult
 
     data object Cancelled : BillingResult
+
+    /** Purchase acknowledged by the store but not yet completed (e.g. awaiting payment). */
+    data object Pending : BillingResult
 
     data class Error(val message: String) : BillingResult
 }

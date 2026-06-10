@@ -21,9 +21,11 @@ sealed interface HistoryEffect {
 /** Typed message keys replacing @StringRes Int in history effects. */
 enum class HistoryMessageType {
     DELETE_SUCCESS,
-    DELETE_ALL_SUCCESS,
     COPY_URL_SUCCESS,
     CLOUD_SYNC_ERROR,
     FILE_UNAVAILABLE,
     DELETE_FILE_FAILED,
+    PURCHASE_SUCCESS,
+    PURCHASE_PENDING,
+    PURCHASE_FAILED,
 }

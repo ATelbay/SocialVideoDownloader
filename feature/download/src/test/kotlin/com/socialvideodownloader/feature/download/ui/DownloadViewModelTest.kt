@@ -11,6 +11,7 @@ import com.socialvideodownloader.core.domain.usecase.FindExistingDownloadUseCase
 import com.socialvideodownloader.feature.download.service.DownloadServiceState
 import com.socialvideodownloader.feature.download.service.DownloadServiceStateHolder
 import com.socialvideodownloader.shared.data.platform.AndroidDownloadManager
+import com.socialvideodownloader.shared.data.platform.DownloadErrorType
 import com.socialvideodownloader.shared.feature.download.DownloadIntent.DownloadClicked
 import com.socialvideodownloader.shared.feature.download.DownloadIntent.ExtractClicked
 import com.socialvideodownloader.shared.feature.download.DownloadIntent.FormatSelected
@@ -158,9 +159,11 @@ class DownloadViewModelTest {
 
                 val error = awaitItem()
                 assertTrue(error is Error)
-                // The shared VM maps "Network error" message → NETWORK_ERROR error type
+                // The shared VM maps a "Network error" message → NETWORK_ERROR type and
+                // resolves user-facing text from the type via string resources, so the raw
+                // `message` is only kept for UNKNOWN errors (null otherwise). Assert on type.
                 val errorState = error as Error
-                assertEquals("Network error", errorState.message)
+                assertEquals(DownloadErrorType.NETWORK_ERROR, errorState.errorType)
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -330,7 +333,7 @@ class DownloadViewModelTest {
                 val downloading = awaitItem() as Downloading
                 val requestId = downloading.progress.requestId
 
-                serviceStateHolder.update(DownloadServiceState.Failed(requestId, "Download error"))
+                serviceStateHolder.update(DownloadServiceState.Failed(requestId, DownloadErrorType.DOWNLOAD_FAILED))
 
                 val error = awaitItem()
                 assertTrue(error is Error)

@@ -42,24 +42,24 @@ import com.socialvideodownloader.shared.ui.theme.SvdSuccessSoft
  * @param status A string representation of the download status. Recognised values:
  *   "COMPLETED", "FAILED", "DOWNLOADING", "PENDING", "QUEUED", "CANCELLED".
  *   Unknown values are rendered with a neutral accent color.
+ * @param label The localized text to display. Resolved by the caller so the design system
+ *   stays free of hardcoded user-facing strings.
  * @param isAnimated When true, a pulsing dot is shown (used for active downloads).
  */
 @Composable
 fun StatusBadge(
     status: String,
+    label: String,
     isAnimated: Boolean = status.equals("DOWNLOADING", ignoreCase = true),
     modifier: Modifier = Modifier,
 ) {
     val shapes = LocalAppShapes.current
-    val (containerColor, contentColor, label) =
+    val (containerColor, contentColor) =
         when (status.uppercase()) {
-            "COMPLETED" -> Triple(SvdSuccessSoft, SvdSuccess, "Completed")
-            "FAILED" -> Triple(SvdErrorSoft, SvdError, "Failed")
-            "DOWNLOADING" -> Triple(SvdPrimarySoft, SvdPrimaryStrong, "Downloading")
-            "PENDING" -> Triple(SvdAccentSoft, SvdAccent, "Pending")
-            "QUEUED" -> Triple(SvdAccentSoft, SvdAccent, "Queued")
-            "CANCELLED" -> Triple(SvdAccentSoft, SvdAccent, "Cancelled")
-            else -> Triple(SvdAccentSoft, SvdAccent, status)
+            "COMPLETED" -> SvdSuccessSoft to SvdSuccess
+            "FAILED" -> SvdErrorSoft to SvdError
+            "DOWNLOADING" -> SvdPrimarySoft to SvdPrimaryStrong
+            else -> SvdAccentSoft to SvdAccent
         }
 
     Row(
@@ -68,9 +68,9 @@ fun StatusBadge(
                 .height(Spacing.StatusChipHeight)
                 .clip(shapes.pill)
                 .background(containerColor)
-                .padding(horizontal = 10.dp),
+                .padding(horizontal = Spacing.InsetSm),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.GapXs),
     ) {
         if (isAnimated) {
             AnimatedSpinnerDot(color = contentColor)

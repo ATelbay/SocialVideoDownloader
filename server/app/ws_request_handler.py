@@ -25,6 +25,35 @@ if TYPE_CHECKING:
     from fastapi import WebSocket
 
 
+class _ValidatingRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """Re-validate every redirect target against the SSRF guard.
+
+    ``urllib`` follows redirects automatically, and :func:`validate_public_url`
+    only checks the *initial* URL. Without this handler a public host could
+    answer ``302 -> http://169.254.169.254/`` (cloud metadata) or
+    ``http://127.0.0.1/`` and the server would happily follow it. We validate
+    each hop and abort the redirect chain when a target is not public.
+
+    Residual risk: this does not defend against DNS rebinding / TOCTOU between
+    validation and the actual connect (the host is resolved again by urllib).
+    Pinning the resolved IP onto the socket is out of scope here.
+    """
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        from app.security import UnsafeUrlError, validate_public_url
+
+        try:
+            validate_public_url(newurl)
+        except UnsafeUrlError as exc:
+            raise UnsafeUrlError(f"Blocked redirect to {newurl}: {exc}") from exc
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+# Built once; the validating handler replaces urllib's default HTTPRedirectHandler
+# while keeping the rest of the default opener chain.
+_DIRECT_OPENER = urllib.request.build_opener(_ValidatingRedirectHandler())
+
+
 @dataclass
 class WSContext:
     websocket: "WebSocket"
@@ -55,7 +84,8 @@ class WebSocketProxyRH(RequestHandler):
 
         request_id = f"req-{ctx.request_counter:03d}"
         ctx.request_counter += 1
-        logger.info("WS proxy _send %s: %s %s headers=%s", request_id, request.method, request.url, dict(self._get_headers(request).items()))
+        # Headers/URLs may carry cookies and signed tokens — keep them at DEBUG.
+        logger.debug("WS proxy _send %s: %s %s headers=%s", request_id, request.method, request.url, dict(self._get_headers(request).items()))
 
         body_bytes: bytes | None = None
         if request.data is not None:
@@ -90,11 +120,11 @@ class WebSocketProxyRH(RequestHandler):
         ).result(timeout=30)
 
         result = future.result(timeout=90)
-        logger.info("WS proxy %s: got response type=%s status=%s", request_id, result.get("type"), result.get("status"))
+        logger.debug("WS proxy %s: got response type=%s status=%s", request_id, result.get("type"), result.get("status"))
 
         if result.get("type") == "http_error":
             error_msg = result.get("error", "")
-            logger.info("WS proxy %s: error=%s", request_id, error_msg)
+            logger.debug("WS proxy %s: error=%s", request_id, error_msg)
             # iOS NSURLSessionDataTask -1103 bug — fallback to server-side request
             if "-1103" in error_msg:
                 logger.info("WS proxy %s: iOS -1103, falling back to direct request", request_id)
@@ -135,6 +165,15 @@ class WebSocketProxyRH(RequestHandler):
 
     def _direct_request(self, request: Request) -> Response:
         """Fallback: make the request directly from the server using urllib."""
+        # This is the only path where the server itself fetches a URL, so guard
+        # it against SSRF (loopback / private / cloud-metadata addresses).
+        from app.security import UnsafeUrlError, validate_public_url
+
+        try:
+            validate_public_url(request.url)
+        except UnsafeUrlError as exc:
+            raise TransportError(str(exc)) from exc
+
         cookiejar = self._get_cookiejar(request)
         urllib_req = urllib.request.Request(
             request.url,
@@ -144,7 +183,12 @@ class WebSocketProxyRH(RequestHandler):
         )
         cookiejar.add_cookie_header(urllib_req)
 
-        resp = urllib.request.urlopen(urllib_req, timeout=30)
+        # Use an opener that re-validates redirect targets, so a public host
+        # cannot 302 us into loopback / cloud-metadata addresses.
+        try:
+            resp = _DIRECT_OPENER.open(urllib_req, timeout=30)
+        except UnsafeUrlError as exc:
+            raise TransportError(str(exc)) from exc
         response_body = resp.read()
 
         # Extract cookies from the direct response

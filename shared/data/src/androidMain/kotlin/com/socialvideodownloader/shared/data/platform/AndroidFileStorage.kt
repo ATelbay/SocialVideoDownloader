@@ -6,7 +6,7 @@ import android.content.Context
 import android.net.Uri
 import android.os.Environment
 import android.provider.MediaStore
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import java.io.File
 
@@ -19,16 +19,17 @@ import java.io.File
 @SuppressLint("NewApi") // MediaStore.Downloads requires API 29+; callers gate on Build.VERSION_CODES.Q
 class AndroidFileStorage(
     private val context: Context,
+    private val ioDispatcher: CoroutineDispatcher,
 ) : PlatformFileStorage {
     override suspend fun saveToDownloads(
         tempFilePath: String,
         fileName: String,
         mimeType: String,
     ): SaveResult =
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             val contentValues =
                 ContentValues().apply {
-                    put(MediaStore.Downloads.DISPLAY_NAME, fileName)
+                    put(MediaStore.Downloads.DISPLAY_NAME, FileNames.sanitize(fileName))
                     put(MediaStore.Downloads.MIME_TYPE, mimeType)
                     put(MediaStore.Downloads.RELATIVE_PATH, "${Environment.DIRECTORY_DOWNLOADS}/SocialVideoDownloader")
                     put(MediaStore.Downloads.IS_PENDING, 1)
@@ -40,15 +41,21 @@ class AndroidFileStorage(
                     ?: throw IllegalStateException("Failed to create MediaStore entry for $fileName")
 
             val tempFile = File(tempFilePath)
-            resolver.openOutputStream(uri)?.use { outputStream ->
-                tempFile.inputStream().use { inputStream ->
-                    inputStream.copyTo(outputStream)
-                }
-            } ?: throw IllegalStateException("Failed to open output stream for $uri")
+            try {
+                resolver.openOutputStream(uri)?.use { outputStream ->
+                    tempFile.inputStream().use { inputStream ->
+                        inputStream.copyTo(outputStream)
+                    }
+                } ?: throw IllegalStateException("Failed to open output stream for $uri")
 
-            contentValues.clear()
-            contentValues.put(MediaStore.Downloads.IS_PENDING, 0)
-            resolver.update(uri, contentValues, null, null)
+                contentValues.clear()
+                contentValues.put(MediaStore.Downloads.IS_PENDING, 0)
+                resolver.update(uri, contentValues, null, null)
+            } catch (e: Exception) {
+                // Remove the orphaned pending MediaStore entry so it does not leak.
+                resolver.delete(uri, null, null)
+                throw e
+            }
 
             // Capture size before deleting temp file
             val fileSize = tempFile.length()
@@ -64,7 +71,7 @@ class AndroidFileStorage(
         }
 
     override suspend fun isFileAccessible(filePath: String): Boolean =
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             try {
                 // Try as content URI first
                 if (filePath.startsWith("content://")) {
@@ -79,7 +86,7 @@ class AndroidFileStorage(
         }
 
     override suspend fun deleteFile(filePath: String): Boolean =
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             try {
                 if (filePath.startsWith("content://")) {
                     val uri = Uri.parse(filePath)

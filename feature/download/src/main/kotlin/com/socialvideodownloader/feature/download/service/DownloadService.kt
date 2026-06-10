@@ -14,8 +14,8 @@ import com.socialvideodownloader.core.domain.usecase.CancelDownloadUseCase
 import com.socialvideodownloader.core.domain.usecase.DownloadVideoUseCase
 import com.socialvideodownloader.core.domain.usecase.SaveDownloadRecordUseCase
 import com.socialvideodownloader.core.domain.usecase.SaveFileToMediaStoreUseCase
-import com.socialvideodownloader.feature.download.R
 import com.socialvideodownloader.feature.download.ui.ErrorMessageMapper
+import com.socialvideodownloader.shared.feature.download.DownloadErrorClassifier
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -23,6 +23,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
@@ -50,6 +51,11 @@ class DownloadService : Service() {
     private val queue = ConcurrentLinkedQueue<DownloadRequest>()
     private val isProcessing = AtomicBoolean(false)
 
+    // Request IDs cancelled by the user. Aborting yt-dlp typically surfaces as a plain
+    // Exception (not CancellationException), so the download coroutine consults this set to
+    // avoid reporting a user-initiated cancel as a failure.
+    private val cancelledIds = ConcurrentHashMap.newKeySet<String>()
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(
@@ -64,6 +70,7 @@ class DownloadService : Service() {
             }
             ACTION_CANCEL_DOWNLOAD -> {
                 val requestId = intent.getStringExtra(EXTRA_REQUEST_ID) ?: return START_NOT_STICKY
+                cancelledIds.add(requestId)
                 cancelDownload(requestId)
                 // Safe to wipe the entire ytdl_downloads dir: downloads are processed serially
                 // (one active at a time via isProcessing), so cancelling the active download means
@@ -246,31 +253,39 @@ class DownloadService : Service() {
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                android.util.Log.e(TAG, "Download failed for ${request.id}", e)
-                val errorMsg = e.message ?: getString(R.string.notification_download_failed)
-                val userFacingError = errorMessageMapper.map(e)
-                stateHolder.update(DownloadServiceState.Failed(request.id, errorMsg))
-                notificationManager.cancelNotification(notificationId)
-                if (!request.shareOnly) {
-                    notificationManager.showErrorNotification(
-                        notificationId xor COMPLETION_ID_XOR,
-                        request.videoTitle,
-                        userFacingError,
-                    )
-                    saveDownloadRecord(
-                        DownloadRecord(
-                            id = request.existingRecordId ?: 0,
-                            sourceUrl = request.sourceUrl,
-                            videoTitle = request.videoTitle,
-                            thumbnailUrl = request.thumbnailUrl,
-                            formatLabel = request.formatLabel,
-                            filePath = null,
-                            status = DownloadStatus.FAILED,
-                            createdAt = System.currentTimeMillis(),
-                        ),
-                    )
+                if (request.id in cancelledIds) {
+                    // User-initiated cancellation surfaced as a plain exception from the aborted
+                    // yt-dlp process. State is already Cancelled (set in onStartCommand) — don't
+                    // overwrite it with Failed, notify, or persist a FAILED record.
+                    notificationManager.cancelNotification(notificationId)
+                } else {
+                    android.util.Log.e(TAG, "Download failed for ${request.id}", e)
+                    val errorType = DownloadErrorClassifier.classify(e, request.sourceUrl)
+                    val userFacingError = errorMessageMapper.map(errorType)
+                    stateHolder.update(DownloadServiceState.Failed(request.id, errorType))
+                    notificationManager.cancelNotification(notificationId)
+                    if (!request.shareOnly) {
+                        notificationManager.showErrorNotification(
+                            notificationId xor COMPLETION_ID_XOR,
+                            request.videoTitle,
+                            userFacingError,
+                        )
+                        saveDownloadRecord(
+                            DownloadRecord(
+                                id = request.existingRecordId ?: 0,
+                                sourceUrl = request.sourceUrl,
+                                videoTitle = request.videoTitle,
+                                thumbnailUrl = request.thumbnailUrl,
+                                formatLabel = request.formatLabel,
+                                filePath = null,
+                                status = DownloadStatus.FAILED,
+                                createdAt = System.currentTimeMillis(),
+                            ),
+                        )
+                    }
                 }
             } finally {
+                cancelledIds.remove(request.id)
                 if (queue.peek() == null) {
                     stopForeground(STOP_FOREGROUND_REMOVE)
                 }
@@ -287,17 +302,16 @@ class DownloadService : Service() {
     }
 
     private fun parseSpeedToBytes(speedText: String): Long {
-        return try {
-            when {
-                speedText.contains("MiB/s", ignoreCase = true) ->
-                    (speedText.replace("MiB/s", "", ignoreCase = true).trim().toFloat() * 1024 * 1024).toLong()
-                speedText.contains("KiB/s", ignoreCase = true) ->
-                    (speedText.replace("KiB/s", "", ignoreCase = true).trim().toFloat() * 1024).toLong()
-                else -> 0L
+        val match = SPEED_REGEX.find(speedText.trim()) ?: return 0L
+        val value = match.groupValues[1].toFloatOrNull() ?: return 0L
+        val multiplier =
+            when (match.groupValues[2].lowercase()) {
+                "g" -> 1024.0 * 1024 * 1024
+                "m" -> 1024.0 * 1024
+                "k" -> 1024.0
+                else -> 1.0
             }
-        } catch (e: NumberFormatException) {
-            0L
-        }
+        return (value * multiplier).toLong()
     }
 
     private fun formatEta(etaSeconds: Long): String {
@@ -337,6 +351,9 @@ class DownloadService : Service() {
         private const val TAG = "DownloadService"
         private const val MUXING_DETECTION_THRESHOLD = 95f
         const val SHARE_TEMP_DIR = "ytdl_share"
+
+        // Matches yt-dlp speed strings: "1.5MiB/s", "850KiB/s", "2.1GiB/s", "512B/s".
+        private val SPEED_REGEX = Regex("""([\d.]+)\s*([KMG]?)i?B/s""", RegexOption.IGNORE_CASE)
 
         // XOR mask to derive completion/error notification IDs from progress IDs without collision.
         // hashCode() returns values in [-2^31, 2^31-1]; XOR with this bit pattern flips the sign bit,

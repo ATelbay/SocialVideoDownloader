@@ -1,8 +1,18 @@
 package com.socialvideodownloader.shared.data.platform
 
+import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.ObjCObjectVar
+import kotlinx.cinterop.alloc
+import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.ptr
+import kotlinx.cinterop.value
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import platform.Foundation.NSDocumentDirectory
+import platform.Foundation.NSError
 import platform.Foundation.NSFileManager
+import platform.Foundation.NSNumber
 import platform.Foundation.NSURL
 import platform.Foundation.NSUserDomainMask
 import platform.Foundation.lastPathComponent
@@ -17,7 +27,7 @@ private const val SVD_DIRECTORY = "SocialVideoDownloader"
  *
  * [platformUri] is always null on iOS — sharing is done via file:// URLs.
  */
-@OptIn(ExperimentalForeignApi::class)
+@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 class IosFileStorage : PlatformFileStorage {
     /**
      * Move a downloaded file from its temp location into the permanent
@@ -27,58 +37,53 @@ class IosFileStorage : PlatformFileStorage {
         tempFilePath: String,
         fileName: String,
         mimeType: String,
-    ): SaveResult {
-        val destDir = svdDirectory() ?: throw StorageException("Cannot resolve Documents directory")
-        ensureDirectory(destDir)
+    ): SaveResult =
+        withContext(Dispatchers.Default) {
+            val destDir = svdDirectory() ?: throw StorageException("Cannot resolve Documents directory")
+            ensureDirectory(destDir)
 
-        val safeFileName = sanitizeFileName(fileName)
-        val destUrl = destDir.URLByAppendingPathComponent(safeFileName) ?: throw StorageException("Cannot build destination URL")
-        val uniqueDestUrl = uniqueUrl(destUrl)
+            val safeFileName = FileNames.sanitize(fileName)
+            val destUrl =
+                destDir.URLByAppendingPathComponent(safeFileName)
+                    ?: throw StorageException("Cannot build destination URL")
+            val uniqueDestUrl = uniqueUrl(destUrl)
 
-        val sourceUrl = NSURL.fileURLWithPath(tempFilePath)
-        val fileManager = NSFileManager.defaultManager
+            val sourceUrl = NSURL.fileURLWithPath(tempFilePath)
+            moveOrCopy(sourceUrl, uniqueDestUrl)
 
-        @Suppress("UNCHECKED_CAST")
-        val moved = fileManager.moveItemAtURL(sourceUrl, toURL = uniqueDestUrl, error = null)
-        if (!moved) {
-            // If move failed (e.g., cross-device), try copy + delete
-            val copied = fileManager.copyItemAtURL(sourceUrl, toURL = uniqueDestUrl, error = null)
-            if (!copied) {
-                throw StorageException("Failed to save file to Downloads directory")
-            }
-            fileManager.removeItemAtURL(sourceUrl, error = null)
+            val filePath = uniqueDestUrl.path ?: throw StorageException("Destination path is nil")
+            val fileSize = fileSizeOf(filePath)
+
+            // iOS uses file:// URLs for sharing, not content:// URIs
+            SaveResult(
+                filePath = filePath,
+                platformUri = null,
+                fileSizeBytes = fileSize,
+            )
         }
 
-        val filePath = uniqueDestUrl.path ?: throw StorageException("Destination path is nil")
-        val fileSize =
-            fileManager.attributesOfItemAtPath(filePath, error = null)
-                ?.get("NSFileSize") as? Long ?: 0L
+    override suspend fun isFileAccessible(filePath: String): Boolean =
+        withContext(Dispatchers.Default) {
+            NSFileManager.defaultManager.fileExistsAtPath(filePath)
+        }
 
-        // iOS uses file:// URLs for sharing, not content:// URIs
-        return SaveResult(
-            filePath = filePath,
-            platformUri = null,
-            fileSizeBytes = fileSize,
-        )
-    }
-
-    override suspend fun isFileAccessible(filePath: String): Boolean {
-        return NSFileManager.defaultManager.fileExistsAtPath(filePath)
-    }
-
-    override suspend fun deleteFile(filePath: String): Boolean {
-        val fileManager = NSFileManager.defaultManager
-        if (!fileManager.fileExistsAtPath(filePath)) return true
-        return fileManager.removeItemAtPath(filePath, error = null)
-    }
+    override suspend fun deleteFile(filePath: String): Boolean =
+        withContext(Dispatchers.Default) {
+            val fileManager = NSFileManager.defaultManager
+            if (!fileManager.fileExistsAtPath(filePath)) return@withContext true
+            fileManager.removeItemAtPath(filePath, error = null)
+        }
 
     /**
      * Returns a `file://` URL string suitable for sharing via UIActivityViewController.
      */
-    override suspend fun getShareableUri(filePath: String): String? {
-        if (!NSFileManager.defaultManager.fileExistsAtPath(filePath)) return null
-        return NSURL.fileURLWithPath(filePath).absoluteString
-    }
+    override suspend fun getShareableUri(filePath: String): String? =
+        withContext(Dispatchers.Default) {
+            if (!NSFileManager.defaultManager.fileExistsAtPath(filePath)) {
+                return@withContext null
+            }
+            NSURL.fileURLWithPath(filePath).absoluteString
+        }
 
     // --- Helpers ---
 
@@ -129,10 +134,36 @@ class IosFileStorage : PlatformFileStorage {
         return base
     }
 
-    private fun sanitizeFileName(name: String): String {
-        val cleaned = name.replace(Regex("[/\\\\:*?\"<>|]"), "_").trim()
-        return cleaned.ifEmpty { "download" }
+    /**
+     * Moves [source] to [dest], falling back to copy + delete if a plain move fails
+     * (e.g. across volumes). Surfaces the underlying [NSError] description on failure
+     * instead of swallowing it.
+     */
+    private fun moveOrCopy(
+        source: NSURL,
+        dest: NSURL,
+    ) {
+        val fileManager = NSFileManager.defaultManager
+        memScoped {
+            val moveError = alloc<ObjCObjectVar<NSError?>>()
+            if (fileManager.moveItemAtURL(source, toURL = dest, error = moveError.ptr)) return
+
+            val copyError = alloc<ObjCObjectVar<NSError?>>()
+            if (!fileManager.copyItemAtURL(source, toURL = dest, error = copyError.ptr)) {
+                throw StorageException(
+                    "Failed to save file to Downloads directory " +
+                        "(move: ${moveError.value?.localizedDescription ?: "unknown"}; " +
+                        "copy: ${copyError.value?.localizedDescription ?: "unknown"})",
+                )
+            }
+            fileManager.removeItemAtURL(source, error = null)
+        }
     }
+
+    /** Reads the file size, correctly bridging the `NSFileSize` [NSNumber] to a [Long]. */
+    private fun fileSizeOf(path: String): Long =
+        (NSFileManager.defaultManager.attributesOfItemAtPath(path, error = null)?.get("NSFileSize") as? NSNumber)
+            ?.longValue ?: 0L
 }
 
 class StorageException(message: String) : Exception(message)

@@ -19,15 +19,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.socialvideodownloader.shared.ui.theme.LocalAppShapes
 import com.socialvideodownloader.shared.ui.theme.Spacing
-import com.socialvideodownloader.shared.ui.theme.SvdPrimary
-import com.socialvideodownloader.shared.ui.theme.SvdWarning
+import com.socialvideodownloader.shared.ui.theme.extendedColors
 
 @Composable
 fun GradientButton(
@@ -38,23 +35,25 @@ fun GradientButton(
     enabled: Boolean = true,
 ) {
     val shapes = LocalAppShapes.current
+    val extended = MaterialTheme.extendedColors
     Box(
         modifier =
             modifier
                 .heightIn(min = Spacing.PrimaryButtonHeight)
                 .clip(shapes.control)
                 .alpha(if (enabled) 1f else 0.5f)
-                .background(Brush.verticalGradient(listOf(SvdPrimary, SvdWarning)))
-                .semantics(mergeDescendants = true) {
-                    role = Role.Button
-                    contentDescription = text
-                }
+                .background(
+                    Brush.verticalGradient(
+                        listOf(extended.primaryGradientStart, extended.primaryGradientEnd),
+                    ),
+                )
+                .semantics(mergeDescendants = true) { role = Role.Button }
                 .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.GapMd), verticalAlignment = Alignment.CenterVertically) {
             if (icon != null) {
-                Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(Spacing.IconMd))
             }
             Text(
                 text = text,

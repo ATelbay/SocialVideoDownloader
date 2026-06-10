@@ -15,6 +15,12 @@ val MaterialTheme.appShapes: AppShapes
     @ReadOnlyComposable
     get() = LocalAppShapes.current
 
+/**
+ * SVD theme. The warm-editorial brand is intentionally light-only — there is no dark color
+ * scheme, and [resolveColorScheme] never consults `isSystemInDarkTheme()`. On Android,
+ * [dynamicColor] may opt into a wallpaper-derived light scheme (Material You); elsewhere the
+ * static brand palette is always used.
+ */
 @Composable
 fun SvdTheme(
     dynamicColor: Boolean = false,
